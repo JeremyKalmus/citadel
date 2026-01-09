@@ -1,8 +1,8 @@
 "use client"
 
 import { Panel, StatusBadge, Gauge, ActionButton, type Status } from "@/components/ui"
-import { useTownStatus, useConvoys, usePolecats } from "@/hooks"
-import { Container, Truck, Terminal, ArrowRight, RefreshCw } from "lucide-react"
+import { useTownStatus, useConvoys, usePolecats, useGuzzoline } from "@/hooks"
+import { Container, Truck, Terminal, ArrowRight, RefreshCw, Fuel, AlertTriangle } from "lucide-react"
 
 const demoStatuses: Status[] = ['active', 'thinking', 'slow', 'unresponsive', 'dead', 'blocked', 'done']
 
@@ -10,8 +10,9 @@ export default function Home() {
   const { data: status, isLoading: statusLoading, refresh: refreshStatus } = useTownStatus({ refreshInterval: 30000 })
   const { data: convoys, isLoading: convoysLoading, refresh: refreshConvoys } = useConvoys({ refreshInterval: 30000 })
   const { data: polecats, isLoading: polecatsLoading, refresh: refreshPolecats } = usePolecats({ refreshInterval: 30000 })
+  const { data: guzzoline, isLoading: guzzolineLoading, refresh: refreshGuzzoline } = useGuzzoline({ refreshInterval: 30000 })
 
-  const isLoading = statusLoading || convoysLoading || polecatsLoading
+  const isLoading = statusLoading || convoysLoading || polecatsLoading || guzzolineLoading
 
   const stats = [
     {
@@ -38,6 +39,14 @@ export default function Home() {
     refreshStatus()
     refreshConvoys()
     refreshPolecats()
+    refreshGuzzoline()
+  }
+
+  // Format token count for display (e.g., 12.4k, 1.2M)
+  const formatTokens = (n: number) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
+    return n.toString()
   }
 
   return (
@@ -78,6 +87,56 @@ export default function Home() {
           </Panel>
         ))}
       </div>
+
+      {/* Guzzoline Stats */}
+      <Panel className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="section-header flex items-center gap-2">
+            <Fuel className="w-5 h-5 text-chrome" />
+            Guzzoline — Token Efficiency
+          </h2>
+          {guzzoline?.budget_warnings && guzzoline.budget_warnings > 0 && (
+            <div className="flex items-center gap-1 text-rust">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="label">{guzzoline.budget_warnings} budget warning{guzzoline.budget_warnings > 1 ? 's' : ''}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div>
+            <p className="label text-ash">Today</p>
+            <p className="data-value">{guzzolineLoading ? "—" : formatTokens(guzzoline?.total_tokens_today ?? 0)}</p>
+            <p className="label text-ash">{guzzoline?.sessions_today ?? 0} sessions</p>
+          </div>
+          <div>
+            <p className="label text-ash">This Week</p>
+            <p className="data-value">{guzzolineLoading ? "—" : formatTokens(guzzoline?.total_tokens_week ?? 0)}</p>
+          </div>
+          <div>
+            <p className="label text-ash">Polecats</p>
+            <p className="data-value">{guzzolineLoading ? "—" : formatTokens(guzzoline?.by_agent_type?.polecat ?? 0)}</p>
+          </div>
+          <div>
+            <p className="label text-ash">Infrastructure</p>
+            <p className="data-value">{guzzolineLoading ? "—" : formatTokens((guzzoline?.by_agent_type?.witness ?? 0) + (guzzoline?.by_agent_type?.refinery ?? 0))}</p>
+          </div>
+        </div>
+
+        {guzzoline?.recent_sessions && guzzoline.recent_sessions.length > 0 && (
+          <div>
+            <p className="label text-ash mb-2">Recent Sessions</p>
+            <div className="space-y-1">
+              {guzzoline.recent_sessions.slice(0, 5).map((session, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <span className="text-bone font-mono">{session.actor}</span>
+                  <span className="text-ash">{formatTokens(session.total)} tokens</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Panel>
 
       {/* Component showcase */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

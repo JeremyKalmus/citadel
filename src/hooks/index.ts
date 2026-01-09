@@ -6,3 +6,6 @@ export type { UseConvoysOptions, UseConvoysResult } from "./use-convoys";
 
 export { usePolecats } from "./use-polecats";
 export type { UsePolecatsOptions, UsePolecatsResult } from "./use-polecats";
+
+export { useGuzzoline } from "./use-guzzoline";
+export type { UseGuzzolineOptions, UseGuzzolineResult } from "./use-guzzoline";
