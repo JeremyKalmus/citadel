@@ -20,8 +20,8 @@ export function Panel({ className, variant = 'default', ...props }: PanelProps) 
           'bg-gunmetal': variant === 'default',
           // Elevated: slightly brighter surface, stronger border
           'bg-gunmetal border-chrome-border/80 shadow-[inset_0_1px_0_rgba(230,232,235,0.05)]': variant === 'elevated',
-          // Inset: darker than background, recessed look
-          'bg-carbon-black border-chrome-border/60 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]': variant === 'inset',
+          // Inset: same as elevated (gunmetal), no border, inset shadow for depth
+          'bg-gunmetal border-transparent shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]': variant === 'inset',
         },
         className
       )}

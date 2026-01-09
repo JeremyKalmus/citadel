@@ -87,15 +87,15 @@ export const AllSizes: Story = {
   render: () => (
     <div className="space-y-4 w-64">
       <div>
-        <p className="text-xs text-chrome-dust mb-1">Small</p>
+        <p className="text-xs text-ash mb-1">Small</p>
         <Gauge value={75} size="sm" />
       </div>
       <div>
-        <p className="text-xs text-chrome-dust mb-1">Medium</p>
+        <p className="text-xs text-ash mb-1">Medium</p>
         <Gauge value={50} size="md" />
       </div>
       <div>
-        <p className="text-xs text-chrome-dust mb-1">Large</p>
+        <p className="text-xs text-ash mb-1">Large</p>
         <Gauge value={25} size="lg" />
       </div>
     </div>

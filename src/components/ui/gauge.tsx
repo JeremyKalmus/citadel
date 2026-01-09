@@ -20,7 +20,7 @@ export function Gauge({ value, size = 'md', showLabel = true, className }: Gauge
   return (
     <div className={cn("flex items-center gap-3", className)}>
       <div className={cn(
-        "flex-1 bg-iron rounded-full overflow-hidden",
+        "flex-1 bg-gunmetal rounded-full overflow-hidden",
         sizes[size]
       )}>
         <div
