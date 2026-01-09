@@ -142,3 +142,32 @@ export const AllStates: Story = {
     </div>
   ),
 }
+
+/**
+ * DS2 Phase 4: Mechanical Motion Demo
+ * Demonstrates the snappy, mechanical click feedback.
+ * Hover and click to see the industrial control panel feel.
+ */
+export const MechanicalMotion: Story = {
+  render: () => (
+    <div className="space-y-6 p-4">
+      <div className="text-ash text-sm uppercase tracking-wider mb-2">
+        Click to feel the mechanical feedback
+      </div>
+      <div className="flex gap-4">
+        <ActionButton variant="default" icon={<Play className="w-4 h-4" />}>
+          Execute
+        </ActionButton>
+        <ActionButton variant="danger" icon={<Trash2 className="w-4 h-4" />}>
+          Terminate
+        </ActionButton>
+        <ActionButton variant="ghost" icon={<RefreshCw className="w-4 h-4" />}>
+          Refresh
+        </ActionButton>
+      </div>
+      <div className="text-ash text-xs mt-4">
+        DS2 Phase 4: btn-mechanical class provides stepped transitions (no soft easing)
+      </div>
+    </div>
+  ),
+}
