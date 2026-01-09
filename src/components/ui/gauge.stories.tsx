@@ -16,9 +16,6 @@ const meta = {
       control: 'select',
       options: ['sm', 'md', 'lg'],
     },
-    segments: {
-      control: { type: 'range', min: 5, max: 20, step: 1 },
-    },
     showLabel: {
       control: 'boolean',
     },
@@ -39,7 +36,6 @@ export const Default: Story = {
   args: {
     value: 50,
     size: 'md',
-    segments: 10,
     showLabel: true,
   },
 }
@@ -77,20 +73,6 @@ export const Full: Story = {
   },
 }
 
-export const FiveSegments: Story = {
-  args: {
-    value: 60,
-    segments: 5,
-  },
-}
-
-export const TwentySegments: Story = {
-  args: {
-    value: 85,
-    segments: 20,
-  },
-}
-
 export const NoLabel: Story = {
   args: {
     value: 65,
@@ -105,38 +87,16 @@ export const AllSizes: Story = {
   render: () => (
     <div className="space-y-4 w-64">
       <div>
-        <p className="label mb-2">Small (75%)</p>
+        <p className="text-xs text-ash mb-1">Small</p>
         <Gauge value={75} size="sm" />
       </div>
       <div>
-        <p className="label mb-2">Medium (50%)</p>
+        <p className="text-xs text-ash mb-1">Medium</p>
         <Gauge value={50} size="md" />
       </div>
       <div>
-        <p className="label mb-2">Large (25%)</p>
+        <p className="text-xs text-ash mb-1">Large</p>
         <Gauge value={25} size="lg" />
-      </div>
-    </div>
-  ),
-}
-
-export const SegmentVariations: Story = {
-  args: {
-    value: 60,
-  },
-  render: () => (
-    <div className="space-y-4 w-64">
-      <div>
-        <p className="label mb-2">5 Segments</p>
-        <Gauge value={60} segments={5} />
-      </div>
-      <div>
-        <p className="label mb-2">10 Segments (default)</p>
-        <Gauge value={60} segments={10} />
-      </div>
-      <div>
-        <p className="label mb-2">20 Segments</p>
-        <Gauge value={60} segments={20} />
       </div>
     </div>
   ),

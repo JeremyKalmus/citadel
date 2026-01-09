@@ -1,0 +1,50 @@
+# Citadel - Gas Town Plugin Manifest
+name: citadel
+version: 0.5.0
+description: "Dashboard UI for Gas Town monitoring. Black & Chrome edition with real-time status, convoy tracking, and worker management."
+type: dashboard
+
+author: "Jeremy Kalmus"
+repository: "https://github.com/jeremykalmus/citadel"
+
+# Compatibility
+gastown_version: ">=2.0.0"
+requires:
+  - keeper: ">=1.0.0"  # Uses Keeper for design governance
+
+# Installation (dashboard is a Next.js app, different pattern)
+install:
+  # Dashboard runs as a separate service, not copied into rigs
+  # Install creates a symlink and config entry
+  service:
+    name: citadel
+    type: nextjs
+    port: 3000
+    start_command: "npm run dev"
+
+  # Config file for connecting to Gas Town
+  templates:
+    - source: templates/citadel.config.yaml
+      dest: .gt/citadel.config.yaml
+
+# Uninstall
+uninstall:
+  remove:
+    - .gt/citadel.config.yaml
+  stop_service: citadel
+
+# Dashboard-specific config
+config_schema:
+  type: object
+  properties:
+    port:
+      type: integer
+      default: 3000
+    refresh_interval:
+      type: integer
+      default: 5000
+      description: "Status refresh interval in milliseconds"
+    theme:
+      type: string
+      enum: [black-chrome, light, dark]
+      default: black-chrome
