@@ -33,11 +33,16 @@ export function Nav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm font-medium transition-colors",
+              // DS2 Phase 4: Mechanical transitions for nav
+              "flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm font-medium",
+              "transition-click",
+              // Accessibility: Clear focus states
+              "focus:outline-none focus-visible:ring-2 focus-visible:ring-bone focus-visible:ring-offset-2 focus-visible:ring-offset-carbon-black",
               isActive
                 ? "bg-gunmetal text-bone border border-chrome-border"
                 : "text-ash hover:text-bone hover:bg-gunmetal/50"
             )}
+            aria-current={isActive ? "page" : undefined}
           >
             <Icon className="w-4 h-4" />
             <span className="hidden lg:inline">{item.label}</span>

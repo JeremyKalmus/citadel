@@ -125,11 +125,32 @@
   --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.1);
 
   /* ─────────────────────────────────────────────────────────────────────────
-     ANIMATIONS
+     DS2 PHASE 4: MOTION - "Snaps, not slides"
+     Industrial control panel timing - mechanical, immediate, earned
      ───────────────────────────────────────────────────────────────────────── */
 
+  /* Timing functions - Mechanical, not organic */
+  --ease-snap: steps(1, end);           /* Binary on/off - like a relay */
+  --ease-click: steps(2, end);          /* Two-state snap - like a switch */
+  --ease-ratchet: steps(4, end);        /* Stepped progression - like a dial */
+  --ease-mechanical: linear;            /* Direct, no acceleration */
+  --ease-sharp: cubic-bezier(0.16, 1, 0.3, 1); /* Fast start, hard stop */
+
+  /* Durations - Fast, purposeful */
+  --duration-instant: 0ms;              /* Immediate feedback */
+  --duration-snap: 50ms;                /* Relay click speed */
+  --duration-fast: 100ms;               /* Quick mechanical action */
+  --duration-normal: 150ms;             /* Standard control response */
+  --duration-measured: 250ms;           /* Deliberate movement */
+
+  /* Legacy animations */
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-glow: glow 2s ease-in-out infinite alternate;
+
+  /* DS2 Phase 4 animations */
+  --animate-status-pulse: status-pulse 2s steps(2, end) infinite;
+  --animate-gauge-fill: gauge-fill 150ms linear forwards;
+  --animate-click: click 100ms steps(2, end);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -362,4 +383,193 @@
 /* Status glow effect */
 .glow-status {
   box-shadow: 0 0 12px currentColor;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DS2 PHASE 4: MECHANICAL MOTION UTILITIES
+   "Control panels don't ease. They click."
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Keyframes - Hard stops, mechanical feel */
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes gauge-fill {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+@keyframes click {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes snap-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes indicator-on {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DS2 PHASE 4: UTILITY CLASSES (outside @layer for Tailwind JIT compatibility)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Transition timing utilities - DS2 Mechanical */
+.transition-snap {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity;
+  transition-timing-function: steps(1, end);
+  transition-duration: 50ms;
+}
+
+.transition-click {
+  transition-property: all;
+  transition-timing-function: steps(2, end);
+  transition-duration: 100ms;
+}
+
+.transition-ratchet {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity;
+  transition-timing-function: steps(4, end);
+  transition-duration: 150ms;
+}
+
+.transition-mechanical {
+  transition-property: all;
+  transition-timing-function: linear;
+  transition-duration: 100ms;
+}
+
+.transition-sharp {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 150ms;
+}
+
+/* Animation utilities */
+.animate-status-pulse {
+  animation: status-pulse 2s steps(2, end) infinite;
+}
+
+.animate-click {
+  animation: click 100ms steps(2, end);
+}
+
+.animate-snap-in {
+  animation: snap-in 100ms steps(2, end) forwards;
+}
+
+.animate-indicator-on {
+  animation: indicator-on 50ms steps(1, end) forwards;
+}
+
+/* Interactive state transitions - Mechanical feedback */
+.interactive-snap {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: steps(1, end);
+  transition-duration: 50ms;
+}
+
+.interactive-click {
+  transition-property: all;
+  transition-timing-function: steps(2, end);
+  transition-duration: 100ms;
+}
+
+.interactive-click:active {
+  transform: scale(0.97);
+}
+
+/* Button press effect - Hard mechanical click */
+.btn-mechanical {
+  transition-property: all;
+  transition-timing-function: steps(2, end);
+  transition-duration: 100ms;
+}
+
+.btn-mechanical:hover {
+  transform: translateY(-1px);
+}
+
+.btn-mechanical:active {
+  transform: translateY(1px);
+}
+
+/* Focus utilities - Industrial, high-contrast */
+.focus-mechanical:focus {
+  outline: none;
+}
+
+.focus-mechanical:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-carbon-black), 0 0 0 4px var(--color-bone);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DS2 PHASE 4: ACCESSIBILITY & REDUCED MOTION
+   "Respect the operator's preferences"
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Reduced motion - Disable animations for users who prefer */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-status-pulse,
+  .animate-click,
+  .animate-snap-in,
+  .animate-indicator-on,
+  .animate-glow,
+  .animate-pulse-slow {
+    animation: none !important;
+  }
+}
+
+/* High contrast mode enhancements */
+@media (prefers-contrast: more) {
+  :root {
+    --color-ash: #C0C4CC;
+    --color-chrome-border: #4A505A;
+  }
+}
+
+/* Focus-visible polyfill support */
+.focus-visible-ring:focus-visible {
+  @apply ring-2 ring-bone ring-offset-2 ring-offset-carbon-black;
 }

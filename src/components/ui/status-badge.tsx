@@ -60,6 +60,7 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, showLabel = true, size = 'md', className }: StatusBadgeProps) {
   const config = statusConfig[status]
+  const isAnimated = status === 'active' || status === 'thinking'
 
   return (
     <span className={cn(
@@ -69,11 +70,13 @@ export function StatusBadge({ status, showLabel = true, size = 'md', className }
       {/* Status dot - the signal */}
       <span
         className={cn(
-          "rounded-full flex-shrink-0",
+          // DS2 Phase 4: Snap transitions for state changes, pulse for active states
+          "rounded-full flex-shrink-0 transition-snap",
           config.dotColor,
           {
             'w-2 h-2': size === 'sm',
             'w-2.5 h-2.5': size === 'md',
+            'animate-status-pulse': isAnimated,
           }
         )}
         aria-hidden="true"
