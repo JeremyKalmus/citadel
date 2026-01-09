@@ -1,0 +1,104 @@
+# Command Center Phase Plan
+# Managed by Hitch - auto-advances when complete_when conditions are met
+
+feature: command-center
+description: |
+  Full command center dashboard for Gas Town with progressive disclosure,
+  real-time data, and actionable controls.
+
+phases:
+  - id: phase-0-foundation
+    title: "Phase 0: Foundation"
+    description: "Base components and DS2 design system"
+    status: complete
+    complete_when:
+      - file_exists: src/components/ui/panel.tsx
+      - file_exists: src/components/ui/status-badge.tsx
+      - file_exists: src/components/ui/gauge.tsx
+      - file_exists: src/components/ui/action-button.tsx
+      - file_exists: src/app/globals.css
+    notes: |
+      All base components built. DS2 colors implemented.
+      Segmented gauge done. Status colors fixed (no more blue).
+
+  - id: phase-1-town-overview
+    title: "Phase 1: Town Overview (Level 0)"
+    description: "Main dashboard with real data display"
+    depends_on: phase-0-foundation
+    complete_when:
+      - file_exists: src/components/town/health-summary.tsx
+      - file_exists: src/components/town/rig-list.tsx
+      - file_exists: src/components/town/stats-grid.tsx
+      - api_returns_data: /api/gastown/status
+    tasks:
+      - Create HealthSummary component (all systems operational vs needs attention)
+      - Create RigList component with drill-down links
+      - Create StatsGrid with real data (not demo values)
+      - Update page.tsx to be real dashboard (not component showcase)
+      - Add recent events feed
+
+  - id: phase-2-rig-view
+    title: "Phase 2: Rig View (Level 1)"
+    description: "Click a rig to see workers, convoys, merge queue"
+    depends_on: phase-1-town-overview
+    complete_when:
+      - file_exists: src/app/rig/[name]/page.tsx
+      - file_exists: src/components/workers/worker-grid.tsx
+      - file_exists: src/components/convoys/convoy-list.tsx
+      - file_exists: src/components/merge-queue/merge-queue.tsx
+    tasks:
+      - Create /rig/[name] route with dynamic params
+      - Create WorkerGrid component showing all workers with status
+      - Create ConvoyList with progress bars
+      - Create MergeQueue component
+      - Add breadcrumb navigation
+
+  - id: phase-3-detail-views
+    title: "Phase 3: Detail Views (Level 2)"
+    description: "Click any item for full details + timeline"
+    depends_on: phase-2-rig-view
+    complete_when:
+      - file_exists: src/app/worker/[name]/page.tsx
+      - file_exists: src/app/convoy/[id]/page.tsx
+      - file_exists: src/components/workers/activity-timeline.tsx
+      - file_exists: src/components/workers/status-explanation.tsx
+    tasks:
+      - Create /worker/[name] route
+      - Create /convoy/[id] route
+      - Create ActivityTimeline component (events, not timestamps)
+      - Create StatusExplanation component ("Why this status")
+      - Link everything with proper navigation
+
+  - id: phase-4-actions
+    title: "Phase 4: Actions"
+    description: "Interactive controls that actually do things"
+    depends_on: phase-3-detail-views
+    complete_when:
+      - api_returns_data: POST /api/actions/nudge
+      - file_exists: src/hooks/use-actions.ts
+    tasks:
+      - Implement Nudge action (gt nudge <worker>)
+      - Implement Kill action (gt polecat remove)
+      - Implement Reassign action (gt sling)
+      - Add confirmation dialogs
+      - Add keyboard shortcuts
+
+  - id: phase-5-polish
+    title: "Phase 5: Polish"
+    description: "Final touches and edge cases"
+    depends_on: phase-4-actions
+    complete_when:
+      - file_exists: src/app/attention/page.tsx
+      - manual_verification: responsive_on_mobile
+    tasks:
+      - Create Attention Required view (/attention)
+      - Add loading skeletons for all data
+      - Add error boundaries
+      - Test mobile responsiveness
+      - Add page title/meta tags
+
+# Hitch configuration
+hitch:
+  auto_advance: true
+  require_keeper_clearance: false
+  notify_on_complete: mayor/
