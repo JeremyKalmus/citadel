@@ -48,25 +48,32 @@ const statusConfig: Record<Status, StatusConfig> = {
   },
 }
 
-interface StatusBadgeProps {
+export interface StatusBadgeProps {
   status: Status
   showLabel?: boolean
+  size?: 'sm' | 'md'
   className?: string
 }
 
-export function StatusBadge({ status, showLabel = true, className }: StatusBadgeProps) {
+const sizeStyles = {
+  sm: "px-1.5 py-0.5 text-[10px] gap-1",
+  md: "px-2 py-1 text-xs gap-1.5",
+}
+
+export function StatusBadge({ status, showLabel = true, size = 'md', className }: StatusBadgeProps) {
   const config = statusConfig[status]
 
   return (
     <span className={cn(
-      "inline-flex items-center gap-1.5 px-2 py-1 rounded-sm border text-xs font-medium uppercase tracking-wide",
+      "inline-flex items-center rounded-sm border font-medium uppercase tracking-wide",
+      sizeStyles[size],
       config.className,
       className
     )}>
       <Icon
         name={config.icon}
         aria-label={config.label}
-        size="xs"
+        size={size === 'sm' ? 'xs' : 'sm'}
       />
       {showLabel && config.label}
     </span>
