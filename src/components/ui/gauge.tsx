@@ -50,10 +50,10 @@ export function Gauge({
                 // DS2 Phase 4: Ratchet transition - segments click on/off
                 "flex-1 transition-ratchet",
                 height,
-                // Filled segments get the bright color
+                // Filled: bone, Empty: gunmetal (DS2 spec)
                 isFilled
                   ? "bg-bone"
-                  : "bg-chrome-border/40",
+                  : "bg-gunmetal",
                 // Hard edges - minimal rounding only on ends
                 {
                   'rounded-l-sm': isFirst,
