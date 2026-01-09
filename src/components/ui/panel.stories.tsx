@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Panel } from './panel'
+import { Panel, PanelHeader, PanelBody } from './panel'
+import { StatusBadge } from './status-badge'
+import { ActionButton } from './action-button'
 
 const meta = {
   title: 'UI/Panel',
@@ -24,7 +26,7 @@ export const Default: Story = {
     children: (
       <div className="p-4">
         <h3 className="text-sm font-medium mb-2">Default Panel</h3>
-        <p className="text-xs text-chrome-dust">Standard panel with subtle background</p>
+        <p className="text-xs text-ash">Standard panel with subtle background</p>
       </div>
     ),
   },
@@ -36,7 +38,7 @@ export const Elevated: Story = {
     children: (
       <div className="p-4">
         <h3 className="text-sm font-medium mb-2">Elevated Panel</h3>
-        <p className="text-xs text-chrome-dust">Panel with shadow for emphasis</p>
+        <p className="text-xs text-ash">Panel with shadow for emphasis</p>
       </div>
     ),
   },
@@ -48,31 +50,113 @@ export const Inset: Story = {
     children: (
       <div className="p-4">
         <h3 className="text-sm font-medium mb-2">Inset Panel</h3>
-        <p className="text-xs text-chrome-dust">Recessed panel for nested content</p>
+        <p className="text-xs text-ash">Recessed panel for nested content</p>
       </div>
     ),
   },
 }
 
+export const WithHeader: Story = {
+  args: {
+    children: null,
+  },
+  render: () => (
+    <Panel className="w-80">
+      <PanelHeader title="Worker Status" icon="terminal" />
+      <PanelBody>
+        <div className="space-y-3">
+          <div className="flex justify-between text-xs">
+            <span className="text-ash">Status</span>
+            <StatusBadge status="active" showLabel={false} />
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-ash">Uptime</span>
+            <span>2h 34m</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-ash">Tasks</span>
+            <span>12 completed</span>
+          </div>
+        </div>
+      </PanelBody>
+    </Panel>
+  ),
+}
+
+export const WithHeaderAndActions: Story = {
+  args: {
+    children: null,
+  },
+  render: () => (
+    <Panel className="w-96">
+      <PanelHeader
+        title="Rig Overview"
+        icon="truck"
+        actions={
+          <ActionButton size="sm" variant="ghost">
+            Refresh
+          </ActionButton>
+        }
+      />
+      <PanelBody>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <span className="label-caps">Workers</span>
+            <p className="data-value-sm mt-1">8</p>
+          </div>
+          <div>
+            <span className="label-caps">Active</span>
+            <p className="data-value-sm mt-1 text-status-active">6</p>
+          </div>
+        </div>
+      </PanelBody>
+    </Panel>
+  ),
+}
+
+export const WithAlertIcon: Story = {
+  args: {
+    children: null,
+  },
+  render: () => (
+    <Panel className="w-80">
+      <PanelHeader
+        title="System Alerts"
+        icon="exclamation-triangle"
+        iconVariant="alert"
+      />
+      <PanelBody>
+        <div className="space-y-2 text-xs">
+          <div className="text-rust-orange">3 workers stalled</div>
+          <div className="text-fuel-yellow">Memory usage high</div>
+        </div>
+      </PanelBody>
+    </Panel>
+  ),
+}
+
 export const AllVariants: Story = {
+  args: {
+    children: null,
+  },
   render: () => (
     <div className="space-y-4">
       <Panel>
         <div className="p-4">
           <h3 className="text-sm font-medium mb-2">Default</h3>
-          <p className="text-xs text-chrome-dust">bg-steel - Standard content container</p>
+          <p className="text-xs text-ash">bg-gunmetal - Standard content container</p>
         </div>
       </Panel>
       <Panel variant="elevated">
         <div className="p-4">
           <h3 className="text-sm font-medium mb-2">Elevated</h3>
-          <p className="text-xs text-chrome-dust">bg-oil + shadow - For important content</p>
+          <p className="text-xs text-ash">bg-gunmetal + shadow - For important content</p>
         </div>
       </Panel>
       <Panel variant="inset">
         <div className="p-4">
           <h3 className="text-sm font-medium mb-2">Inset</h3>
-          <p className="text-xs text-chrome-dust">bg-abyss - For nested/secondary content</p>
+          <p className="text-xs text-ash">bg-carbon-black - For nested/secondary content</p>
         </div>
       </Panel>
     </div>
@@ -80,12 +164,15 @@ export const AllVariants: Story = {
 }
 
 export const NestedPanels: Story = {
+  args: {
+    children: null,
+  },
   render: () => (
     <Panel variant="elevated" className="p-4">
       <h3 className="text-sm font-medium mb-3">Parent Panel (Elevated)</h3>
       <Panel variant="inset" className="p-3">
         <h4 className="text-xs font-medium mb-2">Child Panel (Inset)</h4>
-        <p className="text-xs text-chrome-dust">
+        <p className="text-xs text-ash">
           Panels can be nested to create visual hierarchy
         </p>
       </Panel>
@@ -94,22 +181,25 @@ export const NestedPanels: Story = {
 }
 
 export const WithContent: Story = {
+  args: {
+    children: null,
+  },
   render: () => (
     <Panel className="w-80">
-      <div className="p-4 border-b border-chrome-shadow/50">
+      <div className="p-4 border-b border-chrome-border/50">
         <h3 className="text-sm font-medium">Worker Status</h3>
       </div>
       <div className="p-4 space-y-3">
         <div className="flex justify-between text-xs">
-          <span className="text-chrome-dust">Status</span>
+          <span className="text-ash">Status</span>
           <span className="text-status-active">Active</span>
         </div>
         <div className="flex justify-between text-xs">
-          <span className="text-chrome-dust">Uptime</span>
+          <span className="text-ash">Uptime</span>
           <span>2h 34m</span>
         </div>
         <div className="flex justify-between text-xs">
-          <span className="text-chrome-dust">Tasks</span>
+          <span className="text-ash">Tasks</span>
           <span>12 completed</span>
         </div>
       </div>

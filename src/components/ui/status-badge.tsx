@@ -1,19 +1,10 @@
 import { cn } from "@/lib/utils"
-import {
-  Activity,
-  Brain,
-  Clock,
-  AlertTriangle,
-  XCircle,
-  Lock,
-  CheckCircle,
-  type LucideIcon,
-} from "lucide-react"
+import { Icon, statusIcons, type IconName } from "./icon"
 
 export type Status = 'active' | 'thinking' | 'slow' | 'unresponsive' | 'dead' | 'blocked' | 'done'
 
 interface StatusConfig {
-  icon: LucideIcon
+  icon: IconName
   label: string
   className: string
 }
@@ -21,37 +12,37 @@ interface StatusConfig {
 // DS2: Industrial status labels - firm, grounded language
 const statusConfig: Record<Status, StatusConfig> = {
   active: {
-    icon: Activity,
+    icon: statusIcons.active,
     label: 'Running',
     className: 'text-status-active bg-status-active/10 border-status-active/30'
   },
   thinking: {
-    icon: Brain,
+    icon: statusIcons.thinking,
     label: 'Processing',
     className: 'text-status-thinking bg-status-thinking/10 border-status-thinking/30'
   },
   slow: {
-    icon: Clock,
+    icon: statusIcons.slow,
     label: 'Throttled',
     className: 'text-status-slow bg-status-slow/10 border-status-slow/30'
   },
   unresponsive: {
-    icon: AlertTriangle,
+    icon: statusIcons.unresponsive,
     label: 'Stalled',
     className: 'text-status-unresponsive bg-status-unresponsive/10 border-status-unresponsive/30'
   },
   dead: {
-    icon: XCircle,
+    icon: statusIcons.dead,
     label: 'Dead',
     className: 'text-status-dead bg-status-dead/10 border-status-dead/30'
   },
   blocked: {
-    icon: Lock,
+    icon: statusIcons.blocked,
     label: 'Blocked',
     className: 'text-status-blocked bg-status-blocked/10 border-status-blocked/30'
   },
   done: {
-    icon: CheckCircle,
+    icon: statusIcons.done,
     label: 'Complete',
     className: 'text-status-done bg-status-done/10 border-status-done/30'
   },
@@ -65,7 +56,6 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, showLabel = true, className }: StatusBadgeProps) {
   const config = statusConfig[status]
-  const Icon = config.icon
 
   return (
     <span className={cn(
@@ -73,7 +63,11 @@ export function StatusBadge({ status, showLabel = true, className }: StatusBadge
       config.className,
       className
     )}>
-      <Icon className="w-3 h-3" />
+      <Icon
+        name={config.icon}
+        aria-label={config.label}
+        size="xs"
+      />
       {showLabel && config.label}
     </span>
   )

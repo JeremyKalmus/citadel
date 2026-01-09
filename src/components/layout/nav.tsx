@@ -3,19 +3,19 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Container, Truck, Terminal, Settings } from "lucide-react"
+import { Icon, navIcons, type IconName } from "@/components/ui/icon"
 
 interface NavItem {
   label: string
   href: string
-  icon: React.ElementType
+  icon: IconName
 }
 
 const navItems: NavItem[] = [
-  { label: "Rigs", href: "/", icon: Container },
-  { label: "Convoys", href: "/convoys", icon: Truck },
-  { label: "Workers", href: "/workers", icon: Terminal },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { label: "Rigs", href: "/", icon: navIcons.rigs },
+  { label: "Convoys", href: "/convoys", icon: navIcons.convoys },
+  { label: "Workers", href: "/workers", icon: navIcons.workers },
+  { label: "Settings", href: "/settings", icon: navIcons.settings },
 ]
 
 export function Nav() {
@@ -24,7 +24,6 @@ export function Nav() {
   return (
     <nav className="hidden md:flex items-center gap-1">
       {navItems.map((item) => {
-        const Icon = item.icon
         const isActive = pathname === item.href ||
           (item.href !== "/" && pathname.startsWith(item.href))
 
@@ -39,7 +38,11 @@ export function Nav() {
                 : "text-ash hover:text-bone hover:bg-gunmetal/50"
             )}
           >
-            <Icon className="w-4 h-4" />
+            <Icon
+              name={item.icon}
+              aria-label={item.label}
+              size="sm"
+            />
             <span className="hidden lg:inline">{item.label}</span>
           </Link>
         )

@@ -363,3 +363,38 @@
 .glow-status {
   box-shadow: 0 0 12px currentColor;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DS2 ICON SYSTEM
+   "Icons are mechanical indicators, not decorations."
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* Base icon styles - Industrial, mechanical feel */
+  .icon {
+    stroke-width: 1.5;
+    flex-shrink: 0;
+  }
+
+  /* Icon status variants - Earned through state */
+  .icon--alert {
+    color: var(--color-rust-orange);
+  }
+
+  .icon--active {
+    color: var(--color-fuel-yellow);
+  }
+
+  .icon--ok {
+    color: var(--color-acid-green);
+  }
+
+  .icon--muted {
+    color: var(--color-ash);
+  }
+
+  /* Icon with subtle glow for emphasis */
+  .icon--glow {
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+}
