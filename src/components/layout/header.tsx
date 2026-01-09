@@ -2,6 +2,7 @@
 
 import { Flame, RefreshCw } from "lucide-react"
 import { Nav } from "./nav"
+import { MobileNav } from "./mobile-nav"
 import { ActionButton } from "@/components/ui"
 
 interface HeaderProps {
@@ -13,15 +14,21 @@ export function Header({ onRefresh, loading }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-chrome-border bg-carbon-black/80 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+        {/* Mobile menu button */}
+        <MobileNav />
+
         {/* Logo */}
         <div className="flex items-center gap-3">
           <Flame className="w-6 h-6 text-bone" />
-          <span className="text-lg font-bold text-bone" style={{ letterSpacing: 'var(--tracking-tighter)' }}>
+          <span className="text-lg font-bold text-bone hidden sm:inline" style={{ letterSpacing: 'var(--tracking-tighter)' }}>
             GAS TOWN
+          </span>
+          <span className="text-lg font-bold text-bone sm:hidden" style={{ letterSpacing: 'var(--tracking-tighter)' }}>
+            GT
           </span>
         </div>
 
-        {/* Navigation */}
+        {/* Desktop Navigation */}
         <Nav />
 
         {/* Actions */}

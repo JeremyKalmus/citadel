@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { Header } from "@/components/layout";
+import { Header, ErrorWrapper } from "@/components/layout";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,7 +35,9 @@ export default function RootLayout({
 
         {/* Main content */}
         <main className="max-w-7xl mx-auto px-4 py-6">
-          {children}
+          <ErrorWrapper>
+            {children}
+          </ErrorWrapper>
         </main>
       </body>
     </html>

@@ -21,6 +21,8 @@ import {
   Truck,
   Terminal,
   Settings,
+  Fuel,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react"
 
@@ -54,6 +56,8 @@ export type IconName =
   | "truck-lucide"
   | "terminal"
   | "settings"
+  | "fuel"
+  | "alert-triangle"
   // Domain icons (Font Awesome)
   | "truck"
   | "road"
@@ -83,6 +87,8 @@ const iconMap: Record<IconName, IconComponent> = {
   "truck-lucide": Truck,
   "terminal": Terminal,
   "settings": Settings,
+  "fuel": Fuel,
+  "alert-triangle": AlertTriangle,
   // Font Awesome - Domain
   "truck": FaTruck,
   "road": FaRoad,

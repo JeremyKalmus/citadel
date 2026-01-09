@@ -1,3 +1,5 @@
 export { Header } from './header'
 export { Nav } from './nav'
+export { MobileNav } from './mobile-nav'
 export { Breadcrumb } from './breadcrumb'
+export { ErrorWrapper } from './error-wrapper'

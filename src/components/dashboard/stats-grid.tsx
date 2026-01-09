@@ -1,6 +1,6 @@
 "use client"
 
-import { Panel } from "@/components/ui"
+import { Panel, Skeleton } from "@/components/ui"
 import { Icon, type IconName } from "@/components/ui/icon"
 
 export interface Stat {
@@ -20,9 +20,13 @@ function StatCard({ stat }: { stat: Stat }) {
       <div className="flex items-center justify-between">
         <div>
           <p className="section-header">{stat.label}</p>
-          <p className="data-value mt-2">
-            {stat.loading ? "—" : stat.value}
-          </p>
+          <div className="mt-2">
+            {stat.loading ? (
+              <Skeleton variant="stat" className="h-8 w-12" />
+            ) : (
+              <p className="data-value">{stat.value}</p>
+            )}
+          </div>
         </div>
         <Icon name={stat.icon} aria-label="" variant="muted" size="xl" />
       </div>

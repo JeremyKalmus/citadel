@@ -1,6 +1,6 @@
 "use client"
 
-import { Panel, PanelHeader, PanelBody, Gauge, StatusBadge, type Status } from "@/components/ui"
+import { Panel, PanelHeader, PanelBody, Gauge, StatusBadge, SkeletonGauge, Skeleton, type Status } from "@/components/ui"
 import type { TownStatus, Polecat } from "@/lib/gastown"
 
 interface HealthSummaryProps {
@@ -46,25 +46,33 @@ export function HealthSummary({ status, polecats, loading = false }: HealthSumma
       <PanelHeader
         icon="activity"
         title="Town Health"
-        actions={<StatusBadge status={overallStatus} size="sm" />}
+        actions={loading ? <Skeleton variant="rect" className="w-16 h-5" /> : <StatusBadge status={overallStatus} size="sm" />}
       />
       <PanelBody>
         <div className="flex items-center gap-6">
           <div className="flex-shrink-0">
-            <Gauge value={loading ? 0 : healthScore} size="lg" />
+            {loading ? (
+              <SkeletonGauge size="lg" />
+            ) : (
+              <Gauge value={healthScore} size="lg" />
+            )}
           </div>
           <div className="flex-1 space-y-3">
             <div>
               <p className="label text-ash">Active Workers</p>
-              <p className="data-value">
-                {loading ? "—" : `${runningCount} / ${totalCount}`}
-              </p>
+              {loading ? (
+                <Skeleton variant="stat" className="h-6 w-16 mt-1" />
+              ) : (
+                <p className="data-value">{`${runningCount} / ${totalCount}`}</p>
+              )}
             </div>
             <div>
               <p className="label text-ash">Active Rigs</p>
-              <p className="data-value">
-                {loading ? "—" : status?.rigs.length ?? 0}
-              </p>
+              {loading ? (
+                <Skeleton variant="stat" className="h-6 w-8 mt-1" />
+              ) : (
+                <p className="data-value">{status?.rigs.length ?? 0}</p>
+              )}
             </div>
           </div>
         </div>

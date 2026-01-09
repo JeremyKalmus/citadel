@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Panel, PanelHeader, PanelBody, StatusBadge, type Status } from "@/components/ui"
+import { Panel, PanelHeader, PanelBody, StatusBadge, SkeletonRow, type Status } from "@/components/ui"
 import { Icon } from "@/components/ui/icon"
 import type { Polecat } from "@/lib/gastown"
 
@@ -90,8 +90,10 @@ export function WorkerList({ polecats, loading = false }: WorkerListProps) {
       />
       <PanelBody className="p-0">
         {loading ? (
-          <div className="p-4 text-center">
-            <p className="caption text-ash">Loading...</p>
+          <div className="px-4">
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
           </div>
         ) : !polecats || polecats.length === 0 ? (
           <div className="p-4 text-center">

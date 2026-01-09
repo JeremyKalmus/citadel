@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Panel, PanelHeader, PanelBody, StatusBadge, type Status } from "@/components/ui";
+import { Panel, PanelHeader, PanelBody, StatusBadge, SkeletonRow, type Status } from "@/components/ui";
 import type { Rig } from "@/lib/gastown";
 import { Container, ChevronRight } from "lucide-react";
 
@@ -36,9 +36,11 @@ export function RigList({ rigs, isLoading }: RigListProps) {
     return (
       <Panel>
         <PanelHeader icon="container" title="Rigs" />
-        <PanelBody>
-          <div className="flex items-center justify-center py-8">
-            <span className="text-ash">Loading rigs...</span>
+        <PanelBody className="p-0">
+          <div className="px-4">
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
           </div>
         </PanelBody>
       </Panel>
