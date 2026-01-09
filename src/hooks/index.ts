@@ -12,3 +12,9 @@ export type { UseGuzzolineOptions, UseGuzzolineResult } from "./use-guzzoline";
 
 export { useRig } from "./use-rig";
 export type { UseRigOptions, UseRigResult } from "./use-rig";
+
+export { usePolecatDetail } from "./use-polecat-detail";
+export type { UsePolecatDetailOptions, UsePolecatDetailResult } from "./use-polecat-detail";
+
+export { useConvoyDetail } from "./use-convoy-detail";
+export type { UseConvoyDetailOptions, UseConvoyDetailResult } from "./use-convoy-detail";

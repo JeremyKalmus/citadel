@@ -74,6 +74,28 @@ export interface Polecat {
   name: string;
   state: string;
   session_running: boolean;
+  last_activity?: string;
+}
+
+export interface PolecatDetail {
+  rig: string;
+  name: string;
+  state: string;
+  clone_path: string;
+  branch: string;
+  session_running: boolean;
+  session_id: string;
+  windows: number;
+  last_activity: string;
+}
+
+export interface ConvoyDetail {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  issues?: string[];
+  assigned_workers?: string[];
 }
 
 export interface TokenUsage {
@@ -245,6 +267,14 @@ export class GasTownClient {
     const convoys = await this.getConvoys();
     // Filter convoys by rig (convoy IDs include rig name as prefix)
     return convoys.filter((c) => c.id.startsWith(`${rig}/`) || c.id.includes(`/${rig}/`));
+  }
+
+  async getPolecatStatus(rig: string, name: string): Promise<PolecatDetail> {
+    return this.runCommand<PolecatDetail>(`gt polecat status ${rig}/${name} --json`);
+  }
+
+  async getConvoyStatus(id: string): Promise<ConvoyDetail> {
+    return this.runCommand<ConvoyDetail>(`gt convoy status ${id} --json`);
   }
 }
 

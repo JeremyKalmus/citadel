@@ -1,3 +1,6 @@
 export { HealthSummary } from './health-summary'
 export { RigList } from './rig-list'
 export { StatsGrid, type Stat } from './stats-grid'
+export { ActivityTimeline, type ActivityEvent } from './activity-timeline'
+export { StatusExplanation } from './status-explanation'
+export { WorkerList } from './worker-list'

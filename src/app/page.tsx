@@ -1,7 +1,7 @@
 "use client"
 
 import { Panel, ActionButton } from "@/components/ui"
-import { HealthSummary, StatsGrid, type Stat } from "@/components/dashboard"
+import { HealthSummary, StatsGrid, WorkerList, type Stat } from "@/components/dashboard"
 import { RigList } from "@/components/rig"
 import { useTownStatus, useConvoys, usePolecats, useGuzzoline } from "@/hooks"
 import { RefreshCw, Fuel, AlertTriangle } from "lucide-react"
@@ -134,6 +134,12 @@ export default function Home() {
         {/* Rigs list with drill-down */}
         <RigList rigs={status?.rigs ?? []} isLoading={statusLoading} />
       </div>
+
+      {/* Workers section */}
+      <WorkerList
+        polecats={polecats}
+        loading={polecatsLoading}
+      />
     </div>
   )
 }
