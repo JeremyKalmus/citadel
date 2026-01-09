@@ -114,7 +114,7 @@ export class GasTownClient {
 
     for (const rig of status.rigs) {
       const polecats = await this.getPolecats(rig.name);
-      allPolecats.push(...polecats);
+      allPolecats.push(...(polecats || []));
     }
 
     return allPolecats;
