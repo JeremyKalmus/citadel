@@ -72,24 +72,17 @@
   --color-fuel-yellow: #F2C94C;
   --color-acid-green: #27AE60;
 
-  /* Legacy aliases (backwards compatibility) */
-  --color-abyss: var(--color-carbon-black);
-  --color-oil: #0a0a0a;
-  --color-steel: var(--color-gunmetal);
-  --color-iron: #1c1c1c;
-  --color-chrome-bright: var(--color-bone);
-  --color-chrome-polish: #e4e4e7;
-  --color-chrome-dust: var(--color-ash);
-  --color-chrome-rust: #71717a;
-  --color-chrome-shadow: var(--color-chrome-border);
-
-  /* Status Colors - Mapped to DS2 accents */
+  /* Status Colors - Mapped to DS2 accents
+     acid-green: active, done
+     fuel-yellow: thinking, slow
+     rust-orange: unresponsive
+     red: dead */
   --color-status-active: var(--color-acid-green);
-  --color-status-thinking: #3b82f6;
+  --color-status-thinking: var(--color-fuel-yellow);
   --color-status-slow: var(--color-fuel-yellow);
   --color-status-unresponsive: var(--color-rust-orange);
   --color-status-dead: #ef4444;
-  --color-status-blocked: #6b7280;
+  --color-status-blocked: var(--color-ash);
   --color-status-done: var(--color-acid-green);
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -197,19 +190,24 @@
   --sidebar-border: #2A2F3A; /* chrome-border */
   --sidebar-ring: #9AA1AC; /* ash */
 
-  /* Status colors with DS2 accents */
+  /* Status colors with DS2 accents
+     acid-green: active, done
+     fuel-yellow: thinking, slow
+     rust-orange: unresponsive
+     red: dead
+     ash: blocked */
   --status-active: #27AE60; /* acid-green */
   --status-active-bg: rgba(39, 174, 96, 0.1);
-  --status-thinking: #3b82f6;
-  --status-thinking-bg: rgba(59, 130, 246, 0.1);
+  --status-thinking: #F2C94C; /* fuel-yellow */
+  --status-thinking-bg: rgba(242, 201, 76, 0.1);
   --status-slow: #F2C94C; /* fuel-yellow */
   --status-slow-bg: rgba(242, 201, 76, 0.1);
   --status-unresponsive: #FF7A00; /* rust-orange */
   --status-unresponsive-bg: rgba(255, 122, 0, 0.1);
   --status-dead: #ef4444;
   --status-dead-bg: rgba(239, 68, 68, 0.1);
-  --status-blocked: #6b7280;
-  --status-blocked-bg: rgba(107, 114, 128, 0.1);
+  --status-blocked: #9AA1AC; /* ash */
+  --status-blocked-bg: rgba(154, 161, 172, 0.1);
   --status-done: #27AE60; /* acid-green */
   --status-done-bg: rgba(39, 174, 96, 0.1);
 }

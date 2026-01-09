@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased min-h-screen bg-abyss text-chrome-bright`}
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased min-h-screen bg-carbon-black text-bone`}
       >
         {/* Header - The War Rig's dashboard */}
         <Header />
