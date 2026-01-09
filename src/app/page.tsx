@@ -1,29 +1,68 @@
-import { Panel, StatusBadge, Gauge, ActionButton, type Status } from "@/components/ui"
-import { Container, Truck, Terminal, ArrowRight } from "lucide-react"
+"use client"
 
-// Demo data for showcase
-const demoStats = [
-  { label: "Active Rigs", value: "3", icon: Container },
-  { label: "Running Convoys", value: "5", icon: Truck },
-  { label: "Active Workers", value: "12", icon: Terminal },
-]
+import { Panel, StatusBadge, Gauge, ActionButton, type Status } from "@/components/ui"
+import { useTownStatus, useConvoys, usePolecats } from "@/hooks"
+import { Container, Truck, Terminal, ArrowRight, RefreshCw } from "lucide-react"
 
 const demoStatuses: Status[] = ['active', 'thinking', 'slow', 'unresponsive', 'dead', 'blocked', 'done']
 
 export default function Home() {
+  const { data: status, isLoading: statusLoading, refresh: refreshStatus } = useTownStatus({ refreshInterval: 30000 })
+  const { data: convoys, isLoading: convoysLoading, refresh: refreshConvoys } = useConvoys({ refreshInterval: 30000 })
+  const { data: polecats, isLoading: polecatsLoading, refresh: refreshPolecats } = usePolecats({ refreshInterval: 30000 })
+
+  const isLoading = statusLoading || convoysLoading || polecatsLoading
+
+  const stats = [
+    {
+      label: "Active Rigs",
+      value: status?.rigs.length ?? 0,
+      icon: Container,
+      loading: statusLoading
+    },
+    {
+      label: "Running Convoys",
+      value: convoys?.filter(c => c.status === "active").length ?? 0,
+      icon: Truck,
+      loading: convoysLoading
+    },
+    {
+      label: "Active Workers",
+      value: polecats?.filter(p => p.session_running).length ?? 0,
+      icon: Terminal,
+      loading: polecatsLoading
+    },
+  ]
+
+  const handleRefresh = () => {
+    refreshStatus()
+    refreshConvoys()
+    refreshPolecats()
+  }
+
   return (
     <div className="space-y-8">
       {/* Page header */}
-      <div>
-        <h1 className="text-4xl font-bold text-bone">Town Overview</h1>
-        <p className="body-text-muted mt-1">
-          Gas Town Dashboard — Black & Chrome Edition
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-bone">Town Overview</h1>
+          <p className="body-text-muted mt-1">
+            Gas Town Dashboard — Black & Chrome Edition
+          </p>
+        </div>
+        <ActionButton
+          variant="ghost"
+          onClick={handleRefresh}
+          loading={isLoading}
+          icon={<RefreshCw className="w-4 h-4" />}
+        >
+          Refresh
+        </ActionButton>
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {demoStats.map((stat) => (
+        {stats.map((stat) => (
           <Panel key={stat.label} className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -31,7 +70,7 @@ export default function Home() {
                   {stat.label}
                 </p>
                 <p className="data-value mt-2">
-                  {stat.value}
+                  {stat.loading ? "—" : stat.value}
                 </p>
               </div>
               <stat.icon className="w-8 h-8 text-ash" />
