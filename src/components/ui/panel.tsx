@@ -4,15 +4,24 @@ interface PanelProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'elevated' | 'inset'
 }
 
+/**
+ * DS2 Panel Component
+ * Industrial control panel aesthetic - hard edges, visible borders, insets instead of shadows.
+ * "Panels feel bolted on. Cards feel designed."
+ */
 export function Panel({ className, variant = 'default', ...props }: PanelProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-chrome-shadow/50",
+        // DS2: Hard edges (minimal radius), visible borders
+        "rounded-sm border-2 border-chrome-border",
         {
-          'bg-steel': variant === 'default',
-          'bg-oil shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_4px_16px_rgba(0,0,0,0.4)]': variant === 'elevated',
-          'bg-abyss border-iron': variant === 'inset',
+          // Default: gunmetal surface, visible border
+          'bg-gunmetal': variant === 'default',
+          // Elevated: slightly brighter surface, stronger border
+          'bg-gunmetal border-chrome-border/80 shadow-[inset_0_1px_0_rgba(230,232,235,0.05)]': variant === 'elevated',
+          // Inset: darker than background, recessed look
+          'bg-carbon-black border-chrome-border/60 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]': variant === 'inset',
         },
         className
       )}

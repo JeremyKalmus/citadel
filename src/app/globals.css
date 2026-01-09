@@ -56,30 +56,41 @@
   --radius-4xl: calc(var(--radius) + 16px);
 
   /* ─────────────────────────────────────────────────────────────────────────
-     BLACK & CHROME THEME COLORS
+     DESIGN SYSTEM V2: "Black, Chrome, Dust, Signal"
+     Industrial control panel aesthetic - scarce, intentional, mechanical
      ───────────────────────────────────────────────────────────────────────── */
 
-  /* Base Blacks - The void */
-  --color-abyss: #000000;
+  /* Base Colors - The wasteland */
+  --color-carbon-black: #0B0D10;
+  --color-gunmetal: #141820;
+  --color-chrome-border: #2A2F3A;
+  --color-bone: #E6E8EB;
+  --color-ash: #9AA1AC;
+
+  /* Accent Colors - Use sparingly (earned through state) */
+  --color-rust-orange: #FF7A00;
+  --color-fuel-yellow: #F2C94C;
+  --color-acid-green: #27AE60;
+
+  /* Legacy aliases (backwards compatibility) */
+  --color-abyss: var(--color-carbon-black);
   --color-oil: #0a0a0a;
-  --color-steel: #141414;
+  --color-steel: var(--color-gunmetal);
   --color-iron: #1c1c1c;
-
-  /* Chrome - The machine */
-  --color-chrome-bright: #ffffff;
+  --color-chrome-bright: var(--color-bone);
   --color-chrome-polish: #e4e4e7;
-  --color-chrome-dust: #a1a1aa;
+  --color-chrome-dust: var(--color-ash);
   --color-chrome-rust: #71717a;
-  --color-chrome-shadow: #3f3f46;
+  --color-chrome-shadow: var(--color-chrome-border);
 
-  /* Status - The only colors allowed (earned through state) */
-  --color-status-active: #22c55e;
+  /* Status Colors - Mapped to DS2 accents */
+  --color-status-active: var(--color-acid-green);
   --color-status-thinking: #3b82f6;
-  --color-status-slow: #eab308;
-  --color-status-unresponsive: #f97316;
+  --color-status-slow: var(--color-fuel-yellow);
+  --color-status-unresponsive: var(--color-rust-orange);
   --color-status-dead: #ef4444;
   --color-status-blocked: #6b7280;
-  --color-status-done: #10b981;
+  --color-status-done: var(--color-acid-green);
 
   /* ─────────────────────────────────────────────────────────────────────────
      TYPOGRAPHY
@@ -87,6 +98,23 @@
 
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+  /* Letter-spacing tokens - Industrial, mechanical feel */
+  --tracking-tightest: -0.05em;
+  --tracking-tighter: -0.025em;
+  --tracking-tight: -0.015em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* Font-size tokens for hierarchy */
+  --text-section: 0.6875rem;    /* 11px - Section headers */
+  --text-label: 0.75rem;        /* 12px - Labels */
+  --text-body: 0.875rem;        /* 14px - Body text */
+  --text-data-sm: 1.5rem;       /* 24px - Smaller data values */
+  --text-data: 2rem;            /* 32px - Data values */
+  --text-data-lg: 2.5rem;       /* 40px - Large data values */
 
   /* ─────────────────────────────────────────────────────────────────────────
      SHADOWS - Chrome effects
@@ -109,60 +137,60 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.125rem; /* DS2: Hard edges - minimal radius */
 
-  /* Map to Black & Chrome theme (dark mode default for Gas Town) */
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #141414;
-  --card-foreground: #ffffff;
-  --popover: #0a0a0a;
-  --popover-foreground: #ffffff;
-  --primary: #ffffff;
-  --primary-foreground: #000000;
-  --secondary: #1c1c1c;
-  --secondary-foreground: #e4e4e7;
-  --muted: #1c1c1c;
-  --muted-foreground: #a1a1aa;
-  --accent: #1c1c1c;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --border: #3f3f46;
-  --input: #3f3f46;
-  --ring: #71717a;
+  /* Map to DS2 tokens (dark mode default for Gas Town) */
+  --background: #0B0D10; /* carbon-black */
+  --foreground: #E6E8EB; /* bone */
+  --card: #141820; /* gunmetal */
+  --card-foreground: #E6E8EB; /* bone */
+  --popover: #0B0D10; /* carbon-black */
+  --popover-foreground: #E6E8EB; /* bone */
+  --primary: #E6E8EB; /* bone */
+  --primary-foreground: #0B0D10; /* carbon-black */
+  --secondary: #141820; /* gunmetal */
+  --secondary-foreground: #E6E8EB; /* bone */
+  --muted: #141820; /* gunmetal */
+  --muted-foreground: #9AA1AC; /* ash */
+  --accent: #141820; /* gunmetal */
+  --accent-foreground: #E6E8EB; /* bone */
+  --destructive: #FF7A00; /* rust-orange */
+  --border: #2A2F3A; /* chrome-border */
+  --input: #2A2F3A; /* chrome-border */
+  --ring: #9AA1AC; /* ash */
 
-  /* Chart colors using status colors */
-  --chart-1: #22c55e;
+  /* Chart colors using DS2 accents */
+  --chart-1: #27AE60; /* acid-green */
   --chart-2: #3b82f6;
-  --chart-3: #eab308;
-  --chart-4: #f97316;
+  --chart-3: #F2C94C; /* fuel-yellow */
+  --chart-4: #FF7A00; /* rust-orange */
   --chart-5: #ef4444;
 
-  /* Sidebar - matching the theme */
-  --sidebar: #0a0a0a;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ffffff;
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #1c1c1c;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #3f3f46;
-  --sidebar-ring: #71717a;
+  /* Sidebar - DS2 theme */
+  --sidebar: #0B0D10; /* carbon-black */
+  --sidebar-foreground: #E6E8EB; /* bone */
+  --sidebar-primary: #E6E8EB; /* bone */
+  --sidebar-primary-foreground: #0B0D10; /* carbon-black */
+  --sidebar-accent: #141820; /* gunmetal */
+  --sidebar-accent-foreground: #E6E8EB; /* bone */
+  --sidebar-border: #2A2F3A; /* chrome-border */
+  --sidebar-ring: #9AA1AC; /* ash */
 
-  /* Status colors with background variants */
-  --status-active: #22c55e;
-  --status-active-bg: rgba(34, 197, 94, 0.1);
+  /* Status colors with DS2 accents */
+  --status-active: #27AE60; /* acid-green */
+  --status-active-bg: rgba(39, 174, 96, 0.1);
   --status-thinking: #3b82f6;
   --status-thinking-bg: rgba(59, 130, 246, 0.1);
-  --status-slow: #eab308;
-  --status-slow-bg: rgba(234, 179, 8, 0.1);
-  --status-unresponsive: #f97316;
-  --status-unresponsive-bg: rgba(249, 115, 22, 0.1);
+  --status-slow: #F2C94C; /* fuel-yellow */
+  --status-slow-bg: rgba(242, 201, 76, 0.1);
+  --status-unresponsive: #FF7A00; /* rust-orange */
+  --status-unresponsive-bg: rgba(255, 122, 0, 0.1);
   --status-dead: #ef4444;
   --status-dead-bg: rgba(239, 68, 68, 0.1);
   --status-blocked: #6b7280;
   --status-blocked-bg: rgba(107, 114, 128, 0.1);
-  --status-done: #10b981;
-  --status-done-bg: rgba(16, 185, 129, 0.1);
+  --status-done: #27AE60; /* acid-green */
+  --status-done-bg: rgba(39, 174, 96, 0.1);
 }
 
 /* Light mode override (optional - Gas Town defaults to dark) */
@@ -209,17 +237,94 @@
   }
 
   body {
-    @apply bg-abyss text-chrome-bright antialiased;
+    @apply bg-carbon-black text-bone antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Typography defaults */
+  /* Typography defaults - DS2 hierarchy */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight text-chrome-bright;
+    @apply font-semibold text-bone;
+    letter-spacing: var(--tracking-tighter);
   }
 
   code, pre, .font-mono {
     font-family: var(--font-mono);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DS2 TYPOGRAPHY HIERARCHY
+   "Section headers: ALL CAPS, small size. Data values: Larger, calmer.
+    Labels: Muted, compressed."
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* Section Header - Industrial signage style
+     ALL CAPS, small size, wide tracking for legibility */
+  .section-header {
+    font-size: var(--text-section);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--color-ash);
+  }
+
+  /* Data Value - Large, calm, easy to read at a glance
+     The primary metric display style */
+  .data-value {
+    font-size: var(--text-data);
+    font-weight: 700;
+    letter-spacing: var(--tracking-tighter);
+    color: var(--color-bone);
+    line-height: 1;
+  }
+
+  .data-value-sm {
+    font-size: var(--text-data-sm);
+    font-weight: 700;
+    letter-spacing: var(--tracking-tighter);
+    color: var(--color-bone);
+    line-height: 1;
+  }
+
+  .data-value-lg {
+    font-size: var(--text-data-lg);
+    font-weight: 700;
+    letter-spacing: var(--tracking-tightest);
+    color: var(--color-bone);
+    line-height: 1;
+  }
+
+  /* Label - Muted, compressed, supporting text
+     Never competes with data values */
+  .label {
+    font-size: var(--text-label);
+    font-weight: 500;
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-ash);
+  }
+
+  .label-caps {
+    font-size: var(--text-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-ash);
+  }
+
+  /* Body text - Standard readable content */
+  .body-text {
+    font-size: var(--text-body);
+    font-weight: 400;
+    letter-spacing: var(--tracking-normal);
+    color: var(--color-bone);
+  }
+
+  .body-text-muted {
+    font-size: var(--text-body);
+    font-weight: 400;
+    letter-spacing: var(--tracking-normal);
+    color: var(--color-ash);
   }
 }
 

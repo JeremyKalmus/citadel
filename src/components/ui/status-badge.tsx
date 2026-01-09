@@ -1,79 +1,96 @@
 import { cn } from "@/lib/utils"
-import {
-  Activity,
-  Brain,
-  Clock,
-  AlertTriangle,
-  XCircle,
-  Lock,
-  CheckCircle,
-  type LucideIcon,
-} from "lucide-react"
 
 export type Status = 'active' | 'thinking' | 'slow' | 'unresponsive' | 'dead' | 'blocked' | 'done'
 
 interface StatusConfig {
-  icon: LucideIcon
   label: string
-  className: string
+  dotColor: string
+  textColor: string
 }
 
+/**
+ * DS2 Phase 3: Dot + Label Pattern
+ * Minimal industrial status indicator - colored dot with label text.
+ * "The dot is the signal. The word is the meaning."
+ */
 const statusConfig: Record<Status, StatusConfig> = {
   active: {
-    icon: Activity,
-    label: 'Active',
-    className: 'text-status-active bg-status-active/10 border-status-active/30'
+    label: 'Running',
+    dotColor: 'bg-status-active',
+    textColor: 'text-status-active',
   },
   thinking: {
-    icon: Brain,
-    label: 'Thinking',
-    className: 'text-status-thinking bg-status-thinking/10 border-status-thinking/30'
+    label: 'Processing',
+    dotColor: 'bg-status-thinking',
+    textColor: 'text-status-thinking',
   },
   slow: {
-    icon: Clock,
-    label: 'Slow',
-    className: 'text-status-slow bg-status-slow/10 border-status-slow/30'
+    label: 'Throttled',
+    dotColor: 'bg-status-slow',
+    textColor: 'text-status-slow',
   },
   unresponsive: {
-    icon: AlertTriangle,
-    label: 'Unresponsive',
-    className: 'text-status-unresponsive bg-status-unresponsive/10 border-status-unresponsive/30'
+    label: 'Stalled',
+    dotColor: 'bg-status-unresponsive',
+    textColor: 'text-status-unresponsive',
   },
   dead: {
-    icon: XCircle,
     label: 'Dead',
-    className: 'text-status-dead bg-status-dead/10 border-status-dead/30'
+    dotColor: 'bg-status-dead',
+    textColor: 'text-status-dead',
   },
   blocked: {
-    icon: Lock,
     label: 'Blocked',
-    className: 'text-status-blocked bg-status-blocked/10 border-status-blocked/30'
+    dotColor: 'bg-status-blocked',
+    textColor: 'text-status-blocked',
   },
   done: {
-    icon: CheckCircle,
-    label: 'Done',
-    className: 'text-status-done bg-status-done/10 border-status-done/30'
+    label: 'Complete',
+    dotColor: 'bg-status-done',
+    textColor: 'text-status-done',
   },
 }
 
 interface StatusBadgeProps {
   status: Status
   showLabel?: boolean
+  size?: 'sm' | 'md'
   className?: string
 }
 
-export function StatusBadge({ status, showLabel = true, className }: StatusBadgeProps) {
+export function StatusBadge({ status, showLabel = true, size = 'md', className }: StatusBadgeProps) {
   const config = statusConfig[status]
-  const Icon = config.icon
 
   return (
     <span className={cn(
-      "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium",
-      config.className,
+      "inline-flex items-center gap-2",
       className
     )}>
-      <Icon className="w-3 h-3" />
-      {showLabel && config.label}
+      {/* Status dot - the signal */}
+      <span
+        className={cn(
+          "rounded-full flex-shrink-0",
+          config.dotColor,
+          {
+            'w-2 h-2': size === 'sm',
+            'w-2.5 h-2.5': size === 'md',
+          }
+        )}
+        aria-hidden="true"
+      />
+      {/* Label - the meaning */}
+      {showLabel && (
+        <span className={cn(
+          "font-medium uppercase tracking-wide",
+          config.textColor,
+          {
+            'text-[10px]': size === 'sm',
+            'text-xs': size === 'md',
+          }
+        )}>
+          {config.label}
+        </span>
+      )}
     </span>
   )
 }
