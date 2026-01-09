@@ -24,8 +24,10 @@ export const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-all",
-          "focus:outline-none focus:ring-2 focus:ring-chrome-shadow focus:ring-offset-2 focus:ring-offset-abyss",
+          // DS2 Phase 4: Mechanical transitions - clicks, not slides
+          "inline-flex items-center justify-center gap-2 rounded-sm font-medium",
+          "btn-mechanical",
+          "focus:outline-none focus:ring-2 focus:ring-chrome-border focus:ring-offset-2 focus:ring-offset-carbon-black",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           {
             // Variants

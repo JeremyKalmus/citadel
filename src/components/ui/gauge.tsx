@@ -47,7 +47,8 @@ export function Gauge({
             <div
               key={i}
               className={cn(
-                "flex-1 transition-colors duration-150",
+                // DS2 Phase 4: Ratchet transition - segments click on/off
+                "flex-1 transition-ratchet",
                 height,
                 // Filled segments get the bright color
                 isFilled

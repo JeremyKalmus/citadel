@@ -14,7 +14,8 @@ export function Panel({ className, variant = 'default', ...props }: PanelProps) 
     <div
       className={cn(
         // DS2: Hard edges (minimal radius), visible borders
-        "rounded-sm border-2 border-chrome-border",
+        // DS2 Phase 4: Mechanical transitions
+        "rounded-sm border-2 border-chrome-border transition-mechanical",
         {
           // Default: gunmetal surface, visible border
           'bg-gunmetal': variant === 'default',

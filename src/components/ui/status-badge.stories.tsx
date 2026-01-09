@@ -115,3 +115,36 @@ export const AllStatesSmall: Story = {
     </div>
   ),
 }
+
+/**
+ * DS2 Phase 4: Animated Status Indicators
+ * Active and Processing states pulse with mechanical timing (steps, not ease).
+ * Static states remain steady - animation is earned through activity.
+ */
+export const AnimatedStates: Story = {
+  args: {
+    status: 'active',
+  },
+  render: () => (
+    <div className="space-y-6 p-4">
+      <div className="text-ash text-sm uppercase tracking-wider mb-2">
+        Animated (active states pulse)
+      </div>
+      <div className="flex flex-wrap gap-6">
+        <StatusBadge status="active" />
+        <StatusBadge status="thinking" />
+      </div>
+      <div className="text-ash text-sm uppercase tracking-wider mt-6 mb-2">
+        Static (inactive states stay steady)
+      </div>
+      <div className="flex flex-wrap gap-6">
+        <StatusBadge status="slow" />
+        <StatusBadge status="blocked" />
+        <StatusBadge status="done" />
+      </div>
+      <div className="text-ash text-xs mt-4">
+        DS2 Phase 4: status-pulse uses steps(2, end) for mechanical pulsing
+      </div>
+    </div>
+  ),
+}
