@@ -18,3 +18,6 @@ export type { UsePolecatDetailOptions, UsePolecatDetailResult } from "./use-pole
 
 export { useConvoyDetail } from "./use-convoy-detail";
 export type { UseConvoyDetailOptions, UseConvoyDetailResult } from "./use-convoy-detail";
+
+export { usePolecatActions } from "./use-polecat-actions";
+export type { UsePolecatActionsOptions, UsePolecatActionsResult } from "./use-polecat-actions";

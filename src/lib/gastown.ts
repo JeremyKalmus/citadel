@@ -276,6 +276,59 @@ export class GasTownClient {
   async getConvoyStatus(id: string): Promise<ConvoyDetail> {
     return this.runCommand<ConvoyDetail>(`gt convoy status ${id} --json`);
   }
+
+  // ============================================================================
+  // Actions
+  // ============================================================================
+
+  /**
+   * Send a nudge message to a polecat session.
+   */
+  async nudgePolecat(rig: string, name: string, message: string): Promise<void> {
+    const escapedMessage = message.replace(/"/g, '\\"');
+    await execAsync(`gt nudge ${rig}/${name} "${escapedMessage}"`, { cwd: this.cwd });
+  }
+
+  /**
+   * Nuke (completely destroy) a polecat and all its artifacts.
+   * This kills the session, deletes the worktree, branch, and agent bead.
+   */
+  async nukePolecat(rig: string, name: string, force: boolean = false): Promise<void> {
+    const forceFlag = force ? "--force" : "";
+    await execAsync(`gt polecat nuke ${rig}/${name} ${forceFlag}`, { cwd: this.cwd });
+  }
+
+  /**
+   * Reassign work from one polecat to another.
+   * First gets the hooked bead from the source, then slings it to the target.
+   */
+  async reassignPolecat(
+    sourceRig: string,
+    sourceName: string,
+    targetRig: string,
+    targetName: string
+  ): Promise<void> {
+    // Get the source polecat's hook to find what bead to reassign
+    const { stdout: hookOutput } = await execAsync(
+      `gt hook --json`,
+      { cwd: `${this.cwd}/${sourceRig}/polecats/${sourceName}` }
+    );
+    const hookData = JSON.parse(hookOutput);
+
+    if (!hookData.bead_id) {
+      throw new Error("Source polecat has no work on hook to reassign");
+    }
+
+    // Unsling from source
+    await execAsync(`gt unsling`, {
+      cwd: `${this.cwd}/${sourceRig}/polecats/${sourceName}`
+    });
+
+    // Sling to target
+    await execAsync(`gt sling ${hookData.bead_id} ${targetRig}/${targetName}`, {
+      cwd: this.cwd
+    });
+  }
 }
 
 // Default client instance

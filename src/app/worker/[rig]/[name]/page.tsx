@@ -1,12 +1,13 @@
 "use client"
 
-import { use } from "react"
+import { use, useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { ActionButton } from "@/components/ui"
+import { useRouter } from "next/navigation"
+import { ActionButton, ConfirmDialog } from "@/components/ui"
 import { StatusExplanation, ActivityTimeline, type ActivityEvent } from "@/components/dashboard"
-import { usePolecatDetail } from "@/hooks"
+import { usePolecatDetail, usePolecatActions } from "@/hooks"
 import type { Status } from "@/components/ui"
-import { RefreshCw, ArrowLeft } from "lucide-react"
+import { RefreshCw, ArrowLeft, MessageSquare, Skull, ArrowRightLeft } from "lucide-react"
 
 interface WorkerPageProps {
   params: Promise<{
@@ -78,16 +79,66 @@ function generateActivityEvents(
   return events
 }
 
+type DialogType = "nudge" | "kill" | "reassign" | null
+
 export default function WorkerPage({ params }: WorkerPageProps) {
   const { rig, name } = use(params)
   const decodedRig = decodeURIComponent(rig)
   const decodedName = decodeURIComponent(name)
+  const router = useRouter()
 
   const { data: polecat, isLoading, refresh } = usePolecatDetail({
     rig: decodedRig,
     name: decodedName,
     refreshInterval: 30000,
   })
+
+  const { nudge, kill, reassign, isLoading: actionLoading } = usePolecatActions({
+    rig: decodedRig,
+    name: decodedName,
+    onSuccess: () => {
+      setActiveDialog(null)
+      refresh()
+    },
+  })
+
+  const [activeDialog, setActiveDialog] = useState<DialogType>(null)
+  const [nudgeMessage, setNudgeMessage] = useState("")
+  const [reassignTarget, setReassignTarget] = useState({ rig: "", name: "" })
+
+  // Keyboard shortcuts
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return
+      }
+
+      // Don't trigger if a dialog is open
+      if (activeDialog) return
+
+      switch (e.key.toLowerCase()) {
+        case "n":
+          setActiveDialog("nudge")
+          break
+        case "k":
+          setActiveDialog("kill")
+          break
+        case "r":
+          setActiveDialog("reassign")
+          break
+      }
+    },
+    [activeDialog]
+  )
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [handleKeyDown])
 
   const status = polecat
     ? stateToStatus(polecat.state, polecat.session_running)
@@ -107,6 +158,30 @@ export default function WorkerPage({ params }: WorkerPageProps) {
     ? generateActivityEvents(polecat.state, polecat.last_activity, polecat.session_running)
     : []
 
+  const handleNudgeConfirm = async () => {
+    if (!nudgeMessage.trim()) return
+    const success = await nudge(nudgeMessage)
+    if (success) {
+      setNudgeMessage("")
+    }
+  }
+
+  const handleKillConfirm = async () => {
+    const success = await kill(false)
+    if (success) {
+      // Navigate back after kill
+      router.push("/")
+    }
+  }
+
+  const handleReassignConfirm = async () => {
+    if (!reassignTarget.rig.trim() || !reassignTarget.name.trim()) return
+    const success = await reassign(reassignTarget.rig, reassignTarget.name)
+    if (success) {
+      setReassignTarget({ rig: "", name: "" })
+    }
+  }
+
   return (
     <div className="space-y-8">
       {/* Page header */}
@@ -124,13 +199,42 @@ export default function WorkerPage({ params }: WorkerPageProps) {
             <p className="body-text-muted mt-1">Worker Detail View</p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <ActionButton
+            variant="ghost"
+            onClick={() => refresh()}
+            loading={isLoading}
+            icon={<RefreshCw className="w-4 h-4" />}
+          >
+            Refresh
+          </ActionButton>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex flex-wrap gap-3">
+        <ActionButton
+          onClick={() => setActiveDialog("nudge")}
+          icon={<MessageSquare className="w-4 h-4" />}
+        >
+          Nudge
+          <kbd className="ml-2 px-1 py-0.5 text-xs bg-gunmetal rounded">N</kbd>
+        </ActionButton>
+        <ActionButton
+          variant="danger"
+          onClick={() => setActiveDialog("kill")}
+          icon={<Skull className="w-4 h-4" />}
+        >
+          Kill
+          <kbd className="ml-2 px-1 py-0.5 text-xs bg-gunmetal rounded">K</kbd>
+        </ActionButton>
         <ActionButton
           variant="ghost"
-          onClick={() => refresh()}
-          loading={isLoading}
-          icon={<RefreshCw className="w-4 h-4" />}
+          onClick={() => setActiveDialog("reassign")}
+          icon={<ArrowRightLeft className="w-4 h-4" />}
         >
-          Refresh
+          Reassign
+          <kbd className="ml-2 px-1 py-0.5 text-xs bg-gunmetal rounded">R</kbd>
         </ActionButton>
       </div>
 
@@ -159,6 +263,82 @@ export default function WorkerPage({ params }: WorkerPageProps) {
           <p className="font-mono text-sm text-bone break-all">{polecat.clone_path}</p>
         </div>
       )}
+
+      {/* Nudge Dialog */}
+      <ConfirmDialog
+        open={activeDialog === "nudge"}
+        onClose={() => {
+          setActiveDialog(null)
+          setNudgeMessage("")
+        }}
+        onConfirm={handleNudgeConfirm}
+        title="Nudge Worker"
+        description={`Send a message to ${decodedRig}/${decodedName}'s Claude session.`}
+        confirmLabel="Send"
+        loading={actionLoading}
+      >
+        <textarea
+          value={nudgeMessage}
+          onChange={(e) => setNudgeMessage(e.target.value)}
+          placeholder="Enter your message..."
+          className="w-full h-24 px-3 py-2 rounded-sm bg-carbon-black border-2 border-chrome-border text-bone placeholder:text-ash resize-none focus:outline-none focus:border-bone"
+          autoFocus
+        />
+      </ConfirmDialog>
+
+      {/* Kill Dialog */}
+      <ConfirmDialog
+        open={activeDialog === "kill"}
+        onClose={() => setActiveDialog(null)}
+        onConfirm={handleKillConfirm}
+        title="Kill Worker"
+        description={`This will completely destroy ${decodedRig}/${decodedName}, including its session, worktree, branch, and agent bead. This action cannot be undone.`}
+        confirmLabel="Kill"
+        variant="danger"
+        loading={actionLoading}
+      />
+
+      {/* Reassign Dialog */}
+      <ConfirmDialog
+        open={activeDialog === "reassign"}
+        onClose={() => {
+          setActiveDialog(null)
+          setReassignTarget({ rig: "", name: "" })
+        }}
+        onConfirm={handleReassignConfirm}
+        title="Reassign Work"
+        description={`Transfer hooked work from ${decodedRig}/${decodedName} to another worker.`}
+        confirmLabel="Reassign"
+        loading={actionLoading}
+      >
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm text-ash mb-1">Target Rig</label>
+            <input
+              type="text"
+              value={reassignTarget.rig}
+              onChange={(e) =>
+                setReassignTarget((prev) => ({ ...prev, rig: e.target.value }))
+              }
+              placeholder="e.g., greenplace"
+              className="w-full px-3 py-2 rounded-sm bg-carbon-black border-2 border-chrome-border text-bone placeholder:text-ash focus:outline-none focus:border-bone"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-ash mb-1">Target Worker</label>
+            <input
+              type="text"
+              value={reassignTarget.name}
+              onChange={(e) =>
+                setReassignTarget((prev) => ({ ...prev, name: e.target.value }))
+              }
+              placeholder="e.g., Toast"
+              className="w-full px-3 py-2 rounded-sm bg-carbon-black border-2 border-chrome-border text-bone placeholder:text-ash focus:outline-none focus:border-bone"
+            />
+          </div>
+        </div>
+      </ConfirmDialog>
     </div>
   )
 }
