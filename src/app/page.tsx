@@ -15,9 +15,9 @@ export default function Home() {
     <div className="space-y-8">
       {/* Page header */}
       <div>
-        <h1 className="text-4xl font-bold text-chrome-bright">Town Overview</h1>
-        <p className="text-sm text-chrome-dust mt-1">
-          Gas Town Dashboard - Black & Chrome Edition
+        <h1 className="text-4xl font-bold text-bone">Town Overview</h1>
+        <p className="body-text-muted mt-1">
+          Gas Town Dashboard — Black & Chrome Edition
         </p>
       </div>
 
@@ -27,14 +27,14 @@ export default function Home() {
           <Panel key={stat.label} className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-chrome-dust uppercase tracking-wider">
+                <p className="section-header">
                   {stat.label}
                 </p>
-                <p className="text-3xl font-bold text-chrome-bright mt-1">
+                <p className="data-value mt-2">
                   {stat.value}
                 </p>
               </div>
-              <stat.icon className="w-8 h-8 text-chrome-rust" />
+              <stat.icon className="w-8 h-8 text-ash" />
             </div>
           </Panel>
         ))}
@@ -44,8 +44,8 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status badges */}
         <Panel className="p-6">
-          <h2 className="text-lg font-semibold text-chrome-bright mb-4">
-            Status Badges
+          <h2 className="section-header mb-4">
+            Status Indicators
           </h2>
           <div className="flex flex-wrap gap-2">
             {demoStatuses.map((status) => (
@@ -56,20 +56,20 @@ export default function Home() {
 
         {/* Gauges */}
         <Panel className="p-6">
-          <h2 className="text-lg font-semibold text-chrome-bright mb-4">
-            Progress Gauges
+          <h2 className="section-header mb-4">
+            Fuel Gauges
           </h2>
           <div className="space-y-4">
             <div>
-              <p className="text-xs text-chrome-dust mb-2">Small (25%)</p>
+              <p className="label mb-2">Small (25%)</p>
               <Gauge value={25} size="sm" />
             </div>
             <div>
-              <p className="text-xs text-chrome-dust mb-2">Medium (60%)</p>
+              <p className="label mb-2">Medium (60%)</p>
               <Gauge value={60} size="md" />
             </div>
             <div>
-              <p className="text-xs text-chrome-dust mb-2">Large (100%)</p>
+              <p className="label mb-2">Large (100%)</p>
               <Gauge value={100} size="lg" />
             </div>
           </div>
@@ -77,8 +77,8 @@ export default function Home() {
 
         {/* Buttons */}
         <Panel className="p-6">
-          <h2 className="text-lg font-semibold text-chrome-bright mb-4">
-            Action Buttons
+          <h2 className="section-header mb-4">
+            Action Controls
           </h2>
           <div className="flex flex-wrap gap-3">
             <ActionButton>
@@ -94,7 +94,7 @@ export default function Home() {
               Ghost
             </ActionButton>
             <ActionButton loading>
-              Loading
+              Awaiting signal
             </ActionButton>
             <ActionButton size="sm">
               Small
@@ -104,18 +104,18 @@ export default function Home() {
 
         {/* Panel variants */}
         <Panel className="p-6">
-          <h2 className="text-lg font-semibold text-chrome-bright mb-4">
+          <h2 className="section-header mb-4">
             Panel Variants
           </h2>
           <div className="space-y-3">
             <Panel className="p-3">
-              <p className="text-sm text-chrome-dust">Default panel</p>
+              <p className="label">Default panel</p>
             </Panel>
             <Panel variant="elevated" className="p-3">
-              <p className="text-sm text-chrome-dust">Elevated panel</p>
+              <p className="label">Elevated panel</p>
             </Panel>
             <Panel variant="inset" className="p-3">
-              <p className="text-sm text-chrome-dust">Inset panel</p>
+              <p className="label">Inset panel</p>
             </Panel>
           </div>
         </Panel>

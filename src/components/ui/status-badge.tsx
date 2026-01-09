@@ -18,25 +18,26 @@ interface StatusConfig {
   className: string
 }
 
+// DS2: Industrial status labels - firm, grounded language
 const statusConfig: Record<Status, StatusConfig> = {
   active: {
     icon: Activity,
-    label: 'Active',
+    label: 'Running',
     className: 'text-status-active bg-status-active/10 border-status-active/30'
   },
   thinking: {
     icon: Brain,
-    label: 'Thinking',
+    label: 'Processing',
     className: 'text-status-thinking bg-status-thinking/10 border-status-thinking/30'
   },
   slow: {
     icon: Clock,
-    label: 'Slow',
+    label: 'Throttled',
     className: 'text-status-slow bg-status-slow/10 border-status-slow/30'
   },
   unresponsive: {
     icon: AlertTriangle,
-    label: 'Unresponsive',
+    label: 'Stalled',
     className: 'text-status-unresponsive bg-status-unresponsive/10 border-status-unresponsive/30'
   },
   dead: {
@@ -51,7 +52,7 @@ const statusConfig: Record<Status, StatusConfig> = {
   },
   done: {
     icon: CheckCircle,
-    label: 'Done',
+    label: 'Complete',
     className: 'text-status-done bg-status-done/10 border-status-done/30'
   },
 }
@@ -68,7 +69,7 @@ export function StatusBadge({ status, showLabel = true, className }: StatusBadge
 
   return (
     <span className={cn(
-      "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium",
+      "inline-flex items-center gap-1.5 px-2 py-1 rounded-sm border text-xs font-medium uppercase tracking-wide",
       config.className,
       className
     )}>

@@ -11,12 +11,12 @@ interface HeaderProps {
 
 export function Header({ onRefresh, loading }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 border-b border-iron bg-oil/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b border-chrome-border bg-carbon-black/80 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <Flame className="w-6 h-6 text-chrome-bright" />
-          <span className="text-lg font-bold tracking-tight text-chrome-bright">
+          <Flame className="w-6 h-6 text-bone" />
+          <span className="text-lg font-bold text-bone" style={{ letterSpacing: 'var(--tracking-tighter)' }}>
             GAS TOWN
           </span>
         </div>

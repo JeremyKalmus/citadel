@@ -33,10 +33,10 @@ export function Nav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+              "flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm font-medium transition-colors",
               isActive
-                ? "bg-iron text-chrome-bright"
-                : "text-chrome-dust hover:text-chrome-bright hover:bg-iron/50"
+                ? "bg-gunmetal text-bone border border-chrome-border"
+                : "text-ash hover:text-bone hover:bg-gunmetal/50"
             )}
           >
             <Icon className="w-4 h-4" />

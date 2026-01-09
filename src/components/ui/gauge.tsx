@@ -24,12 +24,12 @@ export function Gauge({ value, size = 'md', showLabel = true, className }: Gauge
         sizes[size]
       )}>
         <div
-          className="h-full bg-gradient-to-r from-chrome-dust to-chrome-bright rounded-full transition-all duration-500"
+          className="h-full bg-gradient-to-r from-ash to-bone rounded-full transition-all duration-500"
           style={{ width: `${clampedValue}%` }}
         />
       </div>
       {showLabel && (
-        <span className="text-xs font-mono text-chrome-dust w-10 text-right">
+        <span className="label font-mono w-10 text-right">
           {clampedValue}%
         </span>
       )}

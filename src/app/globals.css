@@ -99,6 +99,23 @@
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
 
+  /* Letter-spacing tokens - Industrial, mechanical feel */
+  --tracking-tightest: -0.05em;
+  --tracking-tighter: -0.025em;
+  --tracking-tight: -0.015em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* Font-size tokens for hierarchy */
+  --text-section: 0.6875rem;    /* 11px - Section headers */
+  --text-label: 0.75rem;        /* 12px - Labels */
+  --text-body: 0.875rem;        /* 14px - Body text */
+  --text-data-sm: 1.5rem;       /* 24px - Smaller data values */
+  --text-data: 2rem;            /* 32px - Data values */
+  --text-data-lg: 2.5rem;       /* 40px - Large data values */
+
   /* ─────────────────────────────────────────────────────────────────────────
      SHADOWS - Chrome effects
      ───────────────────────────────────────────────────────────────────────── */
@@ -226,11 +243,88 @@
 
   /* Typography defaults - DS2 hierarchy */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight text-bone;
+    @apply font-semibold text-bone;
+    letter-spacing: var(--tracking-tighter);
   }
 
   code, pre, .font-mono {
     font-family: var(--font-mono);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DS2 TYPOGRAPHY HIERARCHY
+   "Section headers: ALL CAPS, small size. Data values: Larger, calmer.
+    Labels: Muted, compressed."
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* Section Header - Industrial signage style
+     ALL CAPS, small size, wide tracking for legibility */
+  .section-header {
+    font-size: var(--text-section);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+    color: var(--color-ash);
+  }
+
+  /* Data Value - Large, calm, easy to read at a glance
+     The primary metric display style */
+  .data-value {
+    font-size: var(--text-data);
+    font-weight: 700;
+    letter-spacing: var(--tracking-tighter);
+    color: var(--color-bone);
+    line-height: 1;
+  }
+
+  .data-value-sm {
+    font-size: var(--text-data-sm);
+    font-weight: 700;
+    letter-spacing: var(--tracking-tighter);
+    color: var(--color-bone);
+    line-height: 1;
+  }
+
+  .data-value-lg {
+    font-size: var(--text-data-lg);
+    font-weight: 700;
+    letter-spacing: var(--tracking-tightest);
+    color: var(--color-bone);
+    line-height: 1;
+  }
+
+  /* Label - Muted, compressed, supporting text
+     Never competes with data values */
+  .label {
+    font-size: var(--text-label);
+    font-weight: 500;
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-ash);
+  }
+
+  .label-caps {
+    font-size: var(--text-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-ash);
+  }
+
+  /* Body text - Standard readable content */
+  .body-text {
+    font-size: var(--text-body);
+    font-weight: 400;
+    letter-spacing: var(--tracking-normal);
+    color: var(--color-bone);
+  }
+
+  .body-text-muted {
+    font-size: var(--text-body);
+    font-weight: 400;
+    letter-spacing: var(--tracking-normal);
+    color: var(--color-ash);
   }
 }
 
