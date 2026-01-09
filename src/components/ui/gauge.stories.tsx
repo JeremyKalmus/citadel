@@ -81,6 +81,9 @@ export const NoLabel: Story = {
 }
 
 export const AllSizes: Story = {
+  args: {
+    value: 50,
+  },
   render: () => (
     <div className="space-y-4 w-64">
       <div>

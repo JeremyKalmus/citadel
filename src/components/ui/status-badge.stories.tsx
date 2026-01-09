@@ -72,6 +72,9 @@ export const IconOnly: Story = {
 }
 
 export const AllStates: Story = {
+  args: {
+    status: 'active',
+  },
   render: () => (
     <div className="flex flex-wrap gap-2">
       <StatusBadge status="active" />
