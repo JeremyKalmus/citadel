@@ -1,10 +1,9 @@
 "use client"
 
-import { Panel, StatusBadge, Gauge, ActionButton, type Status } from "@/components/ui"
+import { Panel, ActionButton } from "@/components/ui"
+import { HealthSummary, RigList, StatsGrid, type Stat } from "@/components/dashboard"
 import { useTownStatus, useConvoys, usePolecats, useGuzzoline } from "@/hooks"
-import { Container, Truck, Terminal, ArrowRight, RefreshCw, Fuel, AlertTriangle } from "lucide-react"
-
-const demoStatuses: Status[] = ['active', 'thinking', 'slow', 'unresponsive', 'dead', 'blocked', 'done']
+import { RefreshCw, Fuel, AlertTriangle } from "lucide-react"
 
 export default function Home() {
   const { data: status, isLoading: statusLoading, refresh: refreshStatus } = useTownStatus({ refreshInterval: 30000 })
@@ -14,23 +13,23 @@ export default function Home() {
 
   const isLoading = statusLoading || convoysLoading || polecatsLoading || guzzolineLoading
 
-  const stats = [
+  const stats: Stat[] = [
     {
       label: "Active Rigs",
       value: status?.rigs.length ?? 0,
-      icon: Container,
+      icon: "container",
       loading: statusLoading
     },
     {
       label: "Running Convoys",
       value: convoys?.filter(c => c.status === "active").length ?? 0,
-      icon: Truck,
+      icon: "road",
       loading: convoysLoading
     },
     {
       label: "Active Workers",
       value: polecats?.filter(p => p.session_running).length ?? 0,
-      icon: Terminal,
+      icon: "terminal",
       loading: polecatsLoading
     },
   ]
@@ -56,7 +55,7 @@ export default function Home() {
         <div>
           <h1 className="text-4xl font-bold text-bone">Town Overview</h1>
           <p className="body-text-muted mt-1">
-            Gas Town Dashboard — Black & Chrome Edition
+            Gas Town Command Center
           </p>
         </div>
         <ActionButton
@@ -70,23 +69,7 @@ export default function Home() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stats.map((stat) => (
-          <Panel key={stat.label} className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="section-header">
-                  {stat.label}
-                </p>
-                <p className="data-value mt-2">
-                  {stat.loading ? "—" : stat.value}
-                </p>
-              </div>
-              <stat.icon className="w-8 h-8 text-ash" />
-            </div>
-          </Panel>
-        ))}
-      </div>
+      <StatsGrid stats={stats} />
 
       {/* Guzzoline Stats */}
       <Panel className="p-6">
@@ -138,85 +121,20 @@ export default function Home() {
         )}
       </Panel>
 
-      {/* Component showcase */}
+      {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Status badges */}
-        <Panel className="p-6">
-          <h2 className="section-header mb-4">
-            Status Indicators
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {demoStatuses.map((status) => (
-              <StatusBadge key={status} status={status} />
-            ))}
-          </div>
-        </Panel>
+        {/* Health summary */}
+        <HealthSummary
+          status={status}
+          polecats={polecats}
+          loading={isLoading}
+        />
 
-        {/* Gauges */}
-        <Panel className="p-6">
-          <h2 className="section-header mb-4">
-            Fuel Gauges
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <p className="label mb-2">Small (25%)</p>
-              <Gauge value={25} size="sm" />
-            </div>
-            <div>
-              <p className="label mb-2">Medium (60%)</p>
-              <Gauge value={60} size="md" />
-            </div>
-            <div>
-              <p className="label mb-2">Large (100%)</p>
-              <Gauge value={100} size="lg" />
-            </div>
-          </div>
-        </Panel>
-
-        {/* Buttons */}
-        <Panel className="p-6">
-          <h2 className="section-header mb-4">
-            Action Controls
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            <ActionButton>
-              Default
-            </ActionButton>
-            <ActionButton icon={<ArrowRight className="w-4 h-4" />}>
-              With Icon
-            </ActionButton>
-            <ActionButton variant="danger">
-              Danger
-            </ActionButton>
-            <ActionButton variant="ghost">
-              Ghost
-            </ActionButton>
-            <ActionButton loading>
-              Awaiting signal
-            </ActionButton>
-            <ActionButton size="sm">
-              Small
-            </ActionButton>
-          </div>
-        </Panel>
-
-        {/* Panel variants */}
-        <Panel className="p-6">
-          <h2 className="section-header mb-4">
-            Panel Variants
-          </h2>
-          <div className="space-y-3">
-            <Panel className="p-3">
-              <p className="label">Default panel</p>
-            </Panel>
-            <Panel variant="elevated" className="p-3">
-              <p className="label">Elevated panel</p>
-            </Panel>
-            <Panel variant="inset" className="p-3">
-              <p className="label">Inset panel</p>
-            </Panel>
-          </div>
-        </Panel>
+        {/* Rig list */}
+        <RigList
+          rigs={status?.rigs}
+          loading={statusLoading}
+        />
       </div>
     </div>
   )
