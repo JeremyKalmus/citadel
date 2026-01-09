@@ -83,7 +83,7 @@ export function PanelHeader({
   )
 }
 
-interface PanelBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
+type PanelBodyProps = React.HTMLAttributes<HTMLDivElement>
 
 /**
  * DS2 Panel Body
