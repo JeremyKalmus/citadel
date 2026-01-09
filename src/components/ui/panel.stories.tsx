@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { Panel } from './panel'
+import { Panel, PanelHeader, PanelBody } from './panel'
+import { StatusBadge } from './status-badge'
+import { ActionButton } from './action-button'
 
 const meta = {
   title: 'UI/Panel',
@@ -54,7 +56,89 @@ export const Inset: Story = {
   },
 }
 
+export const WithHeader: Story = {
+  args: {
+    children: null,
+  },
+  render: () => (
+    <Panel className="w-80">
+      <PanelHeader title="Worker Status" icon="terminal" />
+      <PanelBody>
+        <div className="space-y-3">
+          <div className="flex justify-between text-xs">
+            <span className="text-ash">Status</span>
+            <StatusBadge status="active" showLabel={false} />
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-ash">Uptime</span>
+            <span>2h 34m</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-ash">Tasks</span>
+            <span>12 completed</span>
+          </div>
+        </div>
+      </PanelBody>
+    </Panel>
+  ),
+}
+
+export const WithHeaderAndActions: Story = {
+  args: {
+    children: null,
+  },
+  render: () => (
+    <Panel className="w-96">
+      <PanelHeader
+        title="Rig Overview"
+        icon="truck"
+        actions={
+          <ActionButton size="sm" variant="ghost">
+            Refresh
+          </ActionButton>
+        }
+      />
+      <PanelBody>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <span className="label-caps">Workers</span>
+            <p className="data-value-sm mt-1">8</p>
+          </div>
+          <div>
+            <span className="label-caps">Active</span>
+            <p className="data-value-sm mt-1 text-status-active">6</p>
+          </div>
+        </div>
+      </PanelBody>
+    </Panel>
+  ),
+}
+
+export const WithAlertIcon: Story = {
+  args: {
+    children: null,
+  },
+  render: () => (
+    <Panel className="w-80">
+      <PanelHeader
+        title="System Alerts"
+        icon="exclamation-triangle"
+        iconVariant="alert"
+      />
+      <PanelBody>
+        <div className="space-y-2 text-xs">
+          <div className="text-rust-orange">3 workers stalled</div>
+          <div className="text-fuel-yellow">Memory usage high</div>
+        </div>
+      </PanelBody>
+    </Panel>
+  ),
+}
+
 export const AllVariants: Story = {
+  args: {
+    children: null,
+  },
   render: () => (
     <div className="space-y-4">
       <Panel>
@@ -72,7 +156,7 @@ export const AllVariants: Story = {
       <Panel variant="inset">
         <div className="p-4">
           <h3 className="text-sm font-medium mb-2">Inset</h3>
-          <p className="text-xs text-ash">bg-gunmetal + inset shadow - For nested content</p>
+          <p className="text-xs text-ash">bg-carbon-black - For nested/secondary content</p>
         </div>
       </Panel>
     </div>
@@ -80,6 +164,9 @@ export const AllVariants: Story = {
 }
 
 export const NestedPanels: Story = {
+  args: {
+    children: null,
+  },
   render: () => (
     <Panel variant="elevated" className="p-4">
       <h3 className="text-sm font-medium mb-3">Parent Panel (Elevated)</h3>
@@ -94,6 +181,9 @@ export const NestedPanels: Story = {
 }
 
 export const WithContent: Story = {
+  args: {
+    children: null,
+  },
   render: () => (
     <Panel className="w-80">
       <div className="p-4 border-b border-chrome-border/50">

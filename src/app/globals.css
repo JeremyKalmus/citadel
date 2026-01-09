@@ -72,17 +72,24 @@
   --color-fuel-yellow: #F2C94C;
   --color-acid-green: #27AE60;
 
-  /* Status Colors - Mapped to DS2 accents
-     acid-green: active, done
-     fuel-yellow: thinking, slow
-     rust-orange: unresponsive
-     red: dead */
+  /* Legacy aliases (backwards compatibility) */
+  --color-abyss: var(--color-carbon-black);
+  --color-oil: #0a0a0a;
+  --color-steel: var(--color-gunmetal);
+  --color-iron: #1c1c1c;
+  --color-chrome-bright: var(--color-bone);
+  --color-chrome-polish: #e4e4e7;
+  --color-chrome-dust: var(--color-ash);
+  --color-chrome-rust: #71717a;
+  --color-chrome-shadow: var(--color-chrome-border);
+
+  /* Status Colors - Mapped to DS2 accents */
   --color-status-active: var(--color-acid-green);
-  --color-status-thinking: var(--color-fuel-yellow);
+  --color-status-thinking: #3b82f6;
   --color-status-slow: var(--color-fuel-yellow);
   --color-status-unresponsive: var(--color-rust-orange);
   --color-status-dead: #ef4444;
-  --color-status-blocked: var(--color-ash);
+  --color-status-blocked: #6b7280;
   --color-status-done: var(--color-acid-green);
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -118,32 +125,11 @@
   --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.1);
 
   /* ─────────────────────────────────────────────────────────────────────────
-     DS2 PHASE 4: MOTION - "Snaps, not slides"
-     Industrial control panel timing - mechanical, immediate, earned
+     ANIMATIONS
      ───────────────────────────────────────────────────────────────────────── */
 
-  /* Timing functions - Mechanical, not organic */
-  --ease-snap: steps(1, end);           /* Binary on/off - like a relay */
-  --ease-click: steps(2, end);          /* Two-state snap - like a switch */
-  --ease-ratchet: steps(4, end);        /* Stepped progression - like a dial */
-  --ease-mechanical: linear;            /* Direct, no acceleration */
-  --ease-sharp: cubic-bezier(0.16, 1, 0.3, 1); /* Fast start, hard stop */
-
-  /* Durations - Fast, purposeful */
-  --duration-instant: 0ms;              /* Immediate feedback */
-  --duration-snap: 50ms;                /* Relay click speed */
-  --duration-fast: 100ms;               /* Quick mechanical action */
-  --duration-normal: 150ms;             /* Standard control response */
-  --duration-measured: 250ms;           /* Deliberate movement */
-
-  /* Legacy animations */
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-glow: glow 2s ease-in-out infinite alternate;
-
-  /* DS2 Phase 4 animations */
-  --animate-status-pulse: status-pulse 2s steps(2, end) infinite;
-  --animate-gauge-fill: gauge-fill 150ms linear forwards;
-  --animate-click: click 100ms steps(2, end);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -190,24 +176,19 @@
   --sidebar-border: #2A2F3A; /* chrome-border */
   --sidebar-ring: #9AA1AC; /* ash */
 
-  /* Status colors with DS2 accents
-     acid-green: active, done
-     fuel-yellow: thinking, slow
-     rust-orange: unresponsive
-     red: dead
-     ash: blocked */
+  /* Status colors with DS2 accents */
   --status-active: #27AE60; /* acid-green */
   --status-active-bg: rgba(39, 174, 96, 0.1);
-  --status-thinking: #F2C94C; /* fuel-yellow */
-  --status-thinking-bg: rgba(242, 201, 76, 0.1);
+  --status-thinking: #3b82f6;
+  --status-thinking-bg: rgba(59, 130, 246, 0.1);
   --status-slow: #F2C94C; /* fuel-yellow */
   --status-slow-bg: rgba(242, 201, 76, 0.1);
   --status-unresponsive: #FF7A00; /* rust-orange */
   --status-unresponsive-bg: rgba(255, 122, 0, 0.1);
   --status-dead: #ef4444;
   --status-dead-bg: rgba(239, 68, 68, 0.1);
-  --status-blocked: #9AA1AC; /* ash */
-  --status-blocked-bg: rgba(154, 161, 172, 0.1);
+  --status-blocked: #6b7280;
+  --status-blocked-bg: rgba(107, 114, 128, 0.1);
   --status-done: #27AE60; /* acid-green */
   --status-done-bg: rgba(39, 174, 96, 0.1);
 }
@@ -384,190 +365,36 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DS2 PHASE 4: MECHANICAL MOTION UTILITIES
-   "Control panels don't ease. They click."
+   DS2 ICON SYSTEM
+   "Icons are mechanical indicators, not decorations."
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Keyframes - Hard stops, mechanical feel */
-@keyframes status-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes gauge-fill {
-  from {
-    transform: scaleX(0);
-    transform-origin: left;
-  }
-  to {
-    transform: scaleX(1);
-    transform-origin: left;
-  }
-}
-
-@keyframes click {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(0.95);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes snap-in {
-  from {
-    opacity: 0;
-    transform: translateY(-2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes indicator-on {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   DS2 PHASE 4: UTILITY CLASSES (outside @layer for Tailwind JIT compatibility)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Transition timing utilities - DS2 Mechanical */
-.transition-snap {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity;
-  transition-timing-function: steps(1, end);
-  transition-duration: 50ms;
-}
-
-.transition-click {
-  transition-property: all;
-  transition-timing-function: steps(2, end);
-  transition-duration: 100ms;
-}
-
-.transition-ratchet {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity;
-  transition-timing-function: steps(4, end);
-  transition-duration: 150ms;
-}
-
-.transition-mechanical {
-  transition-property: all;
-  transition-timing-function: linear;
-  transition-duration: 100ms;
-}
-
-.transition-sharp {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  transition-duration: 150ms;
-}
-
-/* Animation utilities */
-.animate-status-pulse {
-  animation: status-pulse 2s steps(2, end) infinite;
-}
-
-.animate-click {
-  animation: click 100ms steps(2, end);
-}
-
-.animate-snap-in {
-  animation: snap-in 100ms steps(2, end) forwards;
-}
-
-.animate-indicator-on {
-  animation: indicator-on 50ms steps(1, end) forwards;
-}
-
-/* Interactive state transitions - Mechanical feedback */
-.interactive-snap {
-  transition-property: color, background-color, border-color;
-  transition-timing-function: steps(1, end);
-  transition-duration: 50ms;
-}
-
-.interactive-click {
-  transition-property: all;
-  transition-timing-function: steps(2, end);
-  transition-duration: 100ms;
-}
-
-.interactive-click:active {
-  transform: scale(0.97);
-}
-
-/* Button press effect - Hard mechanical click */
-.btn-mechanical {
-  transition-property: all;
-  transition-timing-function: steps(2, end);
-  transition-duration: 100ms;
-}
-
-.btn-mechanical:hover {
-  transform: translateY(-1px);
-}
-
-.btn-mechanical:active {
-  transform: translateY(1px);
-}
-
-/* Focus utilities - Industrial, high-contrast */
-.focus-mechanical:focus {
-  outline: none;
-}
-
-.focus-mechanical:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-carbon-black), 0 0 0 4px var(--color-bone);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   DS2 PHASE 4: ACCESSIBILITY & REDUCED MOTION
-   "Respect the operator's preferences"
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Reduced motion - Disable animations for users who prefer */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+@layer components {
+  /* Base icon styles - Industrial, mechanical feel */
+  .icon {
+    stroke-width: 1.5;
+    flex-shrink: 0;
   }
 
-  .animate-status-pulse,
-  .animate-click,
-  .animate-snap-in,
-  .animate-indicator-on,
-  .animate-glow,
-  .animate-pulse-slow {
-    animation: none !important;
+  /* Icon status variants - Earned through state */
+  .icon--alert {
+    color: var(--color-rust-orange);
   }
-}
 
-/* High contrast mode enhancements */
-@media (prefers-contrast: more) {
-  :root {
-    --color-ash: #C0C4CC;
-    --color-chrome-border: #4A505A;
+  .icon--active {
+    color: var(--color-fuel-yellow);
   }
-}
 
-/* Focus-visible polyfill support */
-.focus-visible-ring:focus-visible {
-  @apply ring-2 ring-bone ring-offset-2 ring-offset-carbon-black;
+  .icon--ok {
+    color: var(--color-acid-green);
+  }
+
+  .icon--muted {
+    color: var(--color-ash);
+  }
+
+  /* Icon with subtle glow for emphasis */
+  .icon--glow {
+    filter: drop-shadow(0 0 4px currentColor);
+  }
 }

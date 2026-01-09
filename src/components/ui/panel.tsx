@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { Icon, type IconName, type IconVariant } from "./icon"
 
 interface PanelProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'elevated' | 'inset'
@@ -26,6 +27,72 @@ export function Panel({ className, variant = 'default', ...props }: PanelProps) 
         },
         className
       )}
+      {...props}
+    />
+  )
+}
+
+interface PanelHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Optional icon to display before the title */
+  icon?: IconName
+  /** Icon variant for status indication */
+  iconVariant?: IconVariant
+  /** Panel title text */
+  title: string
+  /** Optional action elements (buttons, badges, etc.) */
+  actions?: React.ReactNode
+}
+
+/**
+ * DS2 Panel Header
+ * Section header with optional contextual icon - industrial signage style.
+ */
+export function PanelHeader({
+  icon,
+  iconVariant = "muted",
+  title,
+  actions,
+  className,
+  ...props
+}: PanelHeaderProps) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-3 px-4 py-3 border-b border-chrome-border/50",
+        className
+      )}
+      {...props}
+    >
+      <div className="flex items-center gap-2">
+        {icon && (
+          <Icon
+            name={icon}
+            aria-label=""
+            variant={iconVariant}
+            size="sm"
+          />
+        )}
+        <h3 className="section-header">{title}</h3>
+      </div>
+      {actions && (
+        <div className="flex items-center gap-2">
+          {actions}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface PanelBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+/**
+ * DS2 Panel Body
+ * Content area with consistent padding.
+ */
+export function PanelBody({ className, ...props }: PanelBodyProps) {
+  return (
+    <div
+      className={cn("p-4", className)}
       {...props}
     />
   )
