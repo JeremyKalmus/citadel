@@ -85,7 +85,7 @@
 
   /* Status Colors - Mapped to DS2 accents */
   --color-status-active: var(--color-acid-green);
-  --color-status-thinking: #3b82f6;
+  --color-status-thinking: var(--color-ash); /* ash - industrial neutral */
   --color-status-slow: var(--color-fuel-yellow);
   --color-status-unresponsive: var(--color-rust-orange);
   --color-status-dead: #ef4444;
@@ -161,7 +161,7 @@
 
   /* Chart colors using DS2 accents */
   --chart-1: #27AE60; /* acid-green */
-  --chart-2: #3b82f6;
+  --chart-2: #9AA1AC; /* ash */
   --chart-3: #F2C94C; /* fuel-yellow */
   --chart-4: #FF7A00; /* rust-orange */
   --chart-5: #ef4444;
@@ -179,8 +179,8 @@
   /* Status colors with DS2 accents */
   --status-active: #27AE60; /* acid-green */
   --status-active-bg: rgba(39, 174, 96, 0.1);
-  --status-thinking: #3b82f6;
-  --status-thinking-bg: rgba(59, 130, 246, 0.1);
+  --status-thinking: #9AA1AC; /* ash - industrial neutral */
+  --status-thinking-bg: rgba(154, 161, 172, 0.1);
   --status-slow: #F2C94C; /* fuel-yellow */
   --status-slow-bg: rgba(242, 201, 76, 0.1);
   --status-unresponsive: #FF7A00; /* rust-orange */
