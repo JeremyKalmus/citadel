@@ -16,6 +16,10 @@ const meta = {
     showLabel: {
       control: 'boolean',
     },
+    size: {
+      control: 'select',
+      options: ['sm', 'md'],
+    },
   },
 } satisfies Meta<typeof StatusBadge>
 
@@ -64,7 +68,14 @@ export const Done: Story = {
   },
 }
 
-export const IconOnly: Story = {
+export const Small: Story = {
+  args: {
+    status: 'active',
+    size: 'sm',
+  },
+}
+
+export const DotOnly: Story = {
   args: {
     status: 'active',
     showLabel: false,
@@ -76,7 +87,7 @@ export const AllStates: Story = {
     status: 'active',
   },
   render: () => (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-4">
       <StatusBadge status="active" />
       <StatusBadge status="thinking" />
       <StatusBadge status="slow" />
@@ -84,6 +95,23 @@ export const AllStates: Story = {
       <StatusBadge status="dead" />
       <StatusBadge status="blocked" />
       <StatusBadge status="done" />
+    </div>
+  ),
+}
+
+export const AllStatesSmall: Story = {
+  args: {
+    status: 'active',
+  },
+  render: () => (
+    <div className="flex flex-wrap gap-4">
+      <StatusBadge status="active" size="sm" />
+      <StatusBadge status="thinking" size="sm" />
+      <StatusBadge status="slow" size="sm" />
+      <StatusBadge status="unresponsive" size="sm" />
+      <StatusBadge status="dead" size="sm" />
+      <StatusBadge status="blocked" size="sm" />
+      <StatusBadge status="done" size="sm" />
     </div>
   ),
 }
