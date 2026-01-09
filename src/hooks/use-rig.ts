@@ -1,33 +1,32 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Convoy } from "@/lib/gastown";
+import type { Rig } from "@/lib/gastown";
 
-export interface UseConvoysOptions {
-  rig?: string;
+export interface UseRigOptions {
   refreshInterval?: number;
 }
 
-export interface UseConvoysResult {
-  data: Convoy[] | null;
+export interface UseRigResult {
+  data: Rig | null;
   error: Error | null;
   isLoading: boolean;
   refresh: () => Promise<void>;
 }
 
-export function useConvoys(options: UseConvoysOptions = {}): UseConvoysResult {
-  const { rig, refreshInterval } = options;
-  const [data, setData] = useState<Convoy[] | null>(null);
+export function useRig(name: string, options: UseRigOptions = {}): UseRigResult {
+  const { refreshInterval } = options;
+  const [data, setData] = useState<Rig | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     try {
-      const url = rig
-        ? `/api/gastown/convoys?rig=${encodeURIComponent(rig)}`
-        : "/api/gastown/convoys";
-      const response = await fetch(url);
+      const response = await fetch(`/api/gastown/rigs/${encodeURIComponent(name)}`);
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error(`Rig '${name}' not found`);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
@@ -38,7 +37,7 @@ export function useConvoys(options: UseConvoysOptions = {}): UseConvoysResult {
     } finally {
       setIsLoading(false);
     }
-  }, [rig]);
+  }, [name]);
 
   useEffect(() => {
     fetchData();

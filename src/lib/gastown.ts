@@ -235,6 +235,17 @@ export class GasTownClient {
 
     return stats;
   }
+
+  async getRig(name: string): Promise<Rig | null> {
+    const status = await this.getStatus();
+    return status.rigs.find((r) => r.name === name) || null;
+  }
+
+  async getRigConvoys(rig: string): Promise<Convoy[]> {
+    const convoys = await this.getConvoys();
+    // Filter convoys by rig (convoy IDs include rig name as prefix)
+    return convoys.filter((c) => c.id.startsWith(`${rig}/`) || c.id.includes(`/${rig}/`));
+  }
 }
 
 // Default client instance
