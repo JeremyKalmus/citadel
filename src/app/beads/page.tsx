@@ -9,9 +9,32 @@ import type { BeadsFilter, Bead } from "@/lib/gastown";
 
 export default function BeadsPage() {
   const [filter, setFilter] = useState<BeadsFilter>("all");
-  const { data: beadsData, isLoading } = useBeads({
+
+  // Fetch beads from both HQ and citadel rig
+  const { data: hqBeadsData, isLoading: hqLoading } = useBeads({
     refreshInterval: 30000,
   });
+  const { data: rigBeadsData, isLoading: rigLoading } = useBeads({
+    rig: "citadel/mayor/rig",
+    refreshInterval: 30000,
+  });
+
+  const isLoading = hqLoading || rigLoading;
+
+  // Combine beads from all sources
+  const beadsData = useMemo(() => {
+    const allBeads: Bead[] = [
+      ...(hqBeadsData?.beads || []),
+      ...(rigBeadsData?.beads || []),
+    ];
+    return {
+      beads: allBeads,
+      total: allBeads.length,
+      open: (hqBeadsData?.open || 0) + (rigBeadsData?.open || 0),
+      in_progress: (hqBeadsData?.in_progress || 0) + (rigBeadsData?.in_progress || 0),
+      blocked: (hqBeadsData?.blocked || 0) + (rigBeadsData?.blocked || 0),
+    };
+  }, [hqBeadsData, rigBeadsData]);
 
   // Derive stats from beadsData
   const stats = useMemo(() => {
