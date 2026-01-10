@@ -121,6 +121,10 @@ export interface GuzzolineStats {
   budget_warnings: number;
 }
 
+// Re-export cost utilities for backwards compatibility
+export { formatCost, calculateCost } from "./cost-utils";
+export type { SparklinePoint, FormatCostOptions } from "./cost-utils";
+
 // ============================================================================
 // Client
 // ============================================================================
