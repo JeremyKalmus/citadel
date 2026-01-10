@@ -3,10 +3,14 @@
 import Link from "next/link"
 import { Panel, PanelHeader, PanelBody, StatusBadge, SkeletonRow, type Status } from "@/components/ui"
 import { Icon } from "@/components/ui/icon"
+import { CostSparkline } from "@/components/cost"
 import type { Polecat } from "@/lib/gastown"
+import type { WorkerCost } from "@/lib/gastown/types"
 
 interface WorkerListProps {
   polecats: Polecat[] | null
+  /** Optional cost data keyed by "rig/workerName" */
+  workerCosts?: Map<string, WorkerCost>
   loading?: boolean
 }
 
@@ -30,9 +34,10 @@ function getWorkerStatus(polecat: Polecat): Status {
 
 interface WorkerRowProps {
   polecat: Polecat
+  cost?: WorkerCost
 }
 
-function WorkerRow({ polecat }: WorkerRowProps) {
+function WorkerRow({ polecat, cost }: WorkerRowProps) {
   const status = getWorkerStatus(polecat)
 
   return (
@@ -52,7 +57,16 @@ function WorkerRow({ polecat }: WorkerRowProps) {
           </p>
         </div>
       </div>
-      <StatusBadge status={status} size="sm" />
+      <div className="flex items-center gap-3">
+        {cost && (
+          <CostSparkline
+            tokens={cost.totalTokens}
+            costUsd={cost.estimatedCostUsd}
+            size="sm"
+          />
+        )}
+        <StatusBadge status={status} size="sm" />
+      </div>
     </Link>
   )
 }
@@ -74,7 +88,7 @@ function formatRelativeTime(timestamp: string): string {
   }
 }
 
-export function WorkerList({ polecats, loading = false }: WorkerListProps) {
+export function WorkerList({ polecats, workerCosts, loading = false }: WorkerListProps) {
   const activeCount = polecats?.filter(p => p.session_running).length ?? 0
 
   return (
@@ -101,9 +115,17 @@ export function WorkerList({ polecats, loading = false }: WorkerListProps) {
           </div>
         ) : (
           <div className="px-4">
-            {polecats.map((polecat) => (
-              <WorkerRow key={`${polecat.rig}-${polecat.name}`} polecat={polecat} />
-            ))}
+            {polecats.map((polecat) => {
+              const costKey = `${polecat.rig}/${polecat.name}`
+              const cost = workerCosts?.get(costKey)
+              return (
+                <WorkerRow
+                  key={`${polecat.rig}-${polecat.name}`}
+                  polecat={polecat}
+                  cost={cost}
+                />
+              )
+            })}
           </div>
         )}
       </PanelBody>

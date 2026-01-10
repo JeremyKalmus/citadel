@@ -1,11 +1,15 @@
 "use client";
 
 import { Panel, PanelHeader, PanelBody, StatusBadge, type Status } from "@/components/ui";
+import { CostSparkline } from "@/components/cost";
 import type { Polecat } from "@/lib/gastown";
+import type { WorkerCost } from "@/lib/gastown/types";
 import { Terminal } from "lucide-react";
 
 interface WorkerGridProps {
   polecats: Polecat[];
+  /** Optional cost data keyed by "rig/workerName" */
+  workerCosts?: Map<string, WorkerCost>;
   isLoading?: boolean;
 }
 
@@ -31,7 +35,7 @@ function mapStateToStatus(state: string, sessionRunning: boolean): Status {
   }
 }
 
-export function WorkerGrid({ polecats, isLoading }: WorkerGridProps) {
+export function WorkerGrid({ polecats, workerCosts, isLoading }: WorkerGridProps) {
   if (isLoading) {
     return (
       <Panel>
@@ -70,30 +74,44 @@ export function WorkerGrid({ polecats, isLoading }: WorkerGridProps) {
       />
       <PanelBody className="p-0">
         <div className="divide-y divide-chrome-border/50">
-          {polecats.map((polecat) => (
-            <div
-              key={polecat.name}
-              className="flex items-center justify-between px-4 py-3 hover:bg-carbon-black/30 transition-mechanical"
-            >
-              <div className="flex items-center gap-3">
-                <Terminal className="w-4 h-4 text-ash" />
-                <div>
-                  <span className="font-mono text-sm text-bone">
-                    {polecat.name}
-                  </span>
-                  {polecat.state && (
-                    <span className="ml-2 text-xs text-ash">
-                      {polecat.state}
+          {polecats.map((polecat) => {
+            const costKey = `${polecat.rig}/${polecat.name}`;
+            const cost = workerCosts?.get(costKey);
+
+            return (
+              <div
+                key={polecat.name}
+                className="flex items-center justify-between px-4 py-3 hover:bg-carbon-black/30 transition-mechanical"
+              >
+                <div className="flex items-center gap-3">
+                  <Terminal className="w-4 h-4 text-ash" />
+                  <div>
+                    <span className="font-mono text-sm text-bone">
+                      {polecat.name}
                     </span>
+                    {polecat.state && (
+                      <span className="ml-2 text-xs text-ash">
+                        {polecat.state}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {cost && (
+                    <CostSparkline
+                      tokens={cost.totalTokens}
+                      costUsd={cost.estimatedCostUsd}
+                      size="sm"
+                    />
                   )}
+                  <StatusBadge
+                    status={mapStateToStatus(polecat.state, polecat.session_running)}
+                    size="sm"
+                  />
                 </div>
               </div>
-              <StatusBadge
-                status={mapStateToStatus(polecat.state, polecat.session_running)}
-                size="sm"
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </PanelBody>
     </Panel>
