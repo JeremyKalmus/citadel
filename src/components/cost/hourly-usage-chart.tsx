@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import { Panel, PanelHeader, PanelBody } from "@/components/ui/panel"
 import {
-  type HourlyUsage,
+  type ChartHourlyUsage as HourlyUsage,
   formatTokenCount,
   formatCostUsd,
 } from "@/lib/gastown/types"

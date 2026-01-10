@@ -171,7 +171,7 @@ export function CostPanel({
   if (isLoading) {
     return (
       <Panel className={className}>
-        <PanelHeader icon="gauge" title="Guzzoline" />
+        <PanelHeader icon="fuel" title="Guzzoline" />
         <PanelBody>
           <div className="flex items-center justify-center py-8">
             <span className="text-ash">Loading token stats...</span>
@@ -184,7 +184,7 @@ export function CostPanel({
   return (
     <Panel className={className}>
       <PanelHeader
-        icon="gauge"
+        icon="fuel"
         title="Guzzoline"
         actions={
           <span className="text-xs text-ash">{periodLabel}</span>

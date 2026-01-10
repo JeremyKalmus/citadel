@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import { Panel, PanelHeader, PanelBody } from "@/components/ui/panel"
 import { CostSparkline } from "./cost-sparkline"
 import {
-  type WorkerCost,
+  type ChartWorkerCost as WorkerCost,
   formatTokenCount,
   formatCostUsd,
 } from "@/lib/gastown/types"
@@ -160,7 +160,7 @@ export function WorkerCostPanel({
   if (isLoading) {
     return (
       <Panel className={className}>
-        <PanelHeader icon="users" title="Worker Costs" />
+        <PanelHeader icon="container" title="Worker Costs" />
         <PanelBody>
           <div className="flex items-center justify-center py-8">
             <span className="text-ash">Loading worker costs...</span>
@@ -174,7 +174,7 @@ export function WorkerCostPanel({
     return (
       <Panel className={className}>
         <PanelHeader
-          icon="users"
+          icon="container"
           title="Worker Costs"
           actions={
             <span className="text-xs text-ash">{periodLabel}</span>
@@ -192,7 +192,7 @@ export function WorkerCostPanel({
   return (
     <Panel className={className}>
       <PanelHeader
-        icon="users"
+        icon="container"
         title={rigFilter ? `Worker Costs: ${rigFilter}` : "Worker Costs"}
         actions={
           <span className="text-xs text-ash">{periodLabel}</span>

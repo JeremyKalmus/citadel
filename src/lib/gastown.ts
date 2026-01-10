@@ -1,7 +1,17 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import type { WorkingSubstage, JourneyState, WorkerCost, TokenUsage as TypedTokenUsage, HourlyUsage } from "./gastown/types";
-import { JourneyStage, SUBSTAGE_DETECTION_SIGNALS, calculateCost } from "./gastown/types";
+import type {
+  WorkingSubstage as TypesWorkingSubstage,
+  JourneyState,
+  ChartWorkerCost,
+  TokenUsage as TypedTokenUsage,
+  ChartHourlyUsage
+} from "./gastown/types";
+import {
+  JourneyStage as TypesJourneyStage,
+  SUBSTAGE_DETECTION_SIGNALS,
+  calculateCost
+} from "./gastown/types";
 
 const execAsync = promisify(exec);
 
@@ -966,7 +976,7 @@ export class GasTownClient {
    * @param workerPath - Path pattern to filter events (e.g., "citadel/polecats/alpha")
    * @returns The detected substage or undefined if not in WORKING stage
    */
-  async detectWorkingSubstage(workerPath: string): Promise<WorkingSubstage | undefined> {
+  async detectWorkingSubstage(workerPath: string): Promise<TypesWorkingSubstage | undefined> {
     const fs = await import("fs/promises");
     const path = await import("path");
 
@@ -994,7 +1004,7 @@ export class GasTownClient {
       }
 
       // Count signal occurrences by substage
-      const substageScores: Record<WorkingSubstage, number> = {
+      const substageScores: Record<TypesWorkingSubstage, number> = {
         "2a": 0,
         "2b": 0,
         "2c": 0,
@@ -1017,12 +1027,12 @@ export class GasTownClient {
 
       // Find highest scoring substage
       let maxScore = 0;
-      let detectedSubstage: WorkingSubstage | undefined;
+      let detectedSubstage: TypesWorkingSubstage | undefined;
 
       for (const [substage, score] of Object.entries(substageScores)) {
         if (score > maxScore) {
           maxScore = score;
-          detectedSubstage = substage as WorkingSubstage;
+          detectedSubstage = substage as TypesWorkingSubstage;
         }
       }
 
@@ -1099,37 +1109,37 @@ export class GasTownClient {
     const workerPath = `${rig}/polecats/${workerName}`;
 
     // Derive base journey stage from worker state
-    let currentStage = JourneyStage.QUEUED;
+    let currentStage = TypesJourneyStage.QUEUED;
     let blocked = false;
 
     if (polecatDetail.session_running) {
       switch (polecatDetail.state) {
         case "waiting":
-          currentStage = JourneyStage.CLAIMED;
+          currentStage = TypesJourneyStage.CLAIMED;
           break;
         case "working":
-          currentStage = JourneyStage.WORKING;
+          currentStage = TypesJourneyStage.WORKING;
           break;
         case "blocked":
-          currentStage = JourneyStage.WORKING;
+          currentStage = TypesJourneyStage.WORKING;
           blocked = true;
           break;
         case "done":
-          currentStage = JourneyStage.MERGED;
+          currentStage = TypesJourneyStage.MERGED;
           break;
         default:
-          currentStage = JourneyStage.WORKING;
+          currentStage = TypesJourneyStage.WORKING;
       }
     } else {
       // Session not running
       currentStage = polecatDetail.state === "done"
-        ? JourneyStage.MERGED
-        : JourneyStage.CLAIMED;
+        ? TypesJourneyStage.MERGED
+        : TypesJourneyStage.CLAIMED;
     }
 
     // Detect substage if in WORKING stage
-    let substage: WorkingSubstage | undefined;
-    if (currentStage === JourneyStage.WORKING) {
+    let substage: TypesWorkingSubstage | undefined;
+    if (currentStage === TypesJourneyStage.WORKING) {
       substage = await this.detectWorkingSubstage(workerPath);
     }
 
@@ -1138,7 +1148,7 @@ export class GasTownClient {
       claimed: polecatDetail.last_activity !== "0001-01-01T00:00:00Z"
         ? polecatDetail.last_activity
         : undefined,
-      workStarted: currentStage >= JourneyStage.WORKING && polecatDetail.session_running
+      workStarted: currentStage >= TypesJourneyStage.WORKING && polecatDetail.session_running
         ? polecatDetail.last_activity
         : undefined,
     };
@@ -1161,9 +1171,9 @@ export class GasTownClient {
    * - Issues worked (from event context)
    * - Efficiency score (tokens per issue)
    *
-   * @returns Array of WorkerCost sorted by total tokens descending
+   * @returns Array of ChartWorkerCost sorted by total tokens descending
    */
-  async getWorkerCosts(): Promise<WorkerCost[]> {
+  async getWorkerCosts(): Promise<ChartWorkerCost[]> {
     const fs = await import("fs/promises");
     const path = await import("path");
 
@@ -1248,8 +1258,8 @@ export class GasTownClient {
       return [];
     }
 
-    // Convert map to WorkerCost array
-    const workerCosts: WorkerCost[] = [];
+    // Convert map to ChartWorkerCost array
+    const workerCosts: ChartWorkerCost[] = [];
 
     for (const [workerPath, data] of workerMap) {
       const parts = workerPath.split("/");
@@ -1306,9 +1316,9 @@ export class GasTownClient {
    * - Active worker count per hour
    *
    * @param hours - Number of hours to look back (default 24)
-   * @returns Array of HourlyUsage sorted by hour ascending
+   * @returns Array of ChartHourlyUsage sorted by hour ascending
    */
-  async getHourlyUsage(hours: number = 24): Promise<HourlyUsage[]> {
+  async getHourlyUsage(hours: number = 24): Promise<ChartHourlyUsage[]> {
     const fs = await import("fs/promises");
     const path = await import("path");
 
@@ -1385,8 +1395,8 @@ export class GasTownClient {
       // File doesn't exist or can't be read - return empty hours
     }
 
-    // Convert map to HourlyUsage array
-    const hourlyUsage: HourlyUsage[] = [];
+    // Convert map to ChartHourlyUsage array
+    const hourlyUsage: ChartHourlyUsage[] = [];
 
     for (const [hour, data] of hourlyMap) {
       hourlyUsage.push({

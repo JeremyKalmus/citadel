@@ -5,7 +5,7 @@ import { Panel, PanelHeader, PanelBody, StatusBadge, SkeletonRow, type Status } 
 import { Icon } from "@/components/ui/icon"
 import { CostSparkline } from "@/components/cost"
 import type { Polecat } from "@/lib/gastown"
-import type { WorkerCost } from "@/lib/gastown/types"
+import type { ChartWorkerCost as WorkerCost } from "@/lib/gastown/types"
 
 interface WorkerListProps {
   polecats: Polecat[] | null

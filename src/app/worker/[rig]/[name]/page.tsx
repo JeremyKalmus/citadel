@@ -279,7 +279,7 @@ export default function WorkerPage({ params }: WorkerPageProps) {
       {/* Journey tracker */}
       {polecat && (
         <Panel>
-          <PanelHeader icon="route" title="Work Journey" />
+          <PanelHeader icon="road" title="Work Journey" />
           <PanelBody>
             <JourneyTracker
               issueId={polecat.branch.split("/").pop() || ""}

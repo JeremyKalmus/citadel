@@ -600,9 +600,9 @@ export interface ConvoyCost extends EntityCost {
 }
 
 /**
- * Worker-level cost tracking
+ * Worker-level cost tracking (for charts)
  */
-export interface WorkerCost extends EntityCost {
+export interface ChartWorkerCost extends EntityCost {
   workerName: string;
   rig: string;
   issuesWorked: string[];
@@ -612,9 +612,9 @@ export interface WorkerCost extends EntityCost {
 }
 
 /**
- * Hourly usage data point for charts
+ * Simple hourly usage data point for charts (used by cost visualization)
  */
-export interface HourlyUsage {
+export interface ChartHourlyUsage {
   hour: string; // ISO timestamp
   tokens: number;
   costUsd: number;

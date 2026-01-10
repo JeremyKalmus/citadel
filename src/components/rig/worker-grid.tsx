@@ -3,7 +3,7 @@
 import { Panel, PanelHeader, PanelBody, StatusBadge, type Status } from "@/components/ui";
 import { CostSparkline } from "@/components/cost";
 import type { Polecat } from "@/lib/gastown";
-import type { WorkerCost } from "@/lib/gastown/types";
+import type { ChartWorkerCost as WorkerCost } from "@/lib/gastown/types";
 import { Terminal } from "lucide-react";
 
 interface WorkerGridProps {

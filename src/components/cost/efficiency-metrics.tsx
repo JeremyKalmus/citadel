@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import { Panel, PanelHeader, PanelBody } from "@/components/ui/panel"
 import { CostSparkline } from "./cost-sparkline"
 import {
-  type WorkerCost,
+  type ChartWorkerCost as WorkerCost,
   formatTokenCount,
   formatCostUsd,
 } from "@/lib/gastown/types"
@@ -211,7 +211,7 @@ export function EfficiencyMetrics({
   if (isLoading) {
     return (
       <Panel className={className}>
-        <PanelHeader icon="zap" title="Efficiency" />
+        <PanelHeader icon="activity" title="Efficiency" />
         <PanelBody>
           <div className="flex items-center justify-center py-8">
             <span className="text-ash">Loading efficiency data...</span>
@@ -225,7 +225,7 @@ export function EfficiencyMetrics({
     return (
       <Panel className={className}>
         <PanelHeader
-          icon="zap"
+          icon="activity"
           title="Efficiency"
           actions={
             <span className="text-xs text-ash">{periodLabel}</span>
@@ -243,7 +243,7 @@ export function EfficiencyMetrics({
   return (
     <Panel className={className}>
       <PanelHeader
-        icon="zap"
+        icon="activity"
         title="Efficiency"
         actions={
           <span className="text-xs text-ash">{periodLabel}</span>
