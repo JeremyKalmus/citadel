@@ -6,3 +6,18 @@
 
 // Re-export all types
 export * from "./types";
+
+// Re-export cost calculation functions
+export {
+  CLAUDE_PRICING,
+  DEFAULT_MODEL,
+  getModelPricing,
+  calculateCost,
+  calculateTokenUsageWithCost,
+  sumTokenCounts,
+  sumCostBreakdowns,
+  formatCost,
+  formatTokens,
+  costPerToken,
+  estimateCost,
+} from "./cost";
