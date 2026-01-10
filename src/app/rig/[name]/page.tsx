@@ -3,7 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { Panel, ActionButton, StatusBadge } from "@/components/ui";
-import { WorkerGrid, ConvoyList, MergeQueue } from "@/components/rig";
+import { WorkerGrid, ConvoyList, RefineryHealth, MergeQueueStats } from "@/components/rig";
 import { useRig, usePolecats, useConvoys } from "@/hooks";
 import { ArrowLeft, RefreshCw, Container, Users, Eye, Cog } from "lucide-react";
 
@@ -149,12 +149,13 @@ export default function RigPage({ params }: RigPageProps) {
         <ConvoyList convoys={convoys || []} isLoading={convoysLoading} />
       </div>
 
-      {/* Merge Queue */}
-      <MergeQueue
-        mergeQueue={rig.mq}
-        hasRefinery={rig.has_refinery}
-        isLoading={rigLoading}
-      />
+      {/* Refinery Health & Merge Queue */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RefineryHealth rig={rig} isLoading={rigLoading} />
+        {rig.has_refinery && rig.mq && (
+          <MergeQueueStats mergeQueue={rig.mq} isLoading={rigLoading} />
+        )}
+      </div>
     </div>
   );
 }
