@@ -604,6 +604,37 @@ function parseNameStatus(nameStatusOutput: string): Map<string, FileChangeStatus
 }
 
 // ============================================================================
+// Beads Types (for DependencyGraph)
+// ============================================================================
+
+export type BeadStatus = 'open' | 'in_progress' | 'hooked' | 'closed' | 'blocked';
+export type BeadType = 'task' | 'bug' | 'feature' | 'epic';
+export type BeadPriority = 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
+
+export interface Bead {
+  id: string;
+  title: string;
+  status: BeadStatus;
+  type: BeadType;
+  priority: BeadPriority;
+  assignee?: string;
+  created: string;
+  updated: string;
+  depends_on: string[];
+  blocks: string[];
+  parent?: string;
+  children?: string[];
+}
+
+export interface BeadsData {
+  beads: Bead[];
+  total: number;
+  open: number;
+  in_progress: number;
+  blocked: number;
+}
+
+// ============================================================================
 // Client
 // ============================================================================
 
@@ -1003,7 +1034,6 @@ export class GasTownClient {
     return this.runCommand<ConvoyDetail>(`gt convoy status ${id} --json`);
   }
 
-<<<<<<< HEAD
   // ============================================================================
   // Actions
   // ============================================================================
@@ -1657,6 +1687,78 @@ export class GasTownClient {
       total_additions: totalAdditions,
       total_deletions: totalDeletions,
       files_changed: Array.from(fileStats.keys()),
+    };
+  }
+
+  // ============================================================================
+  // Beads Data
+  // ============================================================================
+
+  async getBeads(rig?: string): Promise<BeadsData> {
+    const fs = await import("fs/promises");
+    const path = await import("path");
+
+    // Find the beads JSONL file for the rig
+    const beadsDir = rig
+      ? path.join(this.cwd, rig, ".beads")
+      : path.join(this.cwd, ".beads");
+    const issuesFile = path.join(beadsDir, "issues.jsonl");
+
+    const beads: Bead[] = [];
+    let open = 0;
+    let in_progress = 0;
+    let blocked = 0;
+
+    try {
+      const content = await fs.readFile(issuesFile, "utf-8");
+      const lines = content.trim().split("\n").filter(Boolean);
+
+      for (const line of lines) {
+        try {
+          const issue = JSON.parse(line);
+
+          // Map beads JSONL format to our Bead interface
+          const bead: Bead = {
+            id: issue.id,
+            title: issue.title,
+            status: issue.status as BeadStatus,
+            type: (issue.type || 'task') as BeadType,
+            priority: (issue.priority || 'P2') as BeadPriority,
+            assignee: issue.assignee,
+            created: issue.created_at || issue.created,
+            updated: issue.updated_at || issue.updated || issue.created_at || issue.created,
+            depends_on: issue.depends_on || [],
+            blocks: issue.blocks || [],
+            parent: issue.parent,
+            children: issue.children || [],
+          };
+
+          beads.push(bead);
+
+          if (bead.status === 'open') open++;
+          if (bead.status === 'in_progress' || bead.status === 'hooked') in_progress++;
+          if (bead.depends_on && bead.depends_on.length > 0) {
+            // Check if any dependencies are not closed
+            const hasOpenDeps = bead.depends_on.some(depId => {
+              const dep = beads.find(b => b.id === depId);
+              return dep && dep.status !== 'closed';
+            });
+            if (hasOpenDeps) blocked++;
+          }
+        } catch {
+          // Skip malformed lines
+        }
+      }
+    } catch {
+      // File doesn't exist or can't be read - return empty data
+    }
+
+    return {
+      beads,
+      total: beads.length,
+      open,
+      in_progress,
+      blocked,
     };
   }
 }

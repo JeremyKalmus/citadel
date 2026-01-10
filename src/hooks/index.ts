@@ -33,3 +33,6 @@ export type { UseBeadDetailOptions, UseBeadDetailResult } from "./use-bead-detai
 
 export { useWorkerGit } from "./use-worker-git";
 export type { UseWorkerGitOptions, UseWorkerGitResult } from "./use-worker-git";
+
+export { useBeads } from "./use-beads";
+export type { UseBeadsOptions, UseBeadsResult } from "./use-beads";
