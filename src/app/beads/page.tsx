@@ -43,16 +43,26 @@ export default function BeadsPage() {
     }
   }, [beadsData, filter]);
 
-  // Separate HQ (town-level) beads from rig beads
-  const hqBeads = useMemo(() =>
-    filteredBeads.filter(b => b.id.startsWith("hq-")),
+  // Filter to only show actual work beads (tasks, bugs, features, epics)
+  // Exclude system beads: agents, roles, molecules, messages, convoys
+  const WORK_TYPES = ["task", "bug", "feature", "epic"];
+
+  const workBeads = useMemo(() =>
+    filteredBeads.filter(b => WORK_TYPES.includes(b.type?.toLowerCase() || "")),
     [filteredBeads]
   );
 
-  const rigBeads = useMemo(() =>
-    filteredBeads.filter(b => !b.id.startsWith("hq-")),
-    [filteredBeads]
-  );
+  // Separate by rig prefix for organization
+  const rigGroups = useMemo(() => {
+    const groups: Record<string, typeof workBeads> = {};
+    for (const bead of workBeads) {
+      // Extract rig prefix (e.g., "ci" from "ci-123")
+      const prefix = bead.id.split("-")[0];
+      if (!groups[prefix]) groups[prefix] = [];
+      groups[prefix].push(bead);
+    }
+    return groups;
+  }, [workBeads]);
 
   if (isLoading) {
     return (
@@ -80,39 +90,28 @@ export default function BeadsPage() {
 
       <BeadsStatsGrid stats={stats} isLoading={isLoading} />
 
-      {/* Town-level (HQ) Communications */}
-      {hqBeads.length > 0 && (
-        <Panel>
-          <PanelHeader
-            icon="radio"
-            title="Gas Town Communications"
-            actions={<span className="text-xs text-ash">{hqBeads.length} items</span>}
-          />
-          <PanelBody className="p-0">
-            <BeadsTree beads={hqBeads} groupBy="status" />
-          </PanelBody>
-        </Panel>
-      )}
-
-      {/* Rig-level Issues organized by Epic */}
-      {rigBeads.length > 0 && (
-        <Panel>
+      {/* Work items organized by rig, then by epic */}
+      {Object.entries(rigGroups).map(([prefix, beads]) => (
+        <Panel key={prefix}>
           <PanelHeader
             icon="container"
-            title="Rig Issues"
-            actions={<span className="text-xs text-ash">{rigBeads.length} items</span>}
+            title={prefix === "hq" ? "Town-Level Work" : `${prefix.toUpperCase()} Issues`}
+            actions={<span className="text-xs text-ash">{beads.length} items</span>}
           />
           <PanelBody className="p-0">
-            <BeadsTree beads={rigBeads} groupBy="epic" />
+            <BeadsTree beads={beads} groupBy="epic" />
           </PanelBody>
         </Panel>
-      )}
+      ))}
 
-      {filteredBeads.length === 0 && (
+      {workBeads.length === 0 && (
         <Panel>
           <PanelBody>
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <span className="text-ash">No beads found matching filter</span>
+              <span className="text-ash">No work items found matching filter</span>
+              <span className="text-xs text-ash mt-1">
+                Only showing tasks, bugs, features, and epics
+              </span>
             </div>
           </PanelBody>
         </Panel>
