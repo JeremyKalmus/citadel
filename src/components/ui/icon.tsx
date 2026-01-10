@@ -23,6 +23,12 @@ import {
   Settings,
   Fuel,
   AlertTriangle,
+  BookOpen,
+  Compass,
+  Layers,
+  RefreshCw,
+  Puzzle,
+  HelpCircle,
   type LucideIcon,
 } from "lucide-react"
 
@@ -58,6 +64,13 @@ export type IconName =
   | "settings"
   | "fuel"
   | "alert-triangle"
+  // Guide/Navigation icons (Lucide)
+  | "book-open"
+  | "compass"
+  | "layers"
+  | "refresh-cw"
+  | "puzzle"
+  | "help-circle"
   // Domain icons (Font Awesome)
   | "truck"
   | "road"
@@ -89,6 +102,13 @@ const iconMap: Record<IconName, IconComponent> = {
   "settings": Settings,
   "fuel": Fuel,
   "alert-triangle": AlertTriangle,
+  // Lucide - Guide/Navigation
+  "book-open": BookOpen,
+  "compass": Compass,
+  "layers": Layers,
+  "refresh-cw": RefreshCw,
+  "puzzle": Puzzle,
+  "help-circle": HelpCircle,
   // Font Awesome - Domain
   "truck": FaTruck,
   "road": FaRoad,
@@ -180,4 +200,16 @@ export const navIcons: Record<string, IconName> = {
   convoys: "road",
   workers: "terminal",
   settings: "cog",
+  guide: "book-open",
+}
+
+/**
+ * Guide section icon mapping
+ */
+export const guideIcons: Record<string, IconName> = {
+  overview: "compass",
+  entities: "layers",
+  lifecycle: "refresh-cw",
+  plugins: "puzzle",
+  scenarios: "help-circle",
 }
