@@ -1,7 +1,10 @@
 "use client";
 
 import { Panel, PanelHeader, PanelBody, StatusBadge, type Status } from "@/components/ui";
+import { ConvoyJourneyCompact } from "@/components/journey";
 import type { Convoy } from "@/lib/gastown";
+import type { ConvoyJourneyState } from "@/lib/gastown/types";
+import { JourneyStage } from "@/lib/gastown/types";
 import { Truck } from "lucide-react";
 
 interface ConvoyListProps {
@@ -42,6 +45,65 @@ function formatDate(dateString: string): string {
   } catch {
     return dateString;
   }
+}
+
+/**
+ * Derive journey state from convoy status.
+ * This is a placeholder until we have proper journey tracking via convoy API.
+ */
+function deriveConvoyJourneyState(convoy: Convoy): ConvoyJourneyState {
+  // Default distribution based on convoy status
+  const status = convoy.status.toLowerCase();
+
+  // Create a mock distribution based on status
+  // In production, this would come from the API
+  let stageDistribution: Record<JourneyStage, number> = {
+    [JourneyStage.QUEUED]: 0,
+    [JourneyStage.CLAIMED]: 0,
+    [JourneyStage.WORKING]: 0,
+    [JourneyStage.PR_READY]: 0,
+    [JourneyStage.MERGED]: 0,
+  };
+
+  let progressPercent = 0;
+  let completedCount = 0;
+  const issueCount = 1; // Placeholder - would come from API
+
+  switch (status) {
+    case "completed":
+    case "done":
+      stageDistribution[JourneyStage.MERGED] = 1;
+      progressPercent = 100;
+      completedCount = 1;
+      break;
+    case "active":
+    case "running":
+      stageDistribution[JourneyStage.WORKING] = 1;
+      progressPercent = 50;
+      break;
+    case "pending":
+    case "queued":
+      stageDistribution[JourneyStage.QUEUED] = 1;
+      progressPercent = 0;
+      break;
+    case "blocked":
+      stageDistribution[JourneyStage.WORKING] = 1;
+      progressPercent = 40;
+      break;
+    default:
+      stageDistribution[JourneyStage.QUEUED] = 1;
+      progressPercent = 0;
+  }
+
+  return {
+    convoyId: convoy.id,
+    title: convoy.title || convoy.id,
+    progressPercent,
+    issueCount,
+    completedCount,
+    stageDistribution,
+    issues: [], // Would be populated from API
+  };
 }
 
 export function ConvoyList({ convoys, isLoading }: ConvoyListProps) {
@@ -89,32 +151,37 @@ export function ConvoyList({ convoys, isLoading }: ConvoyListProps) {
       />
       <PanelBody className="p-0">
         <div className="divide-y divide-chrome-border/50">
-          {convoys.map((convoy) => (
-            <div
-              key={convoy.id}
-              className="flex items-center justify-between px-4 py-3 hover:bg-carbon-black/30 transition-mechanical"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm text-bone truncate">
-                    {convoy.title || convoy.id}
-                  </span>
+          {convoys.map((convoy) => {
+            const journeyState = deriveConvoyJourneyState(convoy);
+            return (
+              <div
+                key={convoy.id}
+                className="flex items-center justify-between px-4 py-3 hover:bg-carbon-black/30 transition-mechanical"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm text-bone truncate">
+                      {convoy.title || convoy.id}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-xs text-ash font-mono">
+                      {convoy.id}
+                    </span>
+                    <span className="text-xs text-ash">
+                      {formatDate(convoy.created_at)}
+                    </span>
+                    {/* Journey progress indicator */}
+                    <ConvoyJourneyCompact convoy={journeyState} />
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-ash font-mono">
-                    {convoy.id}
-                  </span>
-                  <span className="text-xs text-ash">
-                    {formatDate(convoy.created_at)}
-                  </span>
-                </div>
+                <StatusBadge
+                  status={mapConvoyStatusToStatus(convoy.status)}
+                  size="sm"
+                />
               </div>
-              <StatusBadge
-                status={mapConvoyStatusToStatus(convoy.status)}
-                size="sm"
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </PanelBody>
     </Panel>
