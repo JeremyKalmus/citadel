@@ -15,6 +15,7 @@ const navItems: NavItem[] = [
   { label: "Rigs", href: "/", icon: navIcons.rigs },
   { label: "Convoys", href: "/convoys", icon: navIcons.convoys },
   { label: "Workers", href: "/workers", icon: navIcons.workers },
+  { label: "Guide", href: "/guide", icon: navIcons.guide },
   { label: "Settings", href: "/settings", icon: navIcons.settings },
 ]
 
