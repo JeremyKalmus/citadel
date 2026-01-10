@@ -1735,7 +1735,7 @@ export class GasTownClient {
             id: issue.id,
             title: issue.title,
             status: issue.status as BeadStatus,
-            type: (issue.type || 'task') as BeadType,
+            type: (issue.issue_type || issue.type || 'task') as BeadType,
             priority: (issue.priority || 'P2') as BeadPriority,
             assignee: issue.assignee,
             created: issue.created_at || issue.created,
