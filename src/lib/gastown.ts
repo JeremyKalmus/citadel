@@ -1,6 +1,6 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import type { WorkingSubstage, JourneyState, WorkerCost, TokenUsage as TypedTokenUsage } from "./gastown/types";
+import type { WorkingSubstage, JourneyState, WorkerCost, TokenUsage as TypedTokenUsage, HourlyUsage } from "./gastown/types";
 import { JourneyStage, SUBSTAGE_DETECTION_SIGNALS, calculateCost } from "./gastown/types";
 
 const execAsync = promisify(exec);
@@ -1295,6 +1295,110 @@ export class GasTownClient {
 
     // Sort by total tokens descending
     return workerCosts.sort((a, b) => b.totalTokens - a.totalTokens);
+  }
+
+  /**
+   * Get hourly token usage for charting.
+   *
+   * Aggregates token usage events by hour, calculating:
+   * - Total tokens per hour
+   * - Estimated cost per hour
+   * - Active worker count per hour
+   *
+   * @param hours - Number of hours to look back (default 24)
+   * @returns Array of HourlyUsage sorted by hour ascending
+   */
+  async getHourlyUsage(hours: number = 24): Promise<HourlyUsage[]> {
+    const fs = await import("fs/promises");
+    const path = await import("path");
+
+    const eventsFile = path.join(this.cwd, ".events.jsonl");
+
+    // Map: hour ISO string -> aggregated data
+    const hourlyMap = new Map<string, {
+      tokens: number;
+      costUsd: number;
+      workers: Set<string>;
+    }>();
+
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - hours * 60 * 60 * 1000);
+
+    // Initialize all hours in range with zero values
+    for (let h = 0; h < hours; h++) {
+      const hourDate = new Date(now.getTime() - h * 60 * 60 * 1000);
+      hourDate.setMinutes(0, 0, 0);
+      const hourKey = hourDate.toISOString();
+      if (!hourlyMap.has(hourKey)) {
+        hourlyMap.set(hourKey, { tokens: 0, costUsd: 0, workers: new Set() });
+      }
+    }
+
+    try {
+      const content = await fs.readFile(eventsFile, "utf-8");
+      const lines = content.trim().split("\n").filter(Boolean);
+
+      for (const line of lines) {
+        try {
+          const event = JSON.parse(line);
+          const eventTime = new Date(event.ts);
+
+          // Only process recent token_usage events
+          if (event.source === "guzzoline" && event.type === "token_usage" && eventTime >= cutoff) {
+            // Round to hour
+            const hourDate = new Date(eventTime);
+            hourDate.setMinutes(0, 0, 0);
+            const hourKey = hourDate.toISOString();
+
+            // Initialize hour if needed
+            if (!hourlyMap.has(hourKey)) {
+              hourlyMap.set(hourKey, { tokens: 0, costUsd: 0, workers: new Set() });
+            }
+
+            const hourData = hourlyMap.get(hourKey)!;
+
+            // Aggregate tokens
+            const tokens = event.payload?.tokens?.total ?? 0;
+            hourData.tokens += tokens;
+
+            // Calculate cost from token breakdown
+            const tokenBreakdown: TypedTokenUsage = {
+              input: event.payload?.tokens?.input ?? 0,
+              output: event.payload?.tokens?.output ?? 0,
+              cache_read: event.payload?.tokens?.cache_read ?? 0,
+              total: tokens,
+            };
+            hourData.costUsd += calculateCost(tokenBreakdown);
+
+            // Track active workers
+            const actor = event.actor || "";
+            const workerMatch = actor.match(/([^/]+\/(?:polecats|crew)\/[^/]+)/);
+            if (workerMatch) {
+              hourData.workers.add(workerMatch[1]);
+            }
+          }
+        } catch {
+          // Skip malformed lines
+        }
+      }
+    } catch {
+      // File doesn't exist or can't be read - return empty hours
+    }
+
+    // Convert map to HourlyUsage array
+    const hourlyUsage: HourlyUsage[] = [];
+
+    for (const [hour, data] of hourlyMap) {
+      hourlyUsage.push({
+        hour,
+        tokens: data.tokens,
+        costUsd: data.costUsd,
+        activeWorkers: data.workers.size,
+      });
+    }
+
+    // Sort by hour ascending
+    return hourlyUsage.sort((a, b) => new Date(a.hour).getTime() - new Date(b.hour).getTime());
   }
 }
 
