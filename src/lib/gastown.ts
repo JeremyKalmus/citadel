@@ -1,5 +1,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
+import type { WorkingSubstage, JourneyState } from "./gastown/types";
+import { JourneyStage, SUBSTAGE_DETECTION_SIGNALS } from "./gastown/types";
 
 const execAsync = promisify(exec);
 
@@ -847,7 +849,7 @@ export class GasTownClient {
     return this.runCommand<ConvoyDetail>(`gt convoy status ${id} --json`);
   }
 
-  // ============================================================================
+// ============================================================================
   // Actions
   // ============================================================================
 
@@ -950,6 +952,204 @@ export class GasTownClient {
     }
 
     return journeys;
+  }
+
+  /**
+   * Detect working substage (2a-2d) from recent events for a worker.
+   *
+   * Substage detection is based on the most recent tool/command events:
+   * - 2a (Analyzing): Read, Grep, Glob tools - exploring codebase
+   * - 2b (Coding): Write, Edit tools, git commits - making changes
+   * - 2c (Testing): Test commands (pytest, npm test, etc.)
+   * - 2d (PR Prep): Git push, PR creation
+   *
+   * @param workerPath - Path pattern to filter events (e.g., "citadel/polecats/alpha")
+   * @returns The detected substage or undefined if not in WORKING stage
+   */
+  async detectWorkingSubstage(workerPath: string): Promise<WorkingSubstage | undefined> {
+    const fs = await import("fs/promises");
+    const path = await import("path");
+
+    const eventsFile = path.join(this.cwd, ".events.jsonl");
+
+    try {
+      const content = await fs.readFile(eventsFile, "utf-8");
+      const lines = content.trim().split("\n").filter(Boolean);
+
+      // Look at recent events (last 50) for this worker
+      const recentEvents = lines
+        .slice(-100)
+        .map((line) => {
+          try {
+            return JSON.parse(line);
+          } catch {
+            return null;
+          }
+        })
+        .filter((e) => e && e.actor?.includes(workerPath))
+        .slice(-50);
+
+      if (recentEvents.length === 0) {
+        return undefined;
+      }
+
+      // Count signal occurrences by substage
+      const substageScores: Record<WorkingSubstage, number> = {
+        "2a": 0,
+        "2b": 0,
+        "2c": 0,
+        "2d": 0,
+      };
+
+      // Weight recent events more heavily
+      for (let i = 0; i < recentEvents.length; i++) {
+        const event = recentEvents[i];
+        const eventType = event.type || "";
+        const weight = 1 + (i / recentEvents.length); // More recent = higher weight
+
+        // Check against known signal patterns
+        for (const [signal, substage] of Object.entries(SUBSTAGE_DETECTION_SIGNALS)) {
+          if (eventType.includes(signal) || this.matchesSubstageSignal(event, signal)) {
+            substageScores[substage] += weight;
+          }
+        }
+      }
+
+      // Find highest scoring substage
+      let maxScore = 0;
+      let detectedSubstage: WorkingSubstage | undefined;
+
+      for (const [substage, score] of Object.entries(substageScores)) {
+        if (score > maxScore) {
+          maxScore = score;
+          detectedSubstage = substage as WorkingSubstage;
+        }
+      }
+
+      // Default to 2b (Coding) if no clear signal but worker is active
+      return detectedSubstage || "2b";
+    } catch {
+      // Events file doesn't exist or can't be read
+      return undefined;
+    }
+  }
+
+  /**
+   * Match event against substage signal patterns
+   */
+  private matchesSubstageSignal(event: Record<string, unknown>, signal: string): boolean {
+    const type = String(event.type || "").toLowerCase();
+    const tool = String(event.tool || "").toLowerCase();
+    const command = String(event.command || "").toLowerCase();
+
+    // Signal pattern matching
+    switch (signal) {
+      // 2a: Analyzing
+      case "tool.read":
+        return type === "tool_use" && tool === "read";
+      case "tool.grep":
+        return type === "tool_use" && (tool === "grep" || tool === "search");
+      case "tool.glob":
+        return type === "tool_use" && (tool === "glob" || tool === "find");
+
+      // 2b: Coding
+      case "tool.write":
+        return type === "tool_use" && tool === "write";
+      case "tool.edit":
+        return type === "tool_use" && tool === "edit";
+      case "git.commit":
+        return type === "command" && command.includes("git commit");
+
+      // 2c: Testing
+      case "command.test":
+        return type === "command" && (
+          command.includes("test") ||
+          command.includes("spec") ||
+          command.includes("check")
+        );
+      case "command.pytest":
+        return type === "command" && command.includes("pytest");
+      case "command.npm_test":
+        return type === "command" && (
+          command.includes("npm test") ||
+          command.includes("npm run test") ||
+          command.includes("yarn test")
+        );
+
+      // 2d: PR Prep
+      case "git.push":
+        return type === "command" && command.includes("git push");
+      case "pr.draft":
+        return type === "pr_created" || (type === "command" && command.includes("gh pr"));
+
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Get full journey state for a worker based on their status and recent events.
+   *
+   * @param rig - Rig name
+   * @param workerName - Worker name
+   * @returns Journey state including stage, substage, timestamps
+   */
+  async getWorkerJourneyState(rig: string, workerName: string): Promise<JourneyState> {
+    const polecatDetail = await this.getPolecatStatus(rig, workerName);
+    const workerPath = `${rig}/polecats/${workerName}`;
+
+    // Derive base journey stage from worker state
+    let currentStage = JourneyStage.QUEUED;
+    let blocked = false;
+
+    if (polecatDetail.session_running) {
+      switch (polecatDetail.state) {
+        case "waiting":
+          currentStage = JourneyStage.CLAIMED;
+          break;
+        case "working":
+          currentStage = JourneyStage.WORKING;
+          break;
+        case "blocked":
+          currentStage = JourneyStage.WORKING;
+          blocked = true;
+          break;
+        case "done":
+          currentStage = JourneyStage.MERGED;
+          break;
+        default:
+          currentStage = JourneyStage.WORKING;
+      }
+    } else {
+      // Session not running
+      currentStage = polecatDetail.state === "done"
+        ? JourneyStage.MERGED
+        : JourneyStage.CLAIMED;
+    }
+
+    // Detect substage if in WORKING stage
+    let substage: WorkingSubstage | undefined;
+    if (currentStage === JourneyStage.WORKING) {
+      substage = await this.detectWorkingSubstage(workerPath);
+    }
+
+    // Build timestamps (placeholder - would be populated from events)
+    const timestamps = {
+      claimed: polecatDetail.last_activity !== "0001-01-01T00:00:00Z"
+        ? polecatDetail.last_activity
+        : undefined,
+      workStarted: currentStage >= JourneyStage.WORKING && polecatDetail.session_running
+        ? polecatDetail.last_activity
+        : undefined,
+    };
+
+    return {
+      currentStage,
+      substage,
+      timestamps,
+      actor: `${rig}/${workerName}`,
+      blocked,
+    };
   }
 }
 
