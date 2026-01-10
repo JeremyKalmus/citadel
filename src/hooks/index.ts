@@ -13,6 +13,9 @@ export type { UseGuzzolineOptions, UseGuzzolineResult } from "./use-guzzoline";
 export { useEnhancedGuzzoline } from "./use-enhanced-guzzoline";
 export type { UseEnhancedGuzzolineOptions, UseEnhancedGuzzolineResult } from "./use-enhanced-guzzoline";
 
+export { useConvoyGuzzoline } from "./use-convoy-guzzoline";
+export type { UseConvoyGuzzolineOptions, UseConvoyGuzzolineResult } from "./use-convoy-guzzoline";
+
 export { useRig } from "./use-rig";
 export type { UseRigOptions, UseRigResult } from "./use-rig";
 

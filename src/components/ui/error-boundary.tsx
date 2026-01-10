@@ -102,7 +102,7 @@ export function ErrorPanel({
           )}
           {onRetry && (
             <ActionButton
-              variant="secondary"
+              variant="ghost"
               onClick={onRetry}
               icon={<RefreshCw className="w-4 h-4" />}
               className="mt-4"

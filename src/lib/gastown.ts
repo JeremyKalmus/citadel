@@ -226,6 +226,47 @@ export interface EnhancedGuzzolineStats extends GuzzolineStats {
   active_issues_today: number;
 }
 
+/**
+ * Token usage aggregated by convoy.
+ * Enables cost visibility per batch of coordinated work.
+ */
+export interface ConvoyTokenUsage {
+  /** Convoy ID */
+  convoyId: string;
+  /** Convoy title */
+  title: string;
+  /** Convoy status */
+  status: string;
+  /** Issues included in this convoy */
+  issues: string[];
+  /** Total input tokens for all issues in convoy */
+  inputTokens: number;
+  /** Total output tokens for all issues in convoy */
+  outputTokens: number;
+  /** Total cache read tokens */
+  cacheReadTokens: number;
+  /** Total tokens consumed by this convoy */
+  totalTokens: number;
+  /** Number of sessions across all issues */
+  sessionCount: number;
+  /** Unique actors who worked on this convoy */
+  actors: string[];
+  /** First activity timestamp */
+  firstActivity?: string;
+  /** Most recent activity timestamp */
+  lastActivity?: string;
+}
+
+/**
+ * Extended enhanced stats including convoy breakdown.
+ */
+export interface EnhancedGuzzolineStatsWithConvoys extends EnhancedGuzzolineStats {
+  /** Token usage aggregated by convoy */
+  by_convoy: ConvoyTokenUsage[];
+  /** Top convoys by token consumption */
+  top_convoys: ConvoyTokenUsage[];
+}
+
 // ============================================================================
 // Journey Stage Detection
 // ============================================================================
@@ -698,6 +739,93 @@ export class GasTownClient {
     }
 
     return stats;
+  }
+
+  /**
+   * Get enhanced guzzoline stats with convoy breakdown.
+   * Aggregates issue token usage by convoy for cost visibility.
+   */
+  async getGuzzolineStatsWithConvoys(): Promise<EnhancedGuzzolineStatsWithConvoys> {
+    // Get base enhanced stats with per-issue breakdown
+    const baseStats = await this.getEnhancedGuzzolineStats();
+
+    // Get all convoys
+    const convoys = await this.getConvoys();
+
+    // Build issue -> tokens lookup map
+    const issueTokensMap = new Map<string, IssueTokenUsage>();
+    for (const issue of baseStats.by_issue) {
+      issueTokensMap.set(issue.issueId, issue);
+    }
+
+    // Aggregate token usage by convoy
+    const convoyStats: ConvoyTokenUsage[] = [];
+
+    for (const convoy of convoys) {
+      try {
+        // Get convoy details with issue list
+        const detail = await this.getConvoyStatus(convoy.id);
+        const issues = detail.issues || [];
+
+        // Aggregate tokens from all issues in convoy
+        let inputTokens = 0;
+        let outputTokens = 0;
+        let cacheReadTokens = 0;
+        let totalTokens = 0;
+        let sessionCount = 0;
+        const actorsSet = new Set<string>();
+        let firstActivity: string | undefined;
+        let lastActivity: string | undefined;
+
+        for (const issueId of issues) {
+          const issueStats = issueTokensMap.get(issueId);
+          if (issueStats) {
+            inputTokens += issueStats.inputTokens;
+            outputTokens += issueStats.outputTokens;
+            cacheReadTokens += issueStats.cacheReadTokens;
+            totalTokens += issueStats.totalTokens;
+            sessionCount += issueStats.sessionCount;
+            issueStats.actors.forEach((a) => actorsSet.add(a));
+
+            // Track time range
+            if (!firstActivity || issueStats.firstActivity < firstActivity) {
+              firstActivity = issueStats.firstActivity;
+            }
+            if (!lastActivity || issueStats.lastActivity > lastActivity) {
+              lastActivity = issueStats.lastActivity;
+            }
+          }
+        }
+
+        convoyStats.push({
+          convoyId: convoy.id,
+          title: convoy.title,
+          status: convoy.status,
+          issues,
+          inputTokens,
+          outputTokens,
+          cacheReadTokens,
+          totalTokens,
+          sessionCount,
+          actors: Array.from(actorsSet),
+          firstActivity,
+          lastActivity,
+        });
+      } catch {
+        // Skip convoys we can't get details for
+      }
+    }
+
+    // Sort by total tokens descending for top convoys
+    const topConvoys = [...convoyStats]
+      .sort((a, b) => b.totalTokens - a.totalTokens)
+      .slice(0, 10);
+
+    return {
+      ...baseStats,
+      by_convoy: convoyStats,
+      top_convoys: topConvoys,
+    };
   }
 
   async getRig(name: string): Promise<Rig | null> {
