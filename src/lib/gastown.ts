@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import type { WorkingSubstage, JourneyState } from "./gastown/types";
-import { JourneyStage, SUBSTAGE_DETECTION_SIGNALS } from "./gastown/types";
+import type { WorkingSubstage, JourneyState, WorkerCost, TokenUsage as TypedTokenUsage } from "./gastown/types";
+import { JourneyStage, SUBSTAGE_DETECTION_SIGNALS, calculateCost } from "./gastown/types";
 
 const execAsync = promisify(exec);
 
@@ -1150,6 +1150,151 @@ export class GasTownClient {
       actor: `${rig}/${workerName}`,
       blocked,
     };
+  }
+
+  /**
+   * Get cost breakdown by individual worker.
+   *
+   * Aggregates token usage from events by worker path, calculating:
+   * - Total tokens and cost per worker
+   * - Session count
+   * - Issues worked (from event context)
+   * - Efficiency score (tokens per issue)
+   *
+   * @returns Array of WorkerCost sorted by total tokens descending
+   */
+  async getWorkerCosts(): Promise<WorkerCost[]> {
+    const fs = await import("fs/promises");
+    const path = await import("path");
+
+    const eventsFile = path.join(this.cwd, ".events.jsonl");
+
+    // Map: workerPath -> aggregated data
+    const workerMap = new Map<string, {
+      tokens: { input: number; output: number; cache_read: number; total: number };
+      sessionCount: number;
+      issues: Set<string>;
+      firstActivity?: Date;
+      lastActivity?: Date;
+    }>();
+
+    const now = new Date();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    weekStart.setDate(weekStart.getDate() - 7);
+
+    try {
+      const content = await fs.readFile(eventsFile, "utf-8");
+      const lines = content.trim().split("\n").filter(Boolean);
+
+      for (const line of lines) {
+        try {
+          const event = JSON.parse(line);
+          const eventTime = new Date(event.ts);
+
+          // Only process recent token_usage events
+          if (event.source === "guzzoline" && event.type === "token_usage" && eventTime >= weekStart) {
+            const actor = event.actor || "";
+
+            // Extract worker path (e.g., "citadel/polecats/alpha" from full actor path)
+            const workerMatch = actor.match(/([^/]+\/(?:polecats|crew)\/[^/]+)/);
+            if (!workerMatch) continue;
+
+            const workerPath = workerMatch[1];
+            const parts = workerPath.split("/");
+            if (parts.length < 3) continue;
+
+            // Initialize worker entry if needed
+            if (!workerMap.has(workerPath)) {
+              workerMap.set(workerPath, {
+                tokens: { input: 0, output: 0, cache_read: 0, total: 0 },
+                sessionCount: 0,
+                issues: new Set(),
+                firstActivity: eventTime,
+                lastActivity: eventTime,
+              });
+            }
+
+            const worker = workerMap.get(workerPath)!;
+
+            // Aggregate tokens
+            worker.tokens.input += event.payload?.tokens?.input ?? 0;
+            worker.tokens.output += event.payload?.tokens?.output ?? 0;
+            worker.tokens.cache_read += event.payload?.tokens?.cache_read ?? 0;
+            worker.tokens.total += event.payload?.tokens?.total ?? 0;
+            worker.sessionCount++;
+
+            // Track issues from event context
+            if (event.payload?.issue_id) {
+              worker.issues.add(event.payload.issue_id);
+            }
+            if (event.context?.issue) {
+              worker.issues.add(event.context.issue);
+            }
+
+            // Update activity timestamps
+            if (eventTime < worker.firstActivity!) {
+              worker.firstActivity = eventTime;
+            }
+            if (eventTime > worker.lastActivity!) {
+              worker.lastActivity = eventTime;
+            }
+          }
+        } catch {
+          // Skip malformed lines
+        }
+      }
+    } catch {
+      // File doesn't exist or can't be read - return empty array
+      return [];
+    }
+
+    // Convert map to WorkerCost array
+    const workerCosts: WorkerCost[] = [];
+
+    for (const [workerPath, data] of workerMap) {
+      const parts = workerPath.split("/");
+      const rig = parts[0];
+      const workerName = parts[2];
+
+      const typedTokens: TypedTokenUsage = {
+        input: data.tokens.input,
+        output: data.tokens.output,
+        cache_read: data.tokens.cache_read,
+        total: data.tokens.total,
+      };
+
+      // Calculate duration in minutes
+      let durationMinutes: number | undefined;
+      if (data.firstActivity && data.lastActivity) {
+        durationMinutes = Math.round(
+          (data.lastActivity.getTime() - data.firstActivity.getTime()) / 60000
+        );
+      }
+
+      // Calculate efficiency score (tokens per issue completed)
+      const issuesWorked = Array.from(data.issues);
+      const efficiencyScore = issuesWorked.length > 0
+        ? Math.round(data.tokens.total / issuesWorked.length)
+        : undefined;
+
+      workerCosts.push({
+        workerName,
+        rig,
+        totalTokens: data.tokens.total,
+        tokens: typedTokens,
+        estimatedCostUsd: calculateCost(typedTokens),
+        durationMinutes,
+        tokensPerMinute: durationMinutes && durationMinutes > 0
+          ? Math.round(data.tokens.total / durationMinutes)
+          : undefined,
+        issuesWorked,
+        sessionCount: data.sessionCount,
+        efficiencyScore,
+      });
+    }
+
+    // Sort by total tokens descending
+    return workerCosts.sort((a, b) => b.totalTokens - a.totalTokens);
   }
 }
 
