@@ -124,6 +124,39 @@ export function RefineryHealth({ rig, isLoading }: RefineryHealthProps) {
     );
   }
 
+  // Refinery configured but no merge queue data available yet
+  // This can happen when the refinery agent isn't running or hasn't reported status
+  if (!mergeQueue) {
+    return (
+      <Panel>
+        <PanelHeader
+          icon="cog"
+          title="Refinery Health"
+          actions={<StatusBadge status="thinking" size="sm" />}
+        />
+        <PanelBody>
+          <div className="flex items-center gap-6">
+            <div className="flex-shrink-0">
+              <Gauge value={0} size="lg" />
+            </div>
+            <div className="flex-1 space-y-3">
+              <div>
+                <p className="label text-ash">Queue Health</p>
+                <p className="data-value text-ash">Waiting for data</p>
+              </div>
+              <div>
+                <p className="label text-ash">Status</p>
+                <p className="text-sm text-ash/80">
+                  Refinery configured but not reporting. Check if refinery agent is running.
+                </p>
+              </div>
+            </div>
+          </div>
+        </PanelBody>
+      </Panel>
+    );
+  }
+
   return (
     <Panel>
       <PanelHeader
@@ -139,30 +172,28 @@ export function RefineryHealth({ rig, isLoading }: RefineryHealthProps) {
           <div className="flex-1 space-y-3">
             <div>
               <p className="label text-ash">Queue Health</p>
-              <p className="data-value capitalize">{mergeQueue?.health ?? "Unknown"}</p>
+              <p className="data-value capitalize">{mergeQueue.health}</p>
             </div>
             <div>
               <p className="label text-ash">Queue State</p>
-              <p className="text-sm font-mono text-bone">{mergeQueue?.state ?? "Idle"}</p>
+              <p className="text-sm font-mono text-bone">{mergeQueue.state}</p>
             </div>
-            {mergeQueue && (
-              <div className="flex gap-4 text-xs">
+            <div className="flex gap-4 text-xs">
+              <span>
+                <span className="text-fuel-yellow font-mono">{mergeQueue.pending}</span>
+                <span className="text-ash ml-1">pending</span>
+              </span>
+              <span>
+                <span className="text-acid-green font-mono">{mergeQueue.in_flight}</span>
+                <span className="text-ash ml-1">active</span>
+              </span>
+              {mergeQueue.blocked > 0 && (
                 <span>
-                  <span className="text-fuel-yellow font-mono">{mergeQueue.pending}</span>
-                  <span className="text-ash ml-1">pending</span>
+                  <span className="text-rust-orange font-mono">{mergeQueue.blocked}</span>
+                  <span className="text-ash ml-1">blocked</span>
                 </span>
-                <span>
-                  <span className="text-acid-green font-mono">{mergeQueue.in_flight}</span>
-                  <span className="text-ash ml-1">active</span>
-                </span>
-                {mergeQueue.blocked > 0 && (
-                  <span>
-                    <span className="text-rust-orange font-mono">{mergeQueue.blocked}</span>
-                    <span className="text-ash ml-1">blocked</span>
-                  </span>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </PanelBody>

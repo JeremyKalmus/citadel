@@ -2,40 +2,74 @@
 
 import { Panel, PanelHeader, PanelBody, StatusBadge, type Status } from "@/components/ui";
 import { CostSparkline } from "@/components/cost";
-import type { Polecat } from "@/lib/gastown";
+import type { Polecat, Hook } from "@/lib/gastown";
 import type { ChartWorkerCost as WorkerCost } from "@/lib/gastown/types";
 import { Terminal } from "lucide-react";
 
 interface WorkerGridProps {
   polecats: Polecat[];
+  /** Optional hooks data from rig to determine work assignment */
+  hooks?: Hook[];
   /** Optional cost data keyed by "rig/workerName" */
   workerCosts?: Map<string, WorkerCost>;
   isLoading?: boolean;
 }
 
-function mapStateToStatus(state: string, sessionRunning: boolean): Status {
-  if (!sessionRunning) return "dead";
-  switch (state.toLowerCase()) {
-    case "active":
-    case "running":
-      return "active";
-    case "thinking":
-    case "processing":
-      return "thinking";
-    case "idle":
-    case "waiting":
-      return "slow";
-    case "blocked":
-      return "blocked";
-    case "done":
-    case "complete":
-      return "done";
-    default:
-      return sessionRunning ? "active" : "unresponsive";
+/**
+ * Determine worker status using proper journey detection logic.
+ *
+ * This aligns with Gas Town's detectJourneyStage() which considers:
+ * 1. Polecat state (working, blocked, done, etc.)
+ * 2. Session running status
+ * 3. Hook assignment (whether work is slung to the worker)
+ *
+ * Without hook context, workers without sessions show as "dead" even when
+ * they just finished work successfully.
+ */
+function mapStateToStatus(state: string, sessionRunning: boolean, hasAssignedWork: boolean): Status {
+  const normalizedState = state.toLowerCase();
+
+  // Dead state - worker crashed
+  if (normalizedState === "dead") return "dead";
+
+  // Done state - work completed
+  if (normalizedState === "done" && !sessionRunning) return "done";
+
+  // Blocked state
+  if (normalizedState === "blocked") return "blocked";
+
+  // Working state - actively executing
+  if ((normalizedState === "working" || normalizedState === "waiting") && sessionRunning) {
+    return "active";
   }
+
+  // Assigned but not started - work slung but session not running
+  if (hasAssignedWork && !sessionRunning) return "thinking";
+
+  // Processing states
+  if (normalizedState === "thinking" || normalizedState === "processing") {
+    return "thinking";
+  }
+
+  // Session running without clear state
+  if (sessionRunning) return "active";
+
+  // Idle - no work assigned, no session
+  return "slow";
 }
 
-export function WorkerGrid({ polecats, workerCosts, isLoading }: WorkerGridProps) {
+/**
+ * Find hook for a polecat to determine if it has assigned work.
+ * Hooks can reference workers by name alone or rig/name format.
+ */
+function findHookForPolecat(polecat: Polecat, hooks?: Hook[]): Hook | undefined {
+  if (!hooks) return undefined;
+  return hooks.find(
+    (h) => h.agent === polecat.name || h.agent === `${polecat.rig}/${polecat.name}`
+  );
+}
+
+export function WorkerGrid({ polecats, hooks, workerCosts, isLoading }: WorkerGridProps) {
   if (isLoading) {
     return (
       <Panel>
@@ -77,6 +111,8 @@ export function WorkerGrid({ polecats, workerCosts, isLoading }: WorkerGridProps
           {polecats.map((polecat) => {
             const costKey = `${polecat.rig}/${polecat.name}`;
             const cost = workerCosts?.get(costKey);
+            const hook = findHookForPolecat(polecat, hooks);
+            const hasAssignedWork = hook?.has_work ?? false;
 
             return (
               <div
@@ -105,7 +141,7 @@ export function WorkerGrid({ polecats, workerCosts, isLoading }: WorkerGridProps
                     />
                   )}
                   <StatusBadge
-                    status={mapStateToStatus(polecat.state, polecat.session_running)}
+                    status={mapStateToStatus(polecat.state, polecat.session_running, hasAssignedWork)}
                     size="sm"
                   />
                 </div>

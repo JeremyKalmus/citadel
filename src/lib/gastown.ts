@@ -1020,10 +1020,23 @@ export class GasTownClient {
     return status.rigs.find((r) => r.name === name) || null;
   }
 
-  async getRigConvoys(rig: string): Promise<Convoy[]> {
-    const convoys = await this.getConvoys();
-    // Filter convoys by rig (convoy IDs include rig name as prefix)
-    return convoys.filter((c) => c.id.startsWith(`${rig}/`) || c.id.includes(`/${rig}/`));
+  /**
+   * Get convoys relevant to a rig.
+   *
+   * NOTE: Convoys are ALWAYS at hq-* level (town-wide), not per-rig.
+   * They use cross-prefix tracking to coordinate issues across multiple rigs.
+   * See: `gt convoy --help` - "Cross-prefix capable (convoy in hq-* tracks issues in gt-*, bd-*)"
+   *
+   * We return ALL convoys because:
+   * 1. Convoy IDs are hq-cv-* not rig/* - filtering by rig prefix never matches
+   * 2. Any convoy may track issues relevant to this rig
+   * 3. Town-level visibility is the correct architectural pattern
+   *
+   * @param _rig - Rig name (currently unused - kept for API compatibility)
+   */
+  async getRigConvoys(_rig: string): Promise<Convoy[]> {
+    // Return all convoys - they are town-level coordinators
+    return this.getConvoys();
   }
 
   async getPolecatStatus(rig: string, name: string): Promise<PolecatDetail> {

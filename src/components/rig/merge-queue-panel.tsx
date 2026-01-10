@@ -152,7 +152,7 @@ export function MergeQueuePanel({ rig, isLoading }: MergeQueuePanelProps) {
     );
   }
 
-  // No queue data available
+  // No queue data available - refinery configured but not reporting
   if (!mergeQueue) {
     return (
       <Panel>
@@ -164,9 +164,9 @@ export function MergeQueuePanel({ rig, isLoading }: MergeQueuePanelProps) {
         <PanelBody>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <GitMerge className="w-10 h-10 text-ash mb-3" />
-            <span className="text-bone font-medium">Queue Data Unavailable</span>
-            <span className="text-ash/60 text-xs mt-1">
-              Waiting for refinery status...
+            <span className="text-bone font-medium">Waiting for Data</span>
+            <span className="text-ash/60 text-xs mt-1 max-w-[250px]">
+              Refinery is configured but not reporting status. Check if the refinery agent is running.
             </span>
           </div>
         </PanelBody>

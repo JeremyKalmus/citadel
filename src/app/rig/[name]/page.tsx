@@ -145,7 +145,7 @@ export default function RigPage({ params }: RigPageProps) {
 
       {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <WorkerGrid polecats={polecats || []} isLoading={polecatsLoading} />
+        <WorkerGrid polecats={polecats || []} hooks={rig.hooks} isLoading={polecatsLoading} />
         <ConvoyList convoys={convoys || []} isLoading={convoysLoading} />
       </div>
 
