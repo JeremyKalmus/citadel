@@ -29,6 +29,12 @@ import {
   RefreshCw,
   Puzzle,
   HelpCircle,
+  Home,
+  Factory,
+  Eye,
+  Circle,
+  ChevronDown,
+  ChevronRight,
   type LucideIcon,
 } from "lucide-react"
 
@@ -71,6 +77,13 @@ export type IconName =
   | "refresh-cw"
   | "puzzle"
   | "help-circle"
+  // Entity icons (Lucide)
+  | "home"
+  | "factory"
+  | "eye"
+  | "circle"
+  | "chevron-down"
+  | "chevron-right"
   // Domain icons (Font Awesome)
   | "truck"
   | "road"
@@ -109,6 +122,13 @@ const iconMap: Record<IconName, IconComponent> = {
   "refresh-cw": RefreshCw,
   "puzzle": Puzzle,
   "help-circle": HelpCircle,
+  // Lucide - Entity icons
+  "home": Home,
+  "factory": Factory,
+  "eye": Eye,
+  "circle": Circle,
+  "chevron-down": ChevronDown,
+  "chevron-right": ChevronRight,
   // Font Awesome - Domain
   "truck": FaTruck,
   "road": FaRoad,
@@ -212,4 +232,17 @@ export const guideIcons: Record<string, IconName> = {
   lifecycle: "refresh-cw",
   plugins: "puzzle",
   scenarios: "help-circle",
+}
+
+/**
+ * Entity type icon mapping for Guide/EntityCard
+ */
+export const entityIcons: Record<string, IconName> = {
+  town: "home",
+  rig: "container",
+  convoy: "truck",
+  polecat: "terminal",
+  refinery: "factory",
+  witness: "eye",
+  beads: "circle",
 }
