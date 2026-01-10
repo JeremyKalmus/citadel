@@ -2,13 +2,16 @@
 
 import { Panel, PanelHeader, PanelBody, StatusBadge, type Status } from "@/components/ui";
 import { ConvoyJourneyCompact } from "@/components/journey";
+import { CostSparkline } from "@/components/cost";
 import type { Convoy } from "@/lib/gastown";
-import type { ConvoyJourneyState } from "@/lib/gastown/types";
+import type { ConvoyJourneyState, ConvoyCost } from "@/lib/gastown/types";
 import { JourneyStage } from "@/lib/gastown/types";
 import { Truck } from "lucide-react";
 
 interface ConvoyListProps {
   convoys: Convoy[];
+  /** Optional cost data keyed by convoy ID */
+  convoyCosts?: Map<string, ConvoyCost>;
   isLoading?: boolean;
 }
 
@@ -106,7 +109,7 @@ function deriveConvoyJourneyState(convoy: Convoy): ConvoyJourneyState {
   };
 }
 
-export function ConvoyList({ convoys, isLoading }: ConvoyListProps) {
+export function ConvoyList({ convoys, convoyCosts, isLoading }: ConvoyListProps) {
   if (isLoading) {
     return (
       <Panel>
@@ -153,6 +156,8 @@ export function ConvoyList({ convoys, isLoading }: ConvoyListProps) {
         <div className="divide-y divide-chrome-border/50">
           {convoys.map((convoy) => {
             const journeyState = deriveConvoyJourneyState(convoy);
+            const cost = convoyCosts?.get(convoy.id);
+
             return (
               <div
                 key={convoy.id}
@@ -175,10 +180,19 @@ export function ConvoyList({ convoys, isLoading }: ConvoyListProps) {
                     <ConvoyJourneyCompact convoy={journeyState} />
                   </div>
                 </div>
-                <StatusBadge
-                  status={mapConvoyStatusToStatus(convoy.status)}
-                  size="sm"
-                />
+                <div className="flex items-center gap-3">
+                  {cost && (
+                    <CostSparkline
+                      tokens={cost.totalTokens}
+                      costUsd={cost.estimatedCostUsd}
+                      size="sm"
+                    />
+                  )}
+                  <StatusBadge
+                    status={mapConvoyStatusToStatus(convoy.status)}
+                    size="sm"
+                  />
+                </div>
               </div>
             );
           })}
