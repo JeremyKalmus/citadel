@@ -35,6 +35,14 @@ import {
   Circle,
   ChevronDown,
   ChevronRight,
+  // Additional icons for plugins
+  Anchor,
+  Coins,
+  FileText,
+  Info,
+  Shield,
+  Link,
+  Box,
   type LucideIcon,
 } from "lucide-react"
 
@@ -84,6 +92,14 @@ export type IconName =
   | "circle"
   | "chevron-down"
   | "chevron-right"
+  // Plugin icons (Lucide)
+  | "anchor"
+  | "coins"
+  | "file-text"
+  | "info"
+  | "shield"
+  | "link"
+  | "box"
   // Domain icons (Font Awesome)
   | "truck"
   | "road"
@@ -129,6 +145,14 @@ const iconMap: Record<IconName, IconComponent> = {
   "circle": Circle,
   "chevron-down": ChevronDown,
   "chevron-right": ChevronRight,
+  // Lucide - Plugin icons
+  "anchor": Anchor,
+  "coins": Coins,
+  "file-text": FileText,
+  "info": Info,
+  "shield": Shield,
+  "link": Link,
+  "box": Box,
   // Font Awesome - Domain
   "truck": FaTruck,
   "road": FaRoad,
@@ -245,4 +269,14 @@ export const entityIcons: Record<string, IconName> = {
   refinery: "factory",
   witness: "eye",
   beads: "circle",
+}
+
+/**
+ * Plugin icon mapping for PluginPanel
+ */
+export const pluginIcons: Record<string, IconName> = {
+  guzzoline: "fuel",
+  keeper: "shield",
+  hitch: "link",
+  default: "puzzle",
 }
