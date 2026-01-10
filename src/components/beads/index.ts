@@ -1,6 +1,6 @@
 export { DependencyGraph } from "./dependency-graph"
-export { BeadsFilter } from "./beads-filter"
-export { BeadsStats } from "./beads-stats"
+export { BeadsFilterTabs } from "./beads-filter"
+export { BeadsStatsGrid, BeadsStatsCompact } from "./beads-stats"
 export { BeadsTable } from "./beads-table"
 export { BeadDetailPanel, BeadDetailPanelCompact } from "./bead-detail-panel"
 export { BeadsTree } from "./beads-tree"
