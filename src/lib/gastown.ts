@@ -489,6 +489,121 @@ export function getJourneyColor(stage: JourneyStage): string {
 }
 
 // ============================================================================
+// Git Activity Types (Part 3: Git Diff Viewer)
+// ============================================================================
+
+export type FileChangeStatus = "added" | "modified" | "deleted" | "renamed";
+
+export interface FileChange {
+  path: string;
+  status: FileChangeStatus;
+  additions: number;
+  deletions: number;
+  patch?: string; // Unified diff format
+}
+
+export interface CommitStats {
+  additions: number;
+  deletions: number;
+  files_changed: number;
+}
+
+export interface Commit {
+  sha: string;
+  message: string;
+  timestamp: string;
+  author: string;
+  stats: CommitStats;
+  files: FileChange[];
+}
+
+export interface WorkerGitActivity {
+  worker: string;
+  rig: string;
+  branch: string;
+  base_branch: string;
+  commits: Commit[];
+  total_additions: number;
+  total_deletions: number;
+  files_changed: string[];
+}
+
+// ============================================================================
+// Git Activity Parsing Helpers
+// ============================================================================
+
+function parseFileStatus(statusChar: string): FileChangeStatus {
+  switch (statusChar) {
+    case "A":
+      return "added";
+    case "D":
+      return "deleted";
+    case "R":
+      return "renamed";
+    default:
+      return "modified";
+  }
+}
+
+function parseNumstatLine(line: string): { additions: number; deletions: number; path: string } | null {
+  const match = line.match(/^(\d+|-)\t(\d+|-)\t(.+)$/);
+  if (!match) return null;
+  return {
+    additions: match[1] === "-" ? 0 : parseInt(match[1], 10),
+    deletions: match[2] === "-" ? 0 : parseInt(match[2], 10),
+    path: match[3],
+  };
+}
+
+function parseGitLog(logOutput: string): Omit<Commit, "files">[] {
+  const commits: Omit<Commit, "files">[] = [];
+  const lines = logOutput.trim().split("\n").filter(Boolean);
+
+  for (const line of lines) {
+    const parts = line.split("|");
+    if (parts.length >= 4) {
+      commits.push({
+        sha: parts[0],
+        message: parts[1],
+        timestamp: parts[2],
+        author: parts[3],
+        stats: { additions: 0, deletions: 0, files_changed: 0 },
+      });
+    }
+  }
+
+  return commits;
+}
+
+function parseDiffNumstat(numstatOutput: string): Map<string, { additions: number; deletions: number }> {
+  const fileStats = new Map<string, { additions: number; deletions: number }>();
+  const lines = numstatOutput.trim().split("\n").filter(Boolean);
+
+  for (const line of lines) {
+    const parsed = parseNumstatLine(line);
+    if (parsed) {
+      fileStats.set(parsed.path, { additions: parsed.additions, deletions: parsed.deletions });
+    }
+  }
+
+  return fileStats;
+}
+
+function parseNameStatus(nameStatusOutput: string): Map<string, FileChangeStatus> {
+  const fileStatuses = new Map<string, FileChangeStatus>();
+  const lines = nameStatusOutput.trim().split("\n").filter(Boolean);
+
+  for (const line of lines) {
+    const match = line.match(/^([AMDRT])\d*\t(.+?)(?:\t.+)?$/);
+    if (match) {
+      fileStatuses.set(match[2], parseFileStatus(match[1]));
+    }
+  }
+
+  return fileStatuses;
+}
+
+// ============================================================================
 // Client
 // ============================================================================
 
@@ -888,6 +1003,7 @@ export class GasTownClient {
     return this.runCommand<ConvoyDetail>(`gt convoy status ${id} --json`);
   }
 
+<<<<<<< HEAD
   // ============================================================================
   // Actions
   // ============================================================================
@@ -1451,6 +1567,97 @@ export class GasTownClient {
       return result[0];
     }
     throw new Error(`Bead ${id} not found`);
+  }
+
+  // ============================================================================
+  // Git Activity
+  // ============================================================================
+
+  async getWorkerGitActivity(
+    rig: string,
+    worker: string,
+    baseBranch: string = "main"
+  ): Promise<WorkerGitActivity> {
+    // Get worker's current branch
+    const polecatStatus = await this.getPolecatStatus(rig, worker);
+    const workerBranch = polecatStatus.branch;
+    const clonePath = polecatStatus.clone_path;
+
+    // Get commits on this branch not on base
+    let logOutput = "";
+    try {
+      const { stdout } = await execAsync(
+        `git log ${baseBranch}..${workerBranch} --format='%H|%s|%aI|%an'`,
+        { cwd: clonePath }
+      );
+      logOutput = stdout;
+    } catch {
+      // No commits or branch doesn't exist yet
+      logOutput = "";
+    }
+
+    // Get numstat for file stats
+    let numstatOutput = "";
+    try {
+      const { stdout } = await execAsync(
+        `git diff --numstat ${baseBranch}...${workerBranch}`,
+        { cwd: clonePath }
+      );
+      numstatOutput = stdout;
+    } catch {
+      numstatOutput = "";
+    }
+
+    // Get name-status for file change types
+    let nameStatusOutput = "";
+    try {
+      const { stdout } = await execAsync(
+        `git diff --name-status ${baseBranch}...${workerBranch}`,
+        { cwd: clonePath }
+      );
+      nameStatusOutput = stdout;
+    } catch {
+      nameStatusOutput = "";
+    }
+
+    // Parse outputs
+    const commits = parseGitLog(logOutput);
+    const fileStats = parseDiffNumstat(numstatOutput);
+    const fileStatuses = parseNameStatus(nameStatusOutput);
+
+    // Build file changes array
+    const fileChanges: FileChange[] = [];
+    let totalAdditions = 0;
+    let totalDeletions = 0;
+
+    for (const [path, stats] of fileStats) {
+      const status = fileStatuses.get(path) || "modified";
+      fileChanges.push({
+        path,
+        status,
+        additions: stats.additions,
+        deletions: stats.deletions,
+      });
+      totalAdditions += stats.additions;
+      totalDeletions += stats.deletions;
+    }
+
+    // Build commits with empty files (detailed file info per commit would require more parsing)
+    const commitsWithFiles: Commit[] = commits.map((c) => ({
+      ...c,
+      files: [],
+    }));
+
+    return {
+      worker,
+      rig,
+      branch: workerBranch,
+      base_branch: baseBranch,
+      commits: commitsWithFiles,
+      total_additions: totalAdditions,
+      total_deletions: totalDeletions,
+      files_changed: Array.from(fileStats.keys()),
+    };
   }
 }
 

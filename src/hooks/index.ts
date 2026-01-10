@@ -30,3 +30,6 @@ export type { UsePolecatActionsOptions, UsePolecatActionsResult } from "./use-po
 
 export { useBeadDetail } from "./use-bead-detail";
 export type { UseBeadDetailOptions, UseBeadDetailResult } from "./use-bead-detail";
+
+export { useWorkerGit } from "./use-worker-git";
+export type { UseWorkerGitOptions, UseWorkerGitResult } from "./use-worker-git";
