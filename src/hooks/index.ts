@@ -36,3 +36,6 @@ export type { UseWorkerGitOptions, UseWorkerGitResult } from "./use-worker-git";
 
 export { useBeads } from "./use-beads";
 export type { UseBeadsOptions, UseBeadsResult } from "./use-beads";
+
+export { useConvoyBeads } from "./use-convoy-beads";
+export type { UseConvoyBeadsOptions, UseConvoyBeadsResult } from "./use-convoy-beads";

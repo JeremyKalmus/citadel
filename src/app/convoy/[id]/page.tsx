@@ -4,7 +4,8 @@ import { use } from "react"
 import Link from "next/link"
 import { ActionButton, Panel, PanelHeader, PanelBody } from "@/components/ui"
 import { StatusExplanation, ActivityTimeline, type ActivityEvent } from "@/components/dashboard"
-import { useConvoyDetail } from "@/hooks"
+import { ConvoyBeads } from "@/components/convoy"
+import { useConvoyDetail, useConvoyBeads } from "@/hooks"
 import type { Status } from "@/components/ui"
 import { RefreshCw, ArrowLeft } from "lucide-react"
 import { Icon } from "@/components/ui/icon"
@@ -84,30 +85,6 @@ function generateConvoyActivityEvents(
   return events
 }
 
-function IssuesList({ issues }: { issues: string[] }) {
-  if (!issues || issues.length === 0) {
-    return (
-      <div className="p-4 text-center">
-        <p className="caption text-ash">No issues assigned</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="px-4">
-      {issues.map((issue) => (
-        <div
-          key={issue}
-          className="flex items-center gap-3 py-3 border-b border-chrome-border/30 last:border-0"
-        >
-          <Icon name="terminal" aria-label="" variant="muted" size="sm" />
-          <span className="body-text font-mono">{issue}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 function WorkersList({ workers }: { workers: string[] }) {
   if (!workers || workers.length === 0) {
     return (
@@ -139,6 +116,11 @@ export default function ConvoyPage({ params }: ConvoyPageProps) {
 
   const { data: convoy, isLoading, error, refresh } = useConvoyDetail({
     id: decodedId,
+    refreshInterval: 30000,
+  })
+
+  const { data: beads, isLoading: beadsLoading } = useConvoyBeads({
+    convoyId: decodedId,
     refreshInterval: 30000,
   })
 
@@ -234,50 +216,30 @@ export default function ConvoyPage({ params }: ConvoyPageProps) {
         />
       </div>
 
-      {/* Issues and Workers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Panel>
-          <PanelHeader
-            icon="terminal"
-            title="Issues"
-            actions={
-              <span className="caption text-ash">
-                {convoy?.issues?.length ?? 0} total
-              </span>
-            }
-          />
-          <PanelBody className="p-0">
-            {isLoading ? (
-              <div className="p-4 text-center">
-                <p className="caption text-ash">Loading...</p>
-              </div>
-            ) : (
-              <IssuesList issues={convoy?.issues || []} />
-            )}
-          </PanelBody>
-        </Panel>
+      {/* Linked Beads */}
+      <ConvoyBeads beads={beads || []} isLoading={beadsLoading} />
 
-        <Panel>
-          <PanelHeader
-            icon="truck"
-            title="Assigned Workers"
-            actions={
-              <span className="caption text-ash">
-                {convoy?.assigned_workers?.length ?? 0} total
-              </span>
-            }
-          />
-          <PanelBody className="p-0">
-            {isLoading ? (
-              <div className="p-4 text-center">
-                <p className="caption text-ash">Loading...</p>
-              </div>
-            ) : (
-              <WorkersList workers={convoy?.assigned_workers || []} />
-            )}
-          </PanelBody>
-        </Panel>
-      </div>
+      {/* Workers */}
+      <Panel>
+        <PanelHeader
+          icon="truck"
+          title="Assigned Workers"
+          actions={
+            <span className="caption text-ash">
+              {convoy?.assigned_workers?.length ?? 0} total
+            </span>
+          }
+        />
+        <PanelBody className="p-0">
+          {isLoading ? (
+            <div className="p-4 text-center">
+              <p className="caption text-ash">Loading...</p>
+            </div>
+          ) : (
+            <WorkersList workers={convoy?.assigned_workers || []} />
+          )}
+        </PanelBody>
+      </Panel>
     </div>
   )
 }
