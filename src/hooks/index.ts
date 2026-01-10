@@ -27,3 +27,6 @@ export type { UseConvoyDetailOptions, UseConvoyDetailResult } from "./use-convoy
 
 export { usePolecatActions } from "./use-polecat-actions";
 export type { UsePolecatActionsOptions, UsePolecatActionsResult } from "./use-polecat-actions";
+
+export { useBeadDetail } from "./use-bead-detail";
+export type { UseBeadDetailOptions, UseBeadDetailResult } from "./use-bead-detail";

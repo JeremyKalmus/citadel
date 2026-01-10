@@ -176,6 +176,35 @@ export interface TokenUsage {
   timestamp: string;
 }
 
+export interface BeadDependency {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: number;
+  issue_type: string;
+  assignee?: string;
+  created_at?: string;
+  created_by?: string;
+  updated_at?: string;
+  dependency_type: "blocks" | "parent-child";
+}
+
+export interface BeadDetail {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: number;
+  issue_type: string;
+  assignee?: string;
+  created_at: string;
+  created_by?: string;
+  updated_at: string;
+  dependencies?: BeadDependency[];
+  parent?: string;
+}
+
 export interface GuzzolineStats {
   total_tokens_today: number;
   total_tokens_week: number;
@@ -859,7 +888,7 @@ export class GasTownClient {
     return this.runCommand<ConvoyDetail>(`gt convoy status ${id} --json`);
   }
 
-// ============================================================================
+  // ============================================================================
   // Actions
   // ============================================================================
 
@@ -1409,6 +1438,19 @@ export class GasTownClient {
 
     // Sort by hour ascending
     return hourlyUsage.sort((a, b) => new Date(a.hour).getTime() - new Date(b.hour).getTime());
+  }
+
+  // ============================================================================
+  // Beads
+  // ============================================================================
+
+  async getBeadDetail(id: string): Promise<BeadDetail> {
+    const result = await this.runCommand<BeadDetail[]>(`bd show ${id} --json`);
+    // bd show returns an array, we want the first element
+    if (Array.isArray(result) && result.length > 0) {
+      return result[0];
+    }
+    throw new Error(`Bead ${id} not found`);
   }
 }
 
