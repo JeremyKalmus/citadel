@@ -1599,7 +1599,7 @@ export class GasTownClient {
     throw new Error(`Bead ${id} not found`);
   }
 
-  // ============================================================================
+// ============================================================================
   // Git Activity
   // ============================================================================
 
@@ -1760,6 +1760,38 @@ export class GasTownClient {
       in_progress,
       blocked,
     };
+  }
+
+  /**
+   * Get all beads (issues) for a convoy.
+   * Fetches the convoy details and resolves full bead information for each issue.
+   *
+   * @param convoyId - The convoy ID to get beads for
+   * @returns Array of BeadDetail objects for all issues in the convoy
+   */
+  async getBeadsForConvoy(convoyId: string): Promise<BeadDetail[]> {
+    // Get convoy details to retrieve issue list
+    const convoy = await this.getConvoyStatus(convoyId);
+    const issues = convoy.issues || [];
+
+    if (issues.length === 0) {
+      return [];
+    }
+
+    // Fetch bead details for each issue in parallel
+    const beadPromises = issues.map(async (issueId) => {
+      try {
+        return await this.getBeadDetail(issueId);
+      } catch {
+        // If a bead can't be found, return null and filter later
+        return null;
+      }
+    });
+
+    const beads = await Promise.all(beadPromises);
+
+    // Filter out any null results (beads that couldn't be found)
+    return beads.filter((bead): bead is BeadDetail => bead !== null);
   }
 }
 
