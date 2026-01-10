@@ -1,0 +1,366 @@
+# Frontend Seed Registry
+# Citadel Dashboard - Gas Town UI
+#
+# Machine-readable registry of approved UI components.
+# Keeper uses this to enforce reuse before extension.
+#
+# Founding Convoy: 2026-01-09
+# Design System: DS2 (Black & Chrome Edition)
+
+# =============================================================================
+# CORE UI COMPONENTS (src/components/ui/)
+# =============================================================================
+
+components:
+  # ---------------------------------------------------------------------------
+  # Panel - Container component
+  # ---------------------------------------------------------------------------
+  Panel:
+    variants: [default, elevated, inset]
+    location: src/components/ui/panel.tsx
+    subcomponents:
+      - PanelHeader
+      - PanelBody
+    when_to_use: |
+      Container for grouped content. Industrial control panel aesthetic.
+      - default: Standard surface with visible border
+      - elevated: Emphasized surface with highlight shadow
+      - inset: Recessed feel for secondary content
+    forbidden_extensions:
+      - Custom border colors outside DS2 palette
+      - Rounded corners larger than rounded-sm
+      - Drop shadows (use inset shadows only)
+      - Custom backgrounds outside gunmetal variants
+    storybook: src/components/ui/panel.stories.tsx
+
+  # ---------------------------------------------------------------------------
+  # StatusBadge - 7-state status indicator
+  # ---------------------------------------------------------------------------
+  StatusBadge:
+    variants: [active, thinking, slow, unresponsive, dead, blocked, done]
+    location: src/components/ui/status-badge.tsx
+    sizes: [sm, md]
+    when_to_use: |
+      Status indication for workers, rigs, and other entities.
+      Each status maps to a specific DS2 color and icon.
+      - active: Acid Green - Making progress
+      - thinking: Ash - Working but quiet
+      - slow: Fuel Yellow - Taking longer than usual
+      - unresponsive: Rust Orange - May need attention
+      - dead: Red - Session terminated
+      - blocked: Ash - Waiting on dependency
+      - done: Acid Green - Completed successfully
+    forbidden_extensions:
+      - New status states without ADR approval
+      - Custom colors outside DS2 status palette
+      - Custom icons not in statusIcons mapping
+    storybook: src/components/ui/status-badge.stories.tsx
+
+  # ---------------------------------------------------------------------------
+  # Gauge - Segmented progress indicator
+  # ---------------------------------------------------------------------------
+  Gauge:
+    variants: []
+    location: src/components/ui/gauge.tsx
+    sizes: [sm, md, lg]
+    props:
+      - value (0-100)
+      - segments (default: 10)
+      - showLabel (boolean)
+    when_to_use: |
+      Progress indication for convoys, tasks, and completion states.
+      Industrial fuel gauge aesthetic with discrete segments.
+      "Like a fuel gauge on a war rig - you see exactly how much is left."
+    forbidden_extensions:
+      - Continuous (non-segmented) progress bars
+      - Custom segment colors
+      - Animated fills (use ratchet transition only)
+      - Circular or radial gauges
+    storybook: src/components/ui/gauge.stories.tsx
+
+  # ---------------------------------------------------------------------------
+  # ActionButton - Interactive button
+  # ---------------------------------------------------------------------------
+  ActionButton:
+    variants: [default, danger, ghost]
+    location: src/components/ui/action-button.tsx
+    sizes: [sm, md]
+    props:
+      - loading (boolean)
+      - icon (ReactNode)
+    when_to_use: |
+      Any interactive action. Ghost variant for subtle actions.
+      - default: Primary actions (bone text on carbon-black)
+      - danger: Destructive actions (red tinted)
+      - ghost: Secondary/subtle actions
+    forbidden_extensions:
+      - Custom colors outside DS2 palette
+      - New variants without ADR approval
+      - Inline styles
+      - Non-standard loading indicators
+    storybook: src/components/ui/action-button.stories.tsx
+
+  # ---------------------------------------------------------------------------
+  # Icon - Unified icon system
+  # ---------------------------------------------------------------------------
+  Icon:
+    variants: [default, alert, active, ok, muted]
+    location: src/components/ui/icon.tsx
+    sizes: [xs, sm, md, lg, xl]
+    icon_sources:
+      - Heroicons (status indicators)
+      - Lucide (UI elements)
+      - Font Awesome (domain icons)
+    when_to_use: |
+      All icons must go through this unified component.
+      Provides consistent sizing, coloring, and accessibility.
+      Required: aria-label for accessibility.
+    forbidden_extensions:
+      - Direct import of icon libraries (must use Icon wrapper)
+      - Custom icon colors outside variant system
+      - Icons without aria-label
+    icon_names:
+      status: [play-circle, check-circle, exclamation-triangle, x-circle, clock, lock, cpu, cog]
+      activity: [activity, brain, container, truck-lucide, terminal, settings]
+      domain: [truck, road]
+    storybook: src/components/ui/icon.stories.tsx
+
+# =============================================================================
+# LAYOUT COMPONENTS (src/components/layout/)
+# =============================================================================
+
+  # ---------------------------------------------------------------------------
+  # Header - Sticky navigation header
+  # ---------------------------------------------------------------------------
+  Header:
+    variants: []
+    location: src/components/layout/header.tsx
+    when_to_use: |
+      Top-level navigation with logo, nav, and actions.
+      Sticky with backdrop blur. Single instance per page.
+    forbidden_extensions:
+      - Multiple headers
+      - Custom logo treatments
+      - Non-sticky variants
+
+  # ---------------------------------------------------------------------------
+  # Nav - Tab navigation
+  # ---------------------------------------------------------------------------
+  Nav:
+    variants: []
+    location: src/components/layout/nav.tsx
+    when_to_use: |
+      Primary navigation between main sections.
+      Uses Icon component for nav icons.
+      Responsive: icons on mobile, icons+labels on desktop.
+    forbidden_extensions:
+      - Dropdown menus (use separate page routes)
+      - More than 5 nav items
+      - Custom active state styling
+
+  # ---------------------------------------------------------------------------
+  # Breadcrumb - Navigation breadcrumbs
+  # ---------------------------------------------------------------------------
+  Breadcrumb:
+    variants: []
+    location: src/components/layout/breadcrumb.tsx
+    when_to_use: |
+      Hierarchical navigation for drill-down views.
+      Town → Rig → Worker/Convoy/Issue
+    forbidden_extensions:
+      - More than 4 levels deep
+      - Custom separators
+
+# =============================================================================
+# HOOKS (src/hooks/)
+# =============================================================================
+
+hooks:
+  useTownStatus:
+    location: src/hooks/use-town-status.ts
+    when_to_use: "Fetch and cache town status data"
+    returns: "{ data: TownStatus, error, isLoading, refresh }"
+
+  useConvoys:
+    location: src/hooks/use-convoys.ts
+    when_to_use: "Fetch and cache convoy list"
+    returns: "{ data: Convoy[], error, isLoading, refresh }"
+
+  usePolecats:
+    location: src/hooks/use-polecats.ts
+    when_to_use: "Fetch and cache worker list (optionally by rig)"
+    returns: "{ data: Polecat[], error, isLoading, refresh }"
+
+  useGuzzoline:
+    location: src/hooks/use-guzzoline.ts
+    when_to_use: "Fetch and cache token usage stats"
+    returns: "{ data: GuzzolineStats, error, isLoading, refresh }"
+
+# =============================================================================
+# PHASE 2 COMPONENTS (Approved via ADR-003)
+# =============================================================================
+
+  # ---------------------------------------------------------------------------
+  # JourneyTracker - Stage-based lifecycle visualization (Phase 2A)
+  # ---------------------------------------------------------------------------
+  JourneyTracker:
+    status: approved
+    approved_by: ADR-003
+    phase: "2A"
+    location: src/components/journey/journey-tracker.tsx
+    when_to_use: |
+      Display stage-by-stage progress of an issue through its lifecycle.
+      5 stages: queued → claimed → working → pr → merged
+      Optional substages for "working": analyzing, coding, testing, pr_prep
+    props:
+      - issueId: string
+      - currentStage: 0-4
+      - substage?: '2a' | '2b' | '2c' | '2d'
+      - timestamps: object
+      - actor?: string
+    constraints:
+      - Must use DS2 status colors for stage indicators
+      - Must use Icon component for stage icons
+      - Maximum 5 stages (as defined)
+    forbidden_extensions:
+      - Custom stage colors
+      - More than 5 stages without ADR
+      - Non-linear stage flows
+
+  # ---------------------------------------------------------------------------
+  # ConvoyJourney - Aggregate journey view (Phase 2A)
+  # ---------------------------------------------------------------------------
+  ConvoyJourney:
+    status: approved
+    approved_by: ADR-003
+    phase: "2A"
+    location: src/components/journey/convoy-journey.tsx
+    composition_of: [JourneyTracker, Gauge]
+    when_to_use: |
+      Display aggregate stage distribution for a convoy.
+      Shows how many issues are in each stage + overall progress.
+    forbidden_extensions:
+      - Individual issue details (use JourneyTracker for that)
+
+  # ---------------------------------------------------------------------------
+  # CostSparkline - Inline cost indicator (Phase 2B)
+  # ---------------------------------------------------------------------------
+  CostSparkline:
+    status: approved
+    approved_by: ADR-003
+    phase: "2B"
+    location: src/components/cost/cost-sparkline.tsx
+    when_to_use: |
+      Inline token/cost display with optional trend indicator.
+      NOT for progress (use Gauge). For value display only.
+      Example: "450k • $2.25 ▲"
+    props:
+      - tokens: number
+      - costUsd: number
+      - trend?: 'up' | 'down' | 'flat'
+      - size?: 'sm' | 'md' | 'lg'
+    constraints:
+      - Must use DS2 typography (data-value, label)
+      - Trend up: acid-green, Trend down: rust-orange
+    forbidden_extensions:
+      - Custom colors
+      - Animated values
+
+  # ---------------------------------------------------------------------------
+  # CostChart - Token usage chart (Phase 2B)
+  # ---------------------------------------------------------------------------
+  CostChart:
+    status: approved
+    approved_by: ADR-003
+    phase: "2B"
+    location: src/components/cost/cost-chart.tsx
+    when_to_use: |
+      Hourly/daily token usage visualization.
+      Simple bar or line charts only.
+    constraints:
+      - Colors: bone (data), ash (axes), gunmetal (background)
+      - Chart types: bar, line only
+      - Must fit within Panel component
+    forbidden_extensions:
+      - Pie charts, radar charts, complex visualizations
+      - Gradients or shadows
+      - Custom colors
+
+  # ---------------------------------------------------------------------------
+  # DiffViewer - Git diff display (Phase 2C)
+  # ---------------------------------------------------------------------------
+  DiffViewer:
+    status: approved
+    approved_by: ADR-003
+    phase: "2C"
+    location: src/components/git/diff-viewer.tsx
+    when_to_use: |
+      Display code changes with syntax highlighting.
+      Shows file-by-file diffs with +/- indicators.
+    constraints:
+      - Must wrap in Panel component
+      - Additions: rgba(39, 174, 96, 0.15) background
+      - Deletions: rgba(239, 68, 68, 0.15) background
+      - Must use monospace font
+    forbidden_extensions:
+      - Custom diff colors
+      - Side-by-side view (unified only for now)
+
+  # ---------------------------------------------------------------------------
+  # CommitList - Git commit list (Phase 2C)
+  # ---------------------------------------------------------------------------
+  CommitList:
+    status: approved
+    approved_by: ADR-003
+    phase: "2C"
+    location: src/components/git/commit-list.tsx
+    establishes_pattern: list-item
+    when_to_use: |
+      Display list of git commits with metadata.
+      Each item shows: sha, message, timestamp, stats.
+    constraints:
+      - Must use Panel inset pattern for items
+      - Must use Icon for commit indicators
+      - Must use DS2 typography
+    forbidden_extensions:
+      - Inline diff expansion (use DiffViewer)
+
+  # ---------------------------------------------------------------------------
+  # FileChangeList - File change list (Phase 2C)
+  # ---------------------------------------------------------------------------
+  FileChangeList:
+    status: approved
+    approved_by: ADR-003
+    phase: "2C"
+    location: src/components/git/file-change-list.tsx
+    follows_pattern: list-item (from CommitList)
+    when_to_use: |
+      Display list of changed files with +/- counts.
+      Expandable to show inline diff via DiffViewer.
+    constraints:
+      - Follows CommitList pattern
+      - Expandable items use DiffViewer
+
+# =============================================================================
+# PHASE 2 HOOKS (Approved via ADR-003)
+# =============================================================================
+
+  useWorkerGit:
+    status: approved
+    approved_by: ADR-003
+    location: src/hooks/use-worker-git.ts
+    when_to_use: "Fetch git activity for a specific worker"
+    returns: "{ data: WorkerGitActivity, error, isLoading, refresh }"
+
+# =============================================================================
+# REJECTED/CLARIFIED (ADR-003)
+# =============================================================================
+
+rejected:
+  CostPanel:
+    reason: "Not a new component - use Panel composition instead"
+    use_instead: |
+      <Panel>
+        <PanelHeader title="GUZZOLINE" icon="activity" />
+        <PanelBody>{/* cost content */}</PanelBody>
+      </Panel>

@@ -280,3 +280,16 @@ export const pluginIcons: Record<string, IconName> = {
   hitch: "link",
   default: "puzzle",
 }
+
+/**
+ * Entity type icon mapping for Guide/EntityCard
+ */
+export const entityIcons: Record<string, IconName> = {
+  town: "home",
+  rig: "container",
+  convoy: "truck",
+  polecat: "terminal",
+  refinery: "factory",
+  witness: "eye",
+  beads: "circle",
+}

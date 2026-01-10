@@ -1,0 +1,264 @@
+# Data Seed Registry
+# Citadel Dashboard - Gas Town UI
+#
+# Machine-readable registry of approved types, interfaces, and enums.
+# Founding Convoy: 2026-01-09
+
+# =============================================================================
+# CORE TYPES (src/lib/gastown.ts)
+# =============================================================================
+
+types:
+  # ---------------------------------------------------------------------------
+  # Town-Level Types
+  # ---------------------------------------------------------------------------
+  TownStatus:
+    location: src/lib/gastown.ts
+    fields:
+      - name: string
+      - location: string
+      - overseer: Overseer
+      - agents: Agent[]
+      - rigs: Rig[]
+    when_to_use: "Top-level town overview data"
+
+  Overseer:
+    location: src/lib/gastown.ts
+    fields:
+      - name: string
+      - email: string
+      - username: string
+      - source: string
+      - unread_mail: number
+    when_to_use: "Town overseer (user) information"
+
+  # ---------------------------------------------------------------------------
+  # Agent Types
+  # ---------------------------------------------------------------------------
+  Agent:
+    location: src/lib/gastown.ts
+    fields:
+      - name: string
+      - address: string
+      - session: string
+      - role: AgentRole
+      - running: boolean
+      - has_work: boolean
+      - state?: string
+      - unread_mail: number
+      - first_subject?: string
+    when_to_use: "Any Gas Town agent (coordinator, witness, polecat, etc.)"
+
+  # ---------------------------------------------------------------------------
+  # Rig Types
+  # ---------------------------------------------------------------------------
+  Rig:
+    location: src/lib/gastown.ts
+    fields:
+      - name: string
+      - polecats: string[]
+      - polecat_count: number
+      - crews: string[] | null
+      - crew_count: number
+      - has_witness: boolean
+      - has_refinery: boolean
+      - hooks: Hook[]
+      - agents: Agent[]
+      - mq?: MergeQueue
+    when_to_use: "Project container with workers and agents"
+
+  Hook:
+    location: src/lib/gastown.ts
+    fields:
+      - agent: string
+      - role: string
+      - has_work: boolean
+    when_to_use: "Rig hook configuration"
+
+  MergeQueue:
+    location: src/lib/gastown.ts
+    fields:
+      - pending: number
+      - in_flight: number
+      - blocked: number
+      - state: string
+      - health: string
+    when_to_use: "Refinery merge queue status"
+
+  # ---------------------------------------------------------------------------
+  # Convoy Types
+  # ---------------------------------------------------------------------------
+  Convoy:
+    location: src/lib/gastown.ts
+    fields:
+      - id: string
+      - title: string
+      - status: string
+      - created_at: string
+    when_to_use: "Batch work unit"
+
+  # ---------------------------------------------------------------------------
+  # Worker Types
+  # ---------------------------------------------------------------------------
+  Polecat:
+    location: src/lib/gastown.ts
+    fields:
+      - rig: string
+      - name: string
+      - state: string
+      - session_running: boolean
+    when_to_use: "Ephemeral worker agent"
+
+  # ---------------------------------------------------------------------------
+  # Guzzoline (Token Usage) Types
+  # ---------------------------------------------------------------------------
+  TokenUsage:
+    location: src/lib/gastown.ts
+    fields:
+      - actor: string
+      - input: number
+      - output: number
+      - cache_read: number
+      - total: number
+      - timestamp: string
+    when_to_use: "Individual token usage event"
+
+  GuzzolineStats:
+    location: src/lib/gastown.ts
+    fields:
+      - total_tokens_today: number
+      - total_tokens_week: number
+      - sessions_today: number
+      - by_agent_type: AgentTypeTokens
+      - recent_sessions: TokenUsage[]
+      - budget_warnings: number
+    when_to_use: "Aggregated token usage statistics"
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+  AgentRole:
+    location: src/lib/gastown.ts
+    values: [coordinator, health-check, witness, refinery, polecat, crew]
+    extension_policy: frozen
+    scope: global
+    when_to_use: "Agent role classification"
+
+  Status:
+    location: src/components/ui/status-badge.tsx
+    values: [active, thinking, slow, unresponsive, dead, blocked, done]
+    extension_policy: controlled
+    scope: global
+    when_to_use: "7-state status model for workers and entities"
+    keeper_decision: ADR required for new status states
+
+  IconName:
+    location: src/components/ui/icon.tsx
+    values:
+      status: [play-circle, check-circle, exclamation-triangle, x-circle, clock, lock, cpu, cog]
+      activity: [activity, brain, container, truck-lucide, terminal, settings]
+      domain: [truck, road]
+    extension_policy: append-only
+    scope: global
+    when_to_use: "Unified icon system identifiers"
+
+  IconVariant:
+    location: src/components/ui/icon.tsx
+    values: [default, alert, active, ok, muted]
+    extension_policy: controlled
+    scope: global
+    when_to_use: "Icon color variants"
+
+# =============================================================================
+# PROPOSED TYPES (Phase 2+)
+# =============================================================================
+
+proposed:
+  # Phase 2A: Journey
+  JourneyStage:
+    status: proposed
+    phase: "2A"
+    values: [queued, claimed, working, pr, merged]
+    rationale: "5-stage lifecycle model"
+
+  WorkingSubstage:
+    status: proposed
+    phase: "2A"
+    values: [analyzing, coding, testing, pr_prep]
+    rationale: "Substages for 'working' stage"
+
+  # Phase 2B: Enhanced Cost
+  IssueCost:
+    status: proposed
+    phase: "2B"
+    fields:
+      - issue_id: string
+      - total_tokens: number
+      - estimated_cost_usd: number
+      - workers_involved: string[]
+    rationale: "Per-issue cost breakdown"
+
+  ConvoyCost:
+    status: proposed
+    phase: "2B"
+    fields:
+      - convoy_id: string
+      - total_tokens: number
+      - estimated_cost_usd: number
+      - issues: IssueCost[]
+    rationale: "Per-convoy cost aggregation"
+
+  EnhancedGuzzolineStats:
+    status: proposed
+    phase: "2B"
+    extends: GuzzolineStats
+    additional_fields:
+      - by_issue: Map<string, IssueCost>
+      - by_convoy: Map<string, ConvoyCost>
+      - by_worker: Map<string, WorkerCost>
+    rationale: "Enhanced guzzoline with breakdowns"
+
+  # Phase 2C: Git
+  WorkerGitActivity:
+    status: proposed
+    phase: "2C"
+    fields:
+      - worker: string
+      - branch: string
+      - commits: Commit[]
+      - total_additions: number
+      - total_deletions: number
+    rationale: "Git activity per worker"
+
+  Commit:
+    status: proposed
+    phase: "2C"
+    fields:
+      - sha: string
+      - message: string
+      - timestamp: string
+      - stats: CommitStats
+      - files: FileChange[]
+    rationale: "Git commit data"
+
+  FileChange:
+    status: proposed
+    phase: "2C"
+    fields:
+      - path: string
+      - status: added | modified | deleted | renamed
+      - additions: number
+      - deletions: number
+      - patch?: string
+    rationale: "File diff data"
+
+# =============================================================================
+# TYPE EXTENSION POLICIES
+# =============================================================================
+
+extension_policies:
+  frozen: "No changes allowed without migration"
+  append-only: "Only new values can be added, never removed"
+  controlled: "Changes require ADR approval"

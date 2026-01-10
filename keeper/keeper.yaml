@@ -1,0 +1,100 @@
+# Keeper of the Seeds Configuration
+# Citadel Dashboard - Gas Town UI
+#
+# Initialized via Founding Convoy on 2026-01-09
+# Reference: keeper-spec.md
+
+# =============================================================================
+# MODE CONFIGURATION
+# =============================================================================
+# Starting in SEEDING mode because:
+# - Citadel is an evolving dashboard (Phase 1 ~70% complete)
+# - New component patterns are still being established
+# - Need flexibility to add journey, cost, and git diff components
+#
+# Transition to GROWTH mode when:
+# - Phase 2 components (journey, cost, git) are established
+# - Component patterns stabilize
+# - Reuse patterns emerge
+
+keeper:
+  mode: seeding
+
+# =============================================================================
+# SEED VAULT LOCATIONS
+# =============================================================================
+
+seed_vault:
+  frontend: seeds/frontend.yaml
+  backend: seeds/backend.yaml
+  data: seeds/data.yaml
+  auth: seeds/auth.yaml
+
+# =============================================================================
+# DECISIONS OUTPUT
+# =============================================================================
+
+decisions_dir: decisions/
+
+# =============================================================================
+# PROJECT METADATA
+# =============================================================================
+
+project:
+  name: citadel
+  description: Gas Town Dashboard - Read-only monitoring UI for Gas Town operations
+  domain: monitoring-dashboard
+  design_system: DS2 (Black & Chrome Edition)
+  framework: Next.js 16 with App Router
+  styling: Tailwind CSS 4
+
+# =============================================================================
+# DOMAIN BOUNDARIES (Cartographer Output)
+# =============================================================================
+
+domain:
+  # What Citadel IS
+  responsibilities:
+    - Display real-time status of Gas Town entities
+    - Progressive disclosure (Town → Rig → Detail views)
+    - Token usage tracking and cost visibility
+    - Worker activity monitoring
+
+  # What Citadel is NOT
+  boundaries:
+    - No direct control actions (Phase 4 future)
+    - No authentication (read-only dashboard)
+    - No data persistence (reads from Gas Town CLI)
+    - No external API integrations
+
+  # Core entities monitored
+  entities:
+    - Town (top-level overview)
+    - Rig (project container)
+    - Convoy (batch work unit)
+    - Polecat (ephemeral worker)
+    - Refinery (merge queue processor)
+    - Guzzoline (token usage tracking)
+
+# =============================================================================
+# DESIGN SYSTEM REFERENCE
+# =============================================================================
+
+design_system:
+  keeper_decision: 001-ds2-color-system.md
+  colors:
+    base:
+      carbon-black: "#0B0D10"
+      gunmetal: "#141820"
+      chrome-border: "#2A2F3A"
+      bone: "#E6E8EB"
+      ash: "#9AA1AC"
+    accents:
+      acid-green: "#27AE60"
+      fuel-yellow: "#F2C94C"
+      rust-orange: "#FF7A00"
+  principles:
+    - "Industrial control panel aesthetic"
+    - "Hard edges, visible borders"
+    - "Color is earned through state"
+    - "Quiet when healthy, loud when not"

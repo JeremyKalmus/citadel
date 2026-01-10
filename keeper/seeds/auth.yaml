@@ -1,0 +1,74 @@
+# Auth Seed Registry
+# Citadel Dashboard - Gas Town UI
+#
+# Machine-readable registry of authentication and authorization patterns.
+# Founding Convoy: 2026-01-09
+
+# =============================================================================
+# AUTHENTICATION MODEL
+# =============================================================================
+
+auth_model:
+  type: none
+  description: |
+    Citadel is a READ-ONLY dashboard with NO authentication layer.
+    All data is fetched from the local Gas Town CLI.
+    No user sessions, no tokens, no permissions.
+
+  rationale: |
+    - Dashboard runs locally alongside Gas Town
+    - No multi-user scenarios
+    - No sensitive data modification
+    - Security via local access only
+
+# =============================================================================
+# AUTHORIZATION
+# =============================================================================
+
+authorization:
+  model: implicit-local-access
+  description: |
+    Authorization is implicit: if you can access localhost:3000,
+    you have permission to view all data.
+
+  scopes: []  # No scopes - read-only dashboard
+
+  roles: []   # No roles - single-user local access
+
+# =============================================================================
+# FORBIDDEN PATTERNS
+# =============================================================================
+
+forbidden_patterns:
+  - User authentication endpoints
+  - Session management
+  - Token storage (localStorage, cookies)
+  - Role-based access control
+  - API keys or secrets
+  - OAuth/OIDC integration
+
+# =============================================================================
+# FUTURE CONSIDERATIONS (Phase 4+)
+# =============================================================================
+# When actions are added (nudge, kill, reassign), consider:
+# - Confirmation dialogs (not auth, just UX safety)
+# - Audit logging to .events.jsonl
+# - Rate limiting for destructive actions
+#
+# Do NOT add:
+# - User authentication
+# - Permission systems
+# - External auth providers
+
+proposed:
+  confirmation_dialogs:
+    status: proposed
+    phase: "4"
+    purpose: "UX safety for destructive actions"
+    not_auth: true
+
+  audit_logging:
+    status: proposed
+    phase: "4"
+    purpose: "Log actions to .events.jsonl"
+    not_auth: true

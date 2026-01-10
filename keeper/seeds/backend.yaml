@@ -1,0 +1,126 @@
+# Backend Seed Registry
+# Citadel Dashboard - Gas Town UI
+#
+# Machine-readable registry of approved API routes and services.
+# Founding Convoy: 2026-01-09
+
+# =============================================================================
+# API ROUTES (Next.js App Router)
+# =============================================================================
+
+api_routes:
+  # ---------------------------------------------------------------------------
+  # Town Status
+  # ---------------------------------------------------------------------------
+  GET /api/gastown/status:
+    location: src/app/api/gastown/status/route.ts
+    purpose: "Fetch overall town status including rigs, agents, and overseer"
+    auth_required: false
+    returns: TownStatus
+    source: "gt status --json"
+    when_to_use: "Town overview (Level 0)"
+
+  # ---------------------------------------------------------------------------
+  # Convoys
+  # ---------------------------------------------------------------------------
+  GET /api/gastown/convoys:
+    location: src/app/api/gastown/convoys/route.ts
+    purpose: "List all active and recent convoys"
+    auth_required: false
+    returns: Convoy[]
+    source: "gt convoy list --json"
+    when_to_use: "Convoy list display"
+
+  # ---------------------------------------------------------------------------
+  # Polecats (Workers)
+  # ---------------------------------------------------------------------------
+  GET /api/gastown/polecats:
+    location: src/app/api/gastown/polecats/route.ts
+    purpose: "List workers, optionally filtered by rig"
+    auth_required: false
+    query_params:
+      - rig (optional): Filter by rig name
+    returns: Polecat[]
+    source: "gt polecat list [rig] --json"
+    when_to_use: "Worker grid display"
+
+  # ---------------------------------------------------------------------------
+  # Guzzoline (Token Usage)
+  # ---------------------------------------------------------------------------
+  GET /api/gastown/guzzoline:
+    location: src/app/api/gastown/guzzoline/route.ts
+    purpose: "Fetch token usage statistics"
+    auth_required: false
+    returns: GuzzolineStats
+    source: ".events.jsonl parsing"
+    when_to_use: "Cost/token tracking display"
+
+# =============================================================================
+# SERVICES
+# =============================================================================
+
+services:
+  GasTownClient:
+    location: src/lib/gastown.ts
+    responsibilities:
+      - Execute gt CLI commands
+      - Parse JSON responses
+      - Parse .events.jsonl for guzzoline stats
+    forbidden:
+      - Direct database access
+      - Writing to Gas Town state
+      - Authentication handling
+    methods:
+      - getStatus(): TownStatus
+      - getConvoys(): Convoy[]
+      - getPolecats(rig?: string): Polecat[]
+      - getAllPolecats(): Polecat[]
+      - getGuzzolineStats(): GuzzolineStats
+
+# =============================================================================
+# PROPOSED ROUTES (Phase 2+)
+# =============================================================================
+
+proposed_routes:
+  # Phase 2B: Enhanced Guzzoline
+  GET /api/gastown/guzzoline?breakdown=issue,convoy,worker:
+    status: proposed
+    phase: "2B"
+    purpose: "Enhanced token stats with per-entity breakdown"
+    extends: GET /api/gastown/guzzoline
+
+  # Phase 2C: Git Activity
+  GET /api/gastown/workers/:name/git:
+    status: proposed
+    phase: "2C"
+    purpose: "Worker git activity (commits, diffs)"
+    returns: WorkerGitActivity
+
+  # Phase 4: Actions (future)
+  POST /api/gastown/workers/:name/nudge:
+    status: proposed
+    phase: "4"
+    purpose: "Send nudge to worker"
+
+  POST /api/gastown/workers/:name/kill:
+    status: proposed
+    phase: "4"
+    purpose: "Terminate worker"
+
+# =============================================================================
+# REST CONVENTIONS
+# =============================================================================
+
+conventions:
+  base_path: /api/gastown
+  method_patterns:
+    - "GET for read operations"
+    - "POST for actions (Phase 4+)"
+  response_format: JSON
+  error_format:
+    shape: "{ error: string }"
+    status_codes: [200, 500]
+  forbidden:
+    - PUT/PATCH methods (read-only dashboard)
+    - DELETE methods (no destructive actions)
+    - Authentication endpoints (no auth layer)
