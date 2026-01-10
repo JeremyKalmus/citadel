@@ -183,6 +183,50 @@ export { formatCost, calculateCost } from "./cost-utils";
 export type { SparklinePoint, FormatCostOptions } from "./cost-utils";
 
 // ============================================================================
+// Enhanced Guzzoline Stats (CT-002)
+// ============================================================================
+
+/**
+ * Token usage aggregated by issue/bead ID.
+ * Enables per-issue cost visibility and ROI analysis.
+ */
+export interface IssueTokenUsage {
+  /** Issue/bead ID (e.g., "ct-abc", "hq-xyz") */
+  issueId: string;
+  /** Issue title if available */
+  title?: string;
+  /** Total input tokens consumed */
+  inputTokens: number;
+  /** Total output tokens generated */
+  outputTokens: number;
+  /** Cache read tokens (reduced cost) */
+  cacheReadTokens: number;
+  /** Total tokens (input + output) */
+  totalTokens: number;
+  /** Number of sessions/invocations for this issue */
+  sessionCount: number;
+  /** First activity timestamp */
+  firstActivity: string;
+  /** Most recent activity timestamp */
+  lastActivity: string;
+  /** Actors (workers) who worked on this issue */
+  actors: string[];
+}
+
+/**
+ * Enhanced guzzoline stats including per-issue breakdown.
+ * Extends base GuzzolineStats with issue-level granularity.
+ */
+export interface EnhancedGuzzolineStats extends GuzzolineStats {
+  /** Token usage aggregated by issue ID */
+  by_issue: IssueTokenUsage[];
+  /** Top issues by token consumption (sorted descending) */
+  top_issues: IssueTokenUsage[];
+  /** Issues with activity today */
+  active_issues_today: number;
+}
+
+// ============================================================================
 // Journey Stage Detection
 // ============================================================================
 
@@ -491,6 +535,163 @@ export class GasTownClient {
       stats.recent_sessions = stats.recent_sessions
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         .slice(0, 10);
+
+    } catch {
+      // File doesn't exist or can't be read - return empty stats
+    }
+
+    return stats;
+  }
+
+  /**
+   * Get enhanced guzzoline stats including per-issue token breakdown.
+   * Parses events.jsonl and aggregates token usage by issue ID.
+   */
+  async getEnhancedGuzzolineStats(): Promise<EnhancedGuzzolineStats> {
+    const fs = await import("fs/promises");
+    const path = await import("path");
+
+    const eventsFile = path.join(this.cwd, ".events.jsonl");
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - 7);
+
+    // Base stats
+    const stats: EnhancedGuzzolineStats = {
+      total_tokens_today: 0,
+      total_tokens_week: 0,
+      sessions_today: 0,
+      by_agent_type: {
+        polecat: 0,
+        witness: 0,
+        refinery: 0,
+        mayor: 0,
+      },
+      recent_sessions: [],
+      budget_warnings: 0,
+      by_issue: [],
+      top_issues: [],
+      active_issues_today: 0,
+    };
+
+    // Map for per-issue aggregation
+    const issueMap = new Map<string, IssueTokenUsage>();
+
+    try {
+      const content = await fs.readFile(eventsFile, "utf-8");
+      const lines = content.trim().split("\n").filter(Boolean);
+
+      for (const line of lines) {
+        try {
+          const event = JSON.parse(line);
+          const eventTime = new Date(event.ts);
+
+          // Count token_usage events from guzzoline
+          if (event.source === "guzzoline" && event.type === "token_usage") {
+            const tokens = event.payload?.tokens?.total ?? 0;
+            const inputTokens = event.payload?.tokens?.input ?? 0;
+            const outputTokens = event.payload?.tokens?.output ?? 0;
+            const cacheReadTokens = event.payload?.tokens?.cache_read ?? 0;
+
+            if (eventTime >= weekStart) {
+              stats.total_tokens_week += tokens;
+
+              // Categorize by agent type
+              const actor = event.actor || "";
+              if (actor.includes("witness")) {
+                stats.by_agent_type.witness += tokens;
+              } else if (actor.includes("refinery")) {
+                stats.by_agent_type.refinery += tokens;
+              } else if (actor.includes("mayor")) {
+                stats.by_agent_type.mayor += tokens;
+              } else {
+                stats.by_agent_type.polecat += tokens;
+              }
+
+              if (eventTime >= todayStart) {
+                stats.total_tokens_today += tokens;
+                stats.sessions_today++;
+              }
+
+              // Track recent sessions (last 10)
+              stats.recent_sessions.push({
+                actor: event.actor,
+                input: inputTokens,
+                output: outputTokens,
+                cache_read: cacheReadTokens,
+                total: tokens,
+                timestamp: event.ts,
+              });
+
+              // Per-issue aggregation
+              // Look for issue ID in payload.issue, payload.bead, or context.issue
+              const issueId =
+                event.payload?.issue ||
+                event.payload?.bead ||
+                event.context?.issue ||
+                event.context?.bead ||
+                null;
+
+              if (issueId) {
+                const existing = issueMap.get(issueId);
+                if (existing) {
+                  existing.inputTokens += inputTokens;
+                  existing.outputTokens += outputTokens;
+                  existing.cacheReadTokens += cacheReadTokens;
+                  existing.totalTokens += tokens;
+                  existing.sessionCount++;
+                  existing.lastActivity = event.ts;
+                  if (!existing.actors.includes(actor)) {
+                    existing.actors.push(actor);
+                  }
+                } else {
+                  issueMap.set(issueId, {
+                    issueId,
+                    title: event.payload?.title || event.context?.title,
+                    inputTokens,
+                    outputTokens,
+                    cacheReadTokens,
+                    totalTokens: tokens,
+                    sessionCount: 1,
+                    firstActivity: event.ts,
+                    lastActivity: event.ts,
+                    actors: [actor],
+                  });
+                }
+              }
+            }
+          }
+
+          // Count budget warnings
+          if (event.source === "guzzoline" && event.type === "budget_exceeded") {
+            if (eventTime >= todayStart) {
+              stats.budget_warnings++;
+            }
+          }
+        } catch {
+          // Skip malformed lines
+        }
+      }
+
+      // Keep only last 10 sessions, sorted by time descending
+      stats.recent_sessions = stats.recent_sessions
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 10);
+
+      // Convert issue map to array
+      stats.by_issue = Array.from(issueMap.values());
+
+      // Top issues sorted by total tokens (descending)
+      stats.top_issues = [...stats.by_issue]
+        .sort((a, b) => b.totalTokens - a.totalTokens)
+        .slice(0, 10);
+
+      // Count issues with activity today
+      stats.active_issues_today = stats.by_issue.filter(
+        (issue) => new Date(issue.lastActivity) >= todayStart
+      ).length;
 
     } catch {
       // File doesn't exist or can't be read - return empty stats

@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { gastown } from "@/lib/gastown";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const stats = await gastown.getGuzzolineStats();
+    const { searchParams } = new URL(request.url);
+    const enhanced = searchParams.get("enhanced") === "true";
+
+    const stats = enhanced
+      ? await gastown.getEnhancedGuzzolineStats()
+      : await gastown.getGuzzolineStats();
+
     return NextResponse.json(stats);
   } catch (error) {
     console.error("Failed to get guzzoline stats:", error);

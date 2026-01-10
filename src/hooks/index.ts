@@ -10,6 +10,9 @@ export type { UsePolecatsOptions, UsePolecatsResult } from "./use-polecats";
 export { useGuzzoline } from "./use-guzzoline";
 export type { UseGuzzolineOptions, UseGuzzolineResult } from "./use-guzzoline";
 
+export { useEnhancedGuzzoline } from "./use-enhanced-guzzoline";
+export type { UseEnhancedGuzzolineOptions, UseEnhancedGuzzolineResult } from "./use-enhanced-guzzoline";
+
 export { useRig } from "./use-rig";
 export type { UseRigOptions, UseRigResult } from "./use-rig";
 
