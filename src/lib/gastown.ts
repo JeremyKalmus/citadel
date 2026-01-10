@@ -4,6 +4,63 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 // ============================================================================
+// Journey Stage Types
+// ============================================================================
+
+/**
+ * JourneyStage represents the lifecycle stage of a worker's current task.
+ * Used to provide at-a-glance visibility into work progress.
+ *
+ * Stages:
+ * - idle: No work assigned, waiting for assignment
+ * - assigned: Work slung but session not started
+ * - working: Actively executing the task
+ * - blocked: Waiting for dependency, approval, or human intervention
+ * - review: Work complete, PR created, awaiting merge
+ * - complete: Task finished, merged or closed
+ * - error: Worker crashed or in error state
+ */
+export type JourneyStage =
+  | "idle"
+  | "assigned"
+  | "working"
+  | "blocked"
+  | "review"
+  | "complete"
+  | "error";
+
+/**
+ * Substages for the "working" stage, providing more granular progress visibility.
+ * These are optional refinements detected through heuristics.
+ */
+export type WorkingSubstage =
+  | "understanding"  // 2a: Reading code, researching
+  | "implementing"   // 2b: Writing code
+  | "testing"        // 2c: Running tests, fixing issues
+  | "preparing"      // 2d: Creating PR, final cleanup
+  | null;            // Unknown/undetectable
+
+/**
+ * Journey information for a worker, including stage and metadata.
+ */
+export interface WorkerJourney {
+  /** Current lifecycle stage */
+  stage: JourneyStage;
+  /** Substage if in working state */
+  substage: WorkingSubstage;
+  /** Human-readable stage label */
+  label: string;
+  /** Time entered current stage (if available) */
+  stageEnteredAt?: string;
+  /** Assigned issue/bead ID if any */
+  assignedIssue?: string;
+  /** Branch name if available */
+  branch?: string;
+  /** Whether a PR exists for this work */
+  hasPR?: boolean;
+}
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -124,6 +181,186 @@ export interface GuzzolineStats {
 // Re-export cost utilities for backwards compatibility
 export { formatCost, calculateCost } from "./cost-utils";
 export type { SparklinePoint, FormatCostOptions } from "./cost-utils";
+
+// ============================================================================
+// Journey Stage Detection
+// ============================================================================
+
+/**
+ * Stage labels for display
+ */
+const stageLabels: Record<JourneyStage, string> = {
+  idle: "Idle",
+  assigned: "Assigned",
+  working: "Working",
+  blocked: "Blocked",
+  review: "In Review",
+  complete: "Complete",
+  error: "Error",
+};
+
+/**
+ * Substage labels for display
+ */
+const substageLabels: Record<Exclude<WorkingSubstage, null>, string> = {
+  understanding: "Understanding",
+  implementing: "Implementing",
+  testing: "Testing",
+  preparing: "Preparing PR",
+};
+
+/**
+ * Detect the journey stage from a polecat's state and context.
+ *
+ * Detection logic:
+ * 1. Dead state → error
+ * 2. Done state with session not running → complete
+ * 3. Blocked state → blocked
+ * 4. Working state with session running → working
+ * 5. Has work but session not running → assigned
+ * 6. No work → idle
+ *
+ * @param polecat - The polecat to analyze
+ * @param hasAssignedWork - Whether work is slung to this worker (from hook)
+ * @param hasPR - Whether a PR exists for current work
+ * @returns Journey information
+ */
+export function detectJourneyStage(
+  polecat: Polecat | PolecatDetail,
+  hasAssignedWork = false,
+  hasPR = false
+): WorkerJourney {
+  const state = polecat.state?.toLowerCase() ?? "";
+  const sessionRunning = polecat.session_running;
+  const branch = "branch" in polecat ? polecat.branch : undefined;
+
+  // Error state - worker crashed or dead
+  if (state === "dead") {
+    return {
+      stage: "error",
+      substage: null,
+      label: stageLabels.error,
+      branch,
+    };
+  }
+
+  // Complete state - work finished
+  if (state === "done" && !sessionRunning) {
+    return {
+      stage: "complete",
+      substage: null,
+      label: stageLabels.complete,
+      branch,
+    };
+  }
+
+  // Review state - PR exists, likely awaiting merge
+  if (hasPR && (state === "done" || state === "waiting")) {
+    return {
+      stage: "review",
+      substage: null,
+      label: stageLabels.review,
+      branch,
+      hasPR: true,
+    };
+  }
+
+  // Blocked state - waiting on dependency or approval
+  if (state === "blocked") {
+    return {
+      stage: "blocked",
+      substage: null,
+      label: stageLabels.blocked,
+      branch,
+    };
+  }
+
+  // Working state - actively executing
+  if ((state === "working" || state === "waiting") && sessionRunning) {
+    return {
+      stage: "working",
+      substage: null, // Substage detection handled separately (JV-008)
+      label: stageLabels.working,
+      branch,
+    };
+  }
+
+  // Assigned state - work slung but session not active
+  if (hasAssignedWork && !sessionRunning) {
+    return {
+      stage: "assigned",
+      substage: null,
+      label: stageLabels.assigned,
+      branch,
+    };
+  }
+
+  // Idle state - no work assigned
+  return {
+    stage: "idle",
+    substage: null,
+    label: stageLabels.idle,
+    branch,
+  };
+}
+
+/**
+ * Get stage label with optional substage
+ */
+export function getJourneyLabel(journey: WorkerJourney): string {
+  if (journey.stage === "working" && journey.substage) {
+    return `${stageLabels.working}: ${substageLabels[journey.substage]}`;
+  }
+  return journey.label;
+}
+
+/**
+ * Get a journey stage icon name for the UI
+ */
+export function getJourneyIcon(stage: JourneyStage): string {
+  switch (stage) {
+    case "idle":
+      return "clock";
+    case "assigned":
+      return "play-circle";
+    case "working":
+      return "activity";
+    case "blocked":
+      return "lock";
+    case "review":
+      return "check-circle";
+    case "complete":
+      return "check-circle";
+    case "error":
+      return "x-circle";
+    default:
+      return "clock";
+  }
+}
+
+/**
+ * Get a journey stage color class for the UI
+ */
+export function getJourneyColor(stage: JourneyStage): string {
+  switch (stage) {
+    case "idle":
+      return "text-ash";
+    case "assigned":
+      return "text-fuel-yellow";
+    case "working":
+      return "text-acid-green";
+    case "blocked":
+      return "text-rust-orange";
+    case "review":
+      return "text-fuel-yellow";
+    case "complete":
+      return "text-acid-green";
+    case "error":
+      return "text-status-dead";
+    default:
+      return "text-ash";
+  }
+}
 
 // ============================================================================
 // Client
@@ -332,6 +569,58 @@ export class GasTownClient {
     await execAsync(`gt sling ${hookData.bead_id} ${targetRig}/${targetName}`, {
       cwd: this.cwd
     });
+  }
+
+  // ============================================================================
+  // Journey
+  // ============================================================================
+
+  /**
+   * Get journey information for a polecat.
+   * Combines polecat status with hook information to determine stage.
+   */
+  async getPolecatJourney(rig: string, name: string): Promise<WorkerJourney> {
+    const polecatDetail = await this.getPolecatStatus(rig, name);
+
+    // Check if polecat has work assigned via hook
+    const rigData = await this.getRig(rig);
+    const hook = rigData?.hooks?.find(
+      (h) => h.agent === name || h.agent === `${rig}/${name}`
+    );
+    const hasAssignedWork = hook?.has_work ?? false;
+
+    // TODO: Check for PR existence (requires git/gh integration)
+    const hasPR = false;
+
+    return detectJourneyStage(polecatDetail, hasAssignedWork, hasPR);
+  }
+
+  /**
+   * Get journey information for all polecats across all rigs.
+   */
+  async getAllPolecatJourneys(): Promise<Array<{ rig: string; name: string; journey: WorkerJourney }>> {
+    const polecats = await this.getAllPolecats();
+    const journeys: Array<{ rig: string; name: string; journey: WorkerJourney }> = [];
+
+    for (const polecat of polecats) {
+      try {
+        const journey = await this.getPolecatJourney(polecat.rig, polecat.name);
+        journeys.push({
+          rig: polecat.rig,
+          name: polecat.name,
+          journey,
+        });
+      } catch {
+        // If we can't get detailed status, use basic detection
+        journeys.push({
+          rig: polecat.rig,
+          name: polecat.name,
+          journey: detectJourneyStage(polecat),
+        });
+      }
+    }
+
+    return journeys;
   }
 }
 
