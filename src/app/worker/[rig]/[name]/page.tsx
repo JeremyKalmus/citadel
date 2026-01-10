@@ -4,9 +4,15 @@ import { use, useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ActionButton, ConfirmDialog } from "@/components/ui"
+import { Panel, PanelHeader, PanelBody } from "@/components/ui/panel"
 import { StatusExplanation, ActivityTimeline, type ActivityEvent } from "@/components/dashboard"
+import { JourneyTracker } from "@/components/journey"
 import { usePolecatDetail, usePolecatActions } from "@/hooks"
 import type { Status } from "@/components/ui"
+import {
+  JourneyStage,
+  type WorkingSubstage,
+} from "@/lib/gastown/types"
 import { RefreshCw, ArrowLeft, MessageSquare, Skull, ArrowRightLeft } from "lucide-react"
 
 interface WorkerPageProps {
@@ -46,6 +52,38 @@ function formatLastActivity(lastActivity: string): string {
   } catch {
     return lastActivity
   }
+}
+
+/**
+ * Derive journey stage from polecat state.
+ * This is a temporary mapping until we have proper journey tracking via events.
+ */
+function deriveJourneyStage(state: string, sessionRunning: boolean): JourneyStage {
+  if (!sessionRunning) {
+    // If session not running, could be done or stalled
+    return state === "done" ? JourneyStage.MERGED : JourneyStage.CLAIMED
+  }
+  switch (state) {
+    case "waiting":
+      return JourneyStage.CLAIMED
+    case "working":
+      return JourneyStage.WORKING
+    case "done":
+      return JourneyStage.MERGED
+    case "blocked":
+      return JourneyStage.WORKING // Still working, just blocked
+    default:
+      return JourneyStage.WORKING
+  }
+}
+
+/**
+ * Derive working substage from state (placeholder until proper event tracking).
+ */
+function deriveSubstage(state: string): WorkingSubstage | undefined {
+  // For now, default to "coding" substage when working
+  if (state === "working") return "2b"
+  return undefined
 }
 
 function generateActivityEvents(
@@ -237,6 +275,27 @@ export default function WorkerPage({ params }: WorkerPageProps) {
           <kbd className="ml-2 px-1 py-0.5 text-xs bg-gunmetal rounded">R</kbd>
         </ActionButton>
       </div>
+
+      {/* Journey tracker */}
+      {polecat && (
+        <Panel>
+          <PanelHeader icon="route" title="Work Journey" />
+          <PanelBody>
+            <JourneyTracker
+              issueId={polecat.branch.split("/").pop() || ""}
+              currentStage={deriveJourneyStage(polecat.state, polecat.session_running)}
+              substage={deriveSubstage(polecat.state)}
+              timestamps={{
+                queued: undefined, // TODO: Get from events
+                claimed: polecat.last_activity !== "0001-01-01T00:00:00Z" ? polecat.last_activity : undefined,
+                workStarted: polecat.session_running ? polecat.last_activity : undefined,
+              }}
+              actor={`${polecat.rig}/${polecat.name}`}
+              blocked={polecat.state === "blocked"}
+            />
+          </PanelBody>
+        </Panel>
+      )}
 
       {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
