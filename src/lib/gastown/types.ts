@@ -538,3 +538,150 @@ export function formatRelativeTime(timestamp: string): string {
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
 }
+
+// ============================================================================
+// Cost/Token Types (Phase 2B)
+// ============================================================================
+
+/**
+ * Token pricing constants (Claude 3.5 Sonnet baseline)
+ */
+export const TOKEN_PRICING = {
+  /** $ per 1M input tokens */
+  input_per_million: 3.0,
+  /** $ per 1M output tokens */
+  output_per_million: 15.0,
+  /** $ per 1M cache read tokens */
+  cache_read_per_million: 0.3,
+} as const;
+
+/**
+ * Token usage breakdown
+ */
+export interface TokenUsage {
+  input: number;
+  output: number;
+  cache_read: number;
+  total: number;
+}
+
+/**
+ * Cost breakdown for an entity (issue, convoy, worker)
+ */
+export interface EntityCost {
+  /** Total tokens used */
+  totalTokens: number;
+  /** Token breakdown */
+  tokens: TokenUsage;
+  /** Estimated cost in USD */
+  estimatedCostUsd: number;
+  /** Duration in minutes */
+  durationMinutes?: number;
+  /** Efficiency metric: tokens per minute */
+  tokensPerMinute?: number;
+}
+
+/**
+ * Issue-level cost tracking
+ */
+export interface IssueCost extends EntityCost {
+  issueId: string;
+  workersInvolved: string[];
+}
+
+/**
+ * Convoy-level cost tracking
+ */
+export interface ConvoyCost extends EntityCost {
+  convoyId: string;
+  issueCount: number;
+  avgCostPerIssue: number;
+  issues: IssueCost[];
+}
+
+/**
+ * Worker-level cost tracking
+ */
+export interface WorkerCost extends EntityCost {
+  workerName: string;
+  rig: string;
+  issuesWorked: string[];
+  sessionCount: number;
+  /** Efficiency score: tokens per issue completed */
+  efficiencyScore?: number;
+}
+
+/**
+ * Hourly usage data point for charts
+ */
+export interface HourlyUsage {
+  hour: string; // ISO timestamp
+  tokens: number;
+  costUsd: number;
+  activeWorkers: number;
+}
+
+/**
+ * Cost breakdown by agent type
+ */
+export interface AgentTypeCosts {
+  polecat: EntityCost;
+  witness: EntityCost;
+  refinery: EntityCost;
+  mayor: EntityCost;
+}
+
+/**
+ * Trend direction for cost comparisons
+ */
+export type CostTrend = "up" | "down" | "flat";
+
+/**
+ * Calculate USD cost from token usage
+ */
+export function calculateCost(usage: TokenUsage): number {
+  return (
+    (usage.input * TOKEN_PRICING.input_per_million) / 1_000_000 +
+    (usage.output * TOKEN_PRICING.output_per_million) / 1_000_000 +
+    (usage.cache_read * TOKEN_PRICING.cache_read_per_million) / 1_000_000
+  );
+}
+
+/**
+ * Format token count for display (e.g., "1.2M", "450k")
+ */
+export function formatTokenCount(tokens: number): string {
+  if (tokens >= 1_000_000) {
+    return `${(tokens / 1_000_000).toFixed(1)}M`;
+  }
+  if (tokens >= 1_000) {
+    return `${Math.round(tokens / 1_000)}k`;
+  }
+  return String(tokens);
+}
+
+/**
+ * Format USD cost for display (e.g., "$12.50", "$0.87")
+ */
+export function formatCostUsd(cost: number): string {
+  return `$${cost.toFixed(2)}`;
+}
+
+/**
+ * Calculate trend based on current vs previous value
+ */
+export function calculateTrend(current: number, previous: number): CostTrend {
+  if (previous === 0) return "flat";
+  const change = (current - previous) / previous;
+  if (change > 0.05) return "up";
+  if (change < -0.05) return "down";
+  return "flat";
+}
+
+/**
+ * Calculate percentage change
+ */
+export function calculatePercentChange(current: number, previous: number): number {
+  if (previous === 0) return 0;
+  return Math.round(((current - previous) / previous) * 100);
+}
