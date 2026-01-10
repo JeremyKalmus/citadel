@@ -1,3 +1,5 @@
 export { JourneyTracker, JourneyTrackerCompact } from "./journey-tracker"
 export { ConvoyJourney, ConvoyJourneyCompact } from "./convoy-journey"
 export { JourneyTimeline, JourneyTimelineCompact } from "./journey-timeline"
+export { LifecycleFlow, LifecycleFlowCompact } from "./lifecycle-flow"
+export type { LifecycleFlowProps, StageDefinition } from "./lifecycle-flow"
