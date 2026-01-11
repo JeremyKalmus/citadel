@@ -92,6 +92,12 @@
   --color-status-blocked: #6b7280;
   --color-status-done: var(--color-acid-green);
 
+  /* Refinery Status Colors - Merge queue pipeline states */
+  --color-status-refinery-queued: var(--color-ash);
+  --color-status-refinery-rebasing: var(--color-fuel-yellow);
+  --color-status-refinery-testing: var(--color-fuel-yellow);
+  --color-status-refinery-merging: var(--color-acid-green);
+
   /* ─────────────────────────────────────────────────────────────────────────
      TYPOGRAPHY
      ───────────────────────────────────────────────────────────────────────── */
@@ -191,6 +197,16 @@
   --status-blocked-bg: rgba(107, 114, 128, 0.1);
   --status-done: #27AE60; /* acid-green */
   --status-done-bg: rgba(39, 174, 96, 0.1);
+
+  /* Refinery status colors */
+  --status-refinery-queued: #9AA1AC; /* ash - waiting in queue */
+  --status-refinery-queued-bg: rgba(154, 161, 172, 0.1);
+  --status-refinery-rebasing: #F2C94C; /* fuel-yellow - active sync */
+  --status-refinery-rebasing-bg: rgba(242, 201, 76, 0.1);
+  --status-refinery-testing: #F2C94C; /* fuel-yellow - running checks */
+  --status-refinery-testing-bg: rgba(242, 201, 76, 0.1);
+  --status-refinery-merging: #27AE60; /* acid-green - final merge */
+  --status-refinery-merging-bg: rgba(39, 174, 96, 0.1);
 }
 
 /* Light mode override (optional - Gas Town defaults to dark) */

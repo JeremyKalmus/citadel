@@ -11,7 +11,10 @@ const meta = {
   argTypes: {
     status: {
       control: 'select',
-      options: ['active', 'thinking', 'slow', 'unresponsive', 'dead', 'blocked', 'done'] as Status[],
+      options: [
+        'active', 'thinking', 'slow', 'unresponsive', 'dead', 'blocked', 'done',
+        'refinery_queued', 'refinery_rebasing', 'refinery_testing', 'refinery_merging'
+      ] as Status[],
     },
     showLabel: {
       control: 'boolean',
@@ -68,6 +71,31 @@ export const Done: Story = {
   },
 }
 
+// Refinery Pipeline States
+export const RefineryQueued: Story = {
+  args: {
+    status: 'refinery_queued',
+  },
+}
+
+export const RefineryRebasing: Story = {
+  args: {
+    status: 'refinery_rebasing',
+  },
+}
+
+export const RefineryTesting: Story = {
+  args: {
+    status: 'refinery_testing',
+  },
+}
+
+export const RefineryMerging: Story = {
+  args: {
+    status: 'refinery_merging',
+  },
+}
+
 export const Small: Story = {
   args: {
     status: 'active',
@@ -99,6 +127,30 @@ export const AllStates: Story = {
   ),
 }
 
+/**
+ * Refinery Pipeline States
+ * These states track a PR through the merge queue:
+ * Queued → Rebasing → Testing → Merging
+ */
+export const RefineryStates: Story = {
+  args: {
+    status: 'refinery_queued',
+  },
+  render: () => (
+    <div className="space-y-4">
+      <div className="text-ash text-sm uppercase tracking-wider">
+        Refinery Pipeline States
+      </div>
+      <div className="flex flex-wrap gap-4">
+        <StatusBadge status="refinery_queued" />
+        <StatusBadge status="refinery_rebasing" />
+        <StatusBadge status="refinery_testing" />
+        <StatusBadge status="refinery_merging" />
+      </div>
+    </div>
+  ),
+}
+
 export const AllStatesSmall: Story = {
   args: {
     status: 'active',
@@ -112,6 +164,25 @@ export const AllStatesSmall: Story = {
       <StatusBadge status="dead" size="sm" />
       <StatusBadge status="blocked" size="sm" />
       <StatusBadge status="done" size="sm" />
+    </div>
+  ),
+}
+
+export const RefineryStatesSmall: Story = {
+  args: {
+    status: 'refinery_queued',
+  },
+  render: () => (
+    <div className="space-y-4">
+      <div className="text-ash text-sm uppercase tracking-wider">
+        Refinery States (Small)
+      </div>
+      <div className="flex flex-wrap gap-4">
+        <StatusBadge status="refinery_queued" size="sm" />
+        <StatusBadge status="refinery_rebasing" size="sm" />
+        <StatusBadge status="refinery_testing" size="sm" />
+        <StatusBadge status="refinery_merging" size="sm" />
+      </div>
     </div>
   ),
 }
