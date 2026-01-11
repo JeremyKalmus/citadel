@@ -65,6 +65,7 @@ function deriveConvoyJourneyState(convoy: Convoy): ConvoyJourneyState {
     [JourneyStage.CLAIMED]: 0,
     [JourneyStage.WORKING]: 0,
     [JourneyStage.PR_READY]: 0,
+    [JourneyStage.REFINERY]: 0,
     [JourneyStage.MERGED]: 0,
   };
 

@@ -279,26 +279,32 @@ const compactMeta = {
 type CompactStory = StoryObj<typeof compactMeta>
 
 export const CompactQueued: CompactStory = {
+  args: { currentStage: JourneyStage.QUEUED },
   render: () => <JourneyTrackerCompact currentStage={JourneyStage.QUEUED} />,
 }
 
 export const CompactWorking: CompactStory = {
+  args: { currentStage: JourneyStage.WORKING },
   render: () => <JourneyTrackerCompact currentStage={JourneyStage.WORKING} />,
 }
 
 export const CompactRefinery: CompactStory = {
+  args: { currentStage: JourneyStage.REFINERY },
   render: () => <JourneyTrackerCompact currentStage={JourneyStage.REFINERY} />,
 }
 
 export const CompactMerged: CompactStory = {
+  args: { currentStage: JourneyStage.MERGED },
   render: () => <JourneyTrackerCompact currentStage={JourneyStage.MERGED} />,
 }
 
 export const CompactBlocked: CompactStory = {
+  args: { currentStage: JourneyStage.WORKING, blocked: true },
   render: () => <JourneyTrackerCompact currentStage={JourneyStage.WORKING} blocked />,
 }
 
 export const CompactAllStages: CompactStory = {
+  args: { currentStage: JourneyStage.QUEUED },
   render: () => (
     <div className="space-y-3">
       <div className="flex items-center gap-4">
