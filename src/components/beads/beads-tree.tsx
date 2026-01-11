@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Icon, StatusBadge, type Status } from "@/components/ui";
 import type { Bead as GasTownBead, BeadPriority } from "@/lib/gastown";
+import { GitMerge } from "lucide-react";
 
 // Re-export the Bead type from gastown for consumers
 export type Bead = GasTownBead & {
@@ -13,6 +14,12 @@ export type Bead = GasTownBead & {
   labels?: string[];
   convoy?: string;
   rig?: string;
+  /** Whether this bead is in the refinery queue (MERGE_READY) */
+  inRefinery?: boolean;
+  /** Refinery queue position (1-based) */
+  refineryPosition?: number;
+  /** Current refinery operation */
+  refineryOperation?: "queued" | "rebasing" | "testing" | "merging";
 };
 
 // Helper to convert priority string to number
@@ -70,6 +77,9 @@ function beadStatusToStatus(status: string): Status {
     case "done":
     case "completed":
       return "done";
+    case "merge_ready":
+    case "pr_ready":
+      return "active"; // Will show refinery indicator separately
     default:
       return "thinking";
   }
@@ -93,6 +103,79 @@ function getPriorityStyle(priority: number): string {
     default:
       return "text-ash bg-ash/10 border-ash/30";
   }
+}
+
+/**
+ * Check if a bead is in MERGE_READY state
+ */
+function isMergeReady(status: string): boolean {
+  const normalized = status.toLowerCase();
+  return (
+    normalized === "merge_ready" ||
+    normalized === "pr_ready" ||
+    normalized === "review"
+  );
+}
+
+/**
+ * Get refinery operation label
+ */
+function getRefineryLabel(
+  operation?: "queued" | "rebasing" | "testing" | "merging"
+): string {
+  switch (operation) {
+    case "rebasing":
+      return "Rebasing";
+    case "testing":
+      return "Testing";
+    case "merging":
+      return "Merging";
+    case "queued":
+    default:
+      return "In Queue";
+  }
+}
+
+/**
+ * RefineryIndicator - Shows refinery status for MERGE_READY issues
+ *
+ * Displays a compact badge indicating the issue is in the refinery queue,
+ * with optional position and current operation.
+ */
+interface RefineryIndicatorProps {
+  position?: number;
+  operation?: "queued" | "rebasing" | "testing" | "merging";
+  className?: string;
+}
+
+function RefineryIndicator({
+  position,
+  operation,
+  className,
+}: RefineryIndicatorProps) {
+  const operationColors: Record<string, string> = {
+    queued: "text-fuel-yellow bg-fuel-yellow/10 border-fuel-yellow/30",
+    rebasing: "text-acid-green bg-acid-green/10 border-acid-green/30",
+    testing: "text-status-thinking bg-status-thinking/10 border-status-thinking/30",
+    merging: "text-acid-green bg-acid-green/10 border-acid-green/30",
+  };
+
+  const colorClass = operationColors[operation || "queued"];
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm border text-[10px] font-medium uppercase tracking-wide",
+        colorClass,
+        className
+      )}
+      title={`Refinery: ${getRefineryLabel(operation)}${position ? ` (#${position})` : ""}`}
+    >
+      <GitMerge className="w-3 h-3" />
+      {position !== undefined && <span>#{position}</span>}
+      {!position && operation && <span>{getRefineryLabel(operation)}</span>}
+    </span>
+  );
 }
 
 /**
@@ -240,6 +323,7 @@ function BeadRow({
 }) {
   const status = beadStatusToStatus(bead.status);
   const hasBlockers = (bead.blockedBy?.length ?? 0) > 0;
+  const showRefinery = bead.inRefinery || isMergeReady(bead.status);
 
   return (
     <Link
@@ -270,6 +354,14 @@ function BeadRow({
         <span className="text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded-sm border text-fuel-yellow bg-fuel-yellow/10 border-fuel-yellow/30">
           EPIC
         </span>
+      )}
+
+      {/* Refinery indicator for MERGE_READY issues */}
+      {showRefinery && (
+        <RefineryIndicator
+          position={bead.refineryPosition}
+          operation={bead.refineryOperation}
+        />
       )}
 
       {/* Status */}
