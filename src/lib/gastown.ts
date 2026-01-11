@@ -110,6 +110,49 @@ export interface MergeQueue {
   health: string;
 }
 
+/**
+ * Merge request item from queue list.
+ */
+export interface MergeRequest {
+  /** Merge request ID */
+  id: string;
+  /** Current status: pending, in_progress, blocked, merged, rejected */
+  status: string;
+  /** Priority level (P0-P4) */
+  priority: string;
+  /** Branch name (typically contains bead/issue ID) */
+  branch: string;
+  /** Worker name who created this MR */
+  worker: string;
+  /** Age in human readable format */
+  age: string;
+  /** Bead/issue ID if available */
+  bead_id?: string;
+  /** Current operation if in_progress: merging, rebasing, testing, etc. */
+  operation?: string;
+  /** Blockers if status is blocked */
+  blockers?: string[];
+}
+
+/**
+ * Queue position information for an issue.
+ * Returned by getQueuePosition() to show refinery status.
+ */
+export interface QueuePosition {
+  /** Queue position (1-based), null if not in queue */
+  position: number | null;
+  /** Current status: pending, in_progress, blocked, merged, rejected, not_found */
+  status: string;
+  /** Current operation if in_progress: merging, rebasing, testing, etc. */
+  operation: string | null;
+  /** Merge request ID if found */
+  mergeRequestId?: string;
+  /** Branch name if found */
+  branch?: string;
+  /** Blockers if blocked */
+  blockers?: string[];
+}
+
 export interface Rig {
   name: string;
   polecats: string[];
@@ -1627,7 +1670,7 @@ export class GasTownClient {
     throw new Error(`Bead ${id} not found`);
   }
 
-// ============================================================================
+  // ============================================================================
   // Git Activity
   // ============================================================================
 
@@ -1820,6 +1863,91 @@ export class GasTownClient {
 
     // Filter out any null results (beads that couldn't be found)
     return beads.filter((bead): bead is BeadDetail => bead !== null);
+  }
+
+  // ============================================================================
+  // Refinery / Merge Queue
+  // ============================================================================
+
+  /**
+   * Get merge queue items for a rig.
+   *
+   * @param rig - Rig name to query
+   * @returns Array of merge request items
+   */
+  async getMergeQueue(rig: string): Promise<MergeRequest[]> {
+    try {
+      const result = await this.runCommand<MergeRequest[] | null>(`gt mq list ${rig} --json`);
+      return result || [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Get queue position for an issue in the refinery merge queue.
+   *
+   * Searches the merge queue for a merge request matching the issue ID.
+   * The issue ID is matched against the branch name which typically contains
+   * the bead ID (e.g., "polecat/alpha/ci-abc123").
+   *
+   * @param issueId - Issue/bead ID to find (e.g., "ci-abc123")
+   * @param rig - Optional rig name to search. If not provided, searches all rigs.
+   * @returns Queue position information including position, status, and operation
+   */
+  async getQueuePosition(issueId: string, rig?: string): Promise<QueuePosition> {
+    try {
+      // If rig specified, search just that rig; otherwise search all
+      const rigsToSearch: string[] = [];
+      if (rig) {
+        rigsToSearch.push(rig);
+      } else {
+        const status = await this.getStatus();
+        rigsToSearch.push(...status.rigs.map((r) => r.name));
+      }
+
+      // Search each rig's merge queue for the issue
+      for (const rigName of rigsToSearch) {
+        const queue = await this.getMergeQueue(rigName);
+
+        // Find merge request by matching issue ID in branch name or bead_id field
+        const index = queue.findIndex((mr) => {
+          // Check bead_id field first
+          if (mr.bead_id === issueId) return true;
+          // Check if branch contains the issue ID (e.g., "polecat/alpha/ci-abc123")
+          if (mr.branch?.includes(issueId)) return true;
+          // Check if ID contains the issue ID
+          if (mr.id?.includes(issueId)) return true;
+          return false;
+        });
+
+        if (index !== -1) {
+          const mr = queue[index];
+          return {
+            position: index + 1, // 1-based position
+            status: mr.status,
+            operation: mr.operation || null,
+            mergeRequestId: mr.id,
+            branch: mr.branch,
+            blockers: mr.blockers,
+          };
+        }
+      }
+
+      // Issue not found in any merge queue
+      return {
+        position: null,
+        status: "not_found",
+        operation: null,
+      };
+    } catch {
+      // On error, return not_found status
+      return {
+        position: null,
+        status: "not_found",
+        operation: null,
+      };
+    }
   }
 }
 
