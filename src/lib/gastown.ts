@@ -620,8 +620,8 @@ export interface Bead {
   assignee?: string;
   created: string;
   updated: string;
-  depends_on: string[];
-  blocks: string[];
+  depends_on?: string[];
+  blocks?: string[];
   parent?: string;
   children?: string[];
 }
@@ -632,6 +632,21 @@ export interface BeadsData {
   open: number;
   in_progress: number;
   blocked: number;
+}
+
+export type BeadsFilter = 'all' | 'open' | 'in_progress' | 'ready' | 'blocked' | 'closed';
+
+export interface BeadsStatsSummary {
+  total_issues: number;
+  open_issues: number;
+  in_progress_issues: number;
+  ready_issues: number;
+  blocked_issues: number;
+  closed_issues: number;
+}
+
+export interface BeadsStats {
+  summary: BeadsStatsSummary;
 }
 
 // ============================================================================

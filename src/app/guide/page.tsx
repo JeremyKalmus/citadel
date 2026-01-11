@@ -36,7 +36,7 @@ const statusGuide: StatusInfo[] = [
     status: "active",
     meaning: "Making progress - worker is running and processing tasks",
     whatToDo: "Nothing - working normally",
-    icon: "play",
+    icon: "play-circle",
   },
   {
     status: "thinking",
@@ -54,7 +54,7 @@ const statusGuide: StatusInfo[] = [
     status: "unresponsive",
     meaning: "No recent activity - session exists but not responding",
     whatToDo: "Check - may be stuck, consider nudging",
-    icon: "warning",
+    icon: "exclamation-triangle",
   },
   {
     status: "dead",
@@ -203,7 +203,7 @@ function LifecycleSection() {
               See how work flows through Gas Town from issue creation to merge.
             </p>
             <ActionButton
-              variant={animated ? "primary" : "ghost"}
+              variant={animated ? "default" : "ghost"}
               size="sm"
               onClick={() => setAnimated(!animated)}
             >

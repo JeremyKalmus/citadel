@@ -4,26 +4,20 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Icon, StatusBadge, type Status } from "@/components/ui";
+import type { Bead as GasTownBead, BeadPriority } from "@/lib/gastown";
 
-/**
- * Bead type for tree display
- */
-export interface Bead {
-  id: string;
-  title: string;
-  type: "task" | "bug" | "feature" | "epic";
-  status: "open" | "in_progress" | "closed" | "blocked" | "hooked";
-  priority: 0 | 1 | 2 | 3 | 4;
-  assignee?: string;
+// Re-export the Bead type from gastown for consumers
+export type Bead = GasTownBead & {
   blockedBy?: string[];
-  blocks?: string[];
-  created: string;
-  updated: string;
   description?: string;
   labels?: string[];
   convoy?: string;
-  parent?: string;
   rig?: string;
+};
+
+// Helper to convert priority string to number
+function priorityToNumber(priority: BeadPriority): number {
+  return parseInt(priority.replace('P', ''), 10);
 }
 
 /**
@@ -285,10 +279,10 @@ function BeadRow({
       <span
         className={cn(
           "text-[10px] font-medium px-1.5 py-0.5 rounded-sm border shrink-0",
-          getPriorityStyle(bead.priority)
+          getPriorityStyle(priorityToNumber(bead.priority))
         )}
       >
-        P{bead.priority}
+        {bead.priority}
       </span>
 
       {/* Assignee */}

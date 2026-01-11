@@ -39,11 +39,19 @@ export default function BeadsPage() {
   // Derive stats from beadsData
   const stats = useMemo(() => {
     if (!beadsData) return null;
+    const closedCount = beadsData.beads.filter(b => b.status === "closed").length;
+    const readyCount = beadsData.beads.filter(b =>
+      b.status === "open" && (!b.depends_on || b.depends_on.length === 0)
+    ).length;
     return {
-      total: beadsData.total,
-      open: beadsData.open,
-      in_progress: beadsData.in_progress,
-      blocked: beadsData.blocked,
+      summary: {
+        total_issues: beadsData.total,
+        open_issues: beadsData.open,
+        in_progress_issues: beadsData.in_progress,
+        ready_issues: readyCount,
+        blocked_issues: beadsData.blocked,
+        closed_issues: closedCount,
+      }
     };
   }, [beadsData]);
 

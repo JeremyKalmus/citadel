@@ -125,6 +125,9 @@ export const Beads: Story = {
 }
 
 export const AllEntitiesCollapsed: Story = {
+  args: {
+    entity: 'town',
+  },
   render: () => (
     <div className="space-y-2 max-w-xl">
       <EntityCard entity="town" />
@@ -181,6 +184,9 @@ const sampleLiveData: EntityLiveData = {
 }
 
 export const EntityCardListDefault: Story = {
+  args: {
+    entity: 'town',
+  },
   render: () => (
     <div className="max-w-xl">
       <EntityCardList />
@@ -189,6 +195,9 @@ export const EntityCardListDefault: Story = {
 }
 
 export const EntityCardListWithLiveData: Story = {
+  args: {
+    entity: 'town',
+  },
   render: () => (
     <div className="max-w-xl">
       <EntityCardList liveData={sampleLiveData} />
@@ -197,6 +206,9 @@ export const EntityCardListWithLiveData: Story = {
 }
 
 export const InteractiveExample: Story = {
+  args: {
+    entity: 'town',
+  },
   render: () => (
     <div className="max-w-xl">
       <h2 className="text-lg font-semibold text-bone mb-4">Gas Town Entities</h2>
