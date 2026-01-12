@@ -20,6 +20,7 @@ function mapConvoyStatusToStatus(status: string): Status {
     case "active":
     case "running":
       return "active";
+    case "open":
     case "pending":
     case "queued":
       return "thinking";
@@ -85,6 +86,7 @@ function deriveConvoyJourneyState(convoy: Convoy): ConvoyJourneyState {
       stageDistribution[JourneyStage.WORKING] = 1;
       progressPercent = 50;
       break;
+    case "open":
     case "pending":
     case "queued":
       stageDistribution[JourneyStage.QUEUED] = 1;

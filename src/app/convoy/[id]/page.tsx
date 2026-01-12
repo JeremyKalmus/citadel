@@ -19,8 +19,11 @@ interface ConvoyPageProps {
 function convoyStatusToStatus(status: string): Status {
   switch (status.toLowerCase()) {
     case "active":
+    case "running":
       return "active"
+    case "open":
     case "pending":
+    case "queued":
       return "thinking"
     case "blocked":
       return "blocked"
@@ -28,9 +31,10 @@ function convoyStatusToStatus(status: string): Status {
     case "done":
       return "done"
     case "failed":
+    case "error":
       return "dead"
     default:
-      return "active"
+      return "thinking"
   }
 }
 
