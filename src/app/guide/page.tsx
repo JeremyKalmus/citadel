@@ -18,7 +18,7 @@ const guideSections: GuideSection[] = [
   { id: "overview", label: "Overview", icon: "compass" },
   { id: "entities", label: "Entities", icon: "layers" },
   { id: "lifecycle", label: "Lifecycle", icon: "activity" },
-  { id: "git", label: "Git Strategy", icon: "github" },
+  { id: "git", label: "Git Strategy", icon: "link" },
   { id: "status", label: "Status Guide", icon: "circle" },
 ]
 
@@ -132,7 +132,7 @@ function OverviewSection({
             </div>
             <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30 sm:col-span-2">
               <div className="flex items-center gap-2 mb-2">
-                <Icon name="zap" aria-label="" size="sm" className="text-fuel-yellow" />
+                <Icon name="fuel" aria-label="" size="sm" className="text-fuel-yellow" />
                 <span className="font-semibold text-bone">GUPP</span>
               </div>
               <p className="text-sm text-ash">
@@ -345,7 +345,7 @@ function GitStrategySection() {
     <div className="space-y-6">
       {/* Overview */}
       <Panel>
-        <PanelHeader icon="github" title="Git Workflow Overview" />
+        <PanelHeader icon="link" title="Git Workflow Overview" />
         <PanelBody>
           <p className="body-text text-ash mb-4">
             Gas Town uses a <span className="text-acid-green font-semibold">worktree-based workflow</span> instead 
@@ -362,12 +362,12 @@ function GitStrategySection() {
           <div className="flex flex-wrap items-center justify-center gap-2 py-4">
             {/* GitHub */}
             <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-chrome-border min-w-[100px]">
-              <Icon name="github" aria-label="GitHub" size="lg" className="mb-2 text-bone" />
+              <Icon name="link" aria-label="GitHub" size="lg" className="mb-2 text-bone" />
               <span className="text-sm font-medium uppercase tracking-wider text-bone">GitHub</span>
               <span className="text-[10px] text-ash/60 mt-1">remote</span>
             </div>
             
-            <Icon name="arrow-right" aria-label="" size="md" className="text-chrome-border mx-1" />
+            <Icon name="chevron-right" aria-label="" size="md" className="text-chrome-border mx-1" />
             
             {/* Rig */}
             <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-acid-green/50 min-w-[100px]">
@@ -376,7 +376,7 @@ function GitStrategySection() {
               <span className="text-[10px] text-ash/60 mt-1">local clone</span>
             </div>
             
-            <Icon name="arrow-right" aria-label="" size="md" className="text-chrome-border mx-1" />
+            <Icon name="chevron-right" aria-label="" size="md" className="text-chrome-border mx-1" />
             
             {/* Worktrees */}
             <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-fuel-yellow/50 min-w-[100px]">
@@ -385,7 +385,7 @@ function GitStrategySection() {
               <span className="text-[10px] text-ash/60 mt-1">polecats</span>
             </div>
             
-            <Icon name="arrow-right" aria-label="" size="md" className="text-chrome-border mx-1" />
+            <Icon name="chevron-right" aria-label="" size="md" className="text-chrome-border mx-1" />
             
             {/* Refinery */}
             <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-rust-orange/50 min-w-[100px]">
@@ -394,11 +394,11 @@ function GitStrategySection() {
               <span className="text-[10px] text-ash/60 mt-1">merge queue</span>
             </div>
             
-            <Icon name="arrow-right" aria-label="" size="md" className="text-chrome-border mx-1" />
+            <Icon name="chevron-right" aria-label="" size="md" className="text-chrome-border mx-1" />
             
             {/* Push */}
             <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-acid-green min-w-[100px]">
-              <Icon name="upload" aria-label="Push" size="lg" className="mb-2 text-acid-green" />
+              <Icon name="chevron-up" aria-label="Push" size="lg" className="mb-2 text-acid-green" />
               <span className="text-sm font-medium uppercase tracking-wider text-acid-green">Push</span>
               <span className="text-[10px] text-ash/60 mt-1">to remote</span>
             </div>

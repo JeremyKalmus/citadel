@@ -30,20 +30,20 @@ function mapBeadStatusToStatus(status: string): Status {
   }
 }
 
-function getPriorityLabel(priority: string): string {
-  return priority; // Already in P0-P4 format
+function getPriorityLabel(priority: number): string {
+  return `P${priority}`; // Convert number to P0-P4 format
 }
 
-function getPriorityClass(priority: string): string {
+function getPriorityClass(priority: number): string {
   switch (priority) {
-    case "P0":
+    case 0:
       return "text-rust-orange";
-    case "P1":
+    case 1:
       return "text-fuel-yellow";
-    case "P2":
+    case 2:
       return "text-bone";
-    case "P3":
-    case "P4":
+    case 3:
+    case 4:
       return "text-ash";
     default:
       return "text-ash";
@@ -147,7 +147,7 @@ export function BeadsTable({ beads, isLoading }: BeadsTableProps) {
                   <p className="text-sm text-bone truncate mt-0.5">{bead.title}</p>
                   {/* Mobile-only metadata */}
                   <div className="flex items-center gap-3 mt-1 md:hidden">
-                    <span className="text-xs text-ash">{getTypeLabel(bead.type)}</span>
+                    <span className="text-xs text-ash">{getTypeLabel(bead.issue_type)}</span>
                     <span className={`text-xs ${getPriorityClass(bead.priority)}`}>
                       {getPriorityLabel(bead.priority)}
                     </span>
@@ -156,7 +156,7 @@ export function BeadsTable({ beads, isLoading }: BeadsTableProps) {
                 </div>
                 {/* Type - desktop only */}
                 <span className="hidden md:block text-xs text-ash">
-                  {getTypeLabel(bead.type)}
+                  {getTypeLabel(bead.issue_type)}
                 </span>
                 {/* Priority - desktop only */}
                 <span className={`hidden md:block text-xs font-mono ${getPriorityClass(bead.priority)}`}>
@@ -168,7 +168,7 @@ export function BeadsTable({ beads, isLoading }: BeadsTableProps) {
                 </div>
                 {/* Updated - desktop only */}
                 <span className="hidden md:block text-xs text-ash">
-                  {formatDate(bead.updated)}
+                  {formatDate(bead.updated_at)}
                 </span>
               </div>
             </Link>

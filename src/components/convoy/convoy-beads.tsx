@@ -31,17 +31,17 @@ function mapBeadStatusToStatus(status: string): Status {
   }
 }
 
-function priorityLabel(priority: string): string {
-  return priority; // Already in P0-P4 format
+function priorityLabel(priority: number): string {
+  return `P${priority}`; // Convert number to P0-P4 format
 }
 
-function priorityColor(priority: string): string {
+function priorityColor(priority: number): string {
   switch (priority) {
-    case "P0":
+    case 0:
       return "text-status-dead";
-    case "P1":
+    case 1:
       return "text-status-blocked";
-    case "P2":
+    case 2:
       return "text-status-slow";
     default:
       return "text-ash";
