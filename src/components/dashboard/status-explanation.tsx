@@ -22,6 +22,7 @@ const statusExplanations: Record<Status, string> = {
   slow: "Worker is operational but running slower than expected. May be resource constrained.",
   unresponsive: "Worker session exists but is not responding. May need attention.",
   dead: "Worker session has terminated. Manual intervention may be required.",
+  stopped: "Agent session is stopped. Run 'gt prime' to restart.",
   blocked: "Worker is waiting on a dependency or external condition to proceed.",
   done: "Worker has completed its assigned tasks successfully.",
   refinery_queued: "Branch is queued for merge processing. Waiting for refinery.",

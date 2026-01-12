@@ -2,8 +2,8 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { Panel, ActionButton, StatusBadge, Icon } from "@/components/ui";
-import { WorkerGrid, ConvoyList, RefineryHealth, MergeQueueStats } from "@/components/rig";
+import { Panel, ActionButton, Icon } from "@/components/ui";
+import { WorkerGrid, ConvoyList, RefineryHealth, MergeQueueStats, InfraAgentStatus } from "@/components/rig";
 import { BeadsTree } from "@/components/beads";
 import { useRig, usePolecats, useConvoys, useBeads } from "@/hooks";
 import { ArrowLeft, RefreshCw, Container, Users, Eye, Cog } from "lucide-react";
@@ -119,11 +119,10 @@ export default function RigPage({ params }: RigPageProps) {
             <div>
               <p className="label">Witness</p>
               <p className="data-value mt-1">
-                {rig.has_witness ? (
-                  <StatusBadge status="active" size="sm" />
-                ) : (
-                  <StatusBadge status="dead" size="sm" />
-                )}
+                <InfraAgentStatus
+                  agentType="witness"
+                  isRunning={rig.agents?.some(a => a.role === "witness" && a.running) ?? false}
+                />
               </p>
             </div>
             <Eye className="w-6 h-6 text-ash" />
@@ -134,11 +133,10 @@ export default function RigPage({ params }: RigPageProps) {
             <div>
               <p className="label">Refinery</p>
               <p className="data-value mt-1">
-                {rig.has_refinery ? (
-                  <StatusBadge status="active" size="sm" />
-                ) : (
-                  <StatusBadge status="dead" size="sm" />
-                )}
+                <InfraAgentStatus
+                  agentType="refinery"
+                  isRunning={rig.agents?.some(a => a.role === "refinery" && a.running) ?? false}
+                />
               </p>
             </div>
             <Cog className="w-6 h-6 text-ash" />

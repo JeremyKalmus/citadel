@@ -137,9 +137,10 @@ export function AttentionRequired({ polecats, guzzoline, loading = false }: Atte
   const budgetItems = getBudgetAttentionItems(guzzoline)
   const allItems = [...workerItems, ...budgetItems]
 
-  // Sort by severity: dead > blocked > slow > unresponsive
+  // Sort by severity: dead/stopped > blocked > slow > unresponsive
   const severityOrder: Record<Status, number> = {
     dead: 0,
+    stopped: 0,
     blocked: 1,
     slow: 2,
     unresponsive: 3,

@@ -9,6 +9,31 @@ interface RigListProps {
   loading?: boolean
 }
 
+/** Helper to check if an infrastructure agent is running */
+function isAgentRunning(rig: Rig, role: "witness" | "refinery"): boolean {
+  return rig.agents?.some((a) => a.role === role && a.running) ?? false;
+}
+
+/** InfraAgentLabel - Shows agent name with color and tooltip based on running state */
+function InfraAgentLabel({
+  label,
+  isRunning,
+}: {
+  label: string;
+  isRunning: boolean;
+}) {
+  const tooltip = isRunning
+    ? `${label} is running`
+    : `${label} stopped. Run 'gt prime' to start infrastructure agents`;
+  const colorClass = isRunning ? "text-acid-green" : "text-status-dead";
+
+  return (
+    <span className={colorClass} title={tooltip}>
+      {" • "}{label}
+    </span>
+  );
+}
+
 function getRigStatus(rig: Rig): Status {
   const activeAgents = rig.agents?.filter(a => a.running).length ?? 0
   const totalAgents = rig.agents?.length ?? 0
@@ -35,8 +60,12 @@ function RigRow({ rig }: RigRowProps) {
           <p className="body-text font-medium">{rig.name}</p>
           <p className="caption text-ash">
             {rig.polecat_count} polecat{rig.polecat_count !== 1 ? "s" : ""}
-            {rig.has_witness && " • witness"}
-            {rig.has_refinery && " • refinery"}
+            {rig.has_witness && (
+              <InfraAgentLabel label="witness" isRunning={isAgentRunning(rig, "witness")} />
+            )}
+            {rig.has_refinery && (
+              <InfraAgentLabel label="refinery" isRunning={isAgentRunning(rig, "refinery")} />
+            )}
           </p>
         </div>
       </div>

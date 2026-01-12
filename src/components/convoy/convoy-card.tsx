@@ -41,6 +41,7 @@ function mapConvoyStatusToStatus(status: string): Status {
     case "active":
     case "running":
       return "active";
+    case "open":
     case "pending":
     case "queued":
       return "thinking";

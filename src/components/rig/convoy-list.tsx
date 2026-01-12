@@ -3,7 +3,7 @@
 import { Panel, PanelHeader, PanelBody, StatusBadge, type Status } from "@/components/ui";
 import { ConvoyJourneyCompact } from "@/components/journey";
 import { CostSparkline } from "@/components/cost";
-import type { Convoy } from "@/lib/gastown";
+import type { Convoy, Bead } from "@/lib/gastown";
 import type { ConvoyJourneyState, ConvoyCost } from "@/lib/gastown/types";
 import { JourneyStage } from "@/lib/gastown/types";
 import { Truck } from "lucide-react";
@@ -12,6 +12,8 @@ interface ConvoyListProps {
   convoys: Convoy[];
   /** Optional cost data keyed by convoy ID */
   convoyCosts?: Map<string, ConvoyCost>;
+  /** Optional beads data keyed by convoy ID */
+  convoyBeads?: Map<string, Bead[]>;
   isLoading?: boolean;
 }
 
@@ -20,6 +22,7 @@ function mapConvoyStatusToStatus(status: string): Status {
     case "active":
     case "running":
       return "active";
+    case "open":
     case "pending":
     case "queued":
       return "thinking";
@@ -51,16 +54,38 @@ function formatDate(dateString: string): string {
 }
 
 /**
- * Derive journey state from convoy status.
- * This is a placeholder until we have proper journey tracking via convoy API.
+ * Map bead status to journey stage.
  */
-function deriveConvoyJourneyState(convoy: Convoy): ConvoyJourneyState {
-  // Default distribution based on convoy status
+function beadStatusToJourneyStage(status: string): JourneyStage {
+  switch (status.toLowerCase()) {
+    case "open":
+      return JourneyStage.QUEUED;
+    case "in_progress":
+    case "hooked":
+      return JourneyStage.WORKING;
+    case "blocked":
+      return JourneyStage.WORKING; // Blocked issues are still in working stage
+    case "deferred":
+      return JourneyStage.QUEUED; // Deferred treated as queued
+    case "closed":
+    case "done":
+    case "completed":
+      return JourneyStage.MERGED;
+    default:
+      return JourneyStage.QUEUED;
+  }
+}
+
+/**
+ * Derive journey state from convoy status and optional beads data.
+ * When beads are provided, calculates real values from bead statuses.
+ * Falls back to status-based estimation when beads are not available.
+ */
+function deriveConvoyJourneyState(convoy: Convoy, beads?: Bead[]): ConvoyJourneyState {
   const status = convoy.status.toLowerCase();
 
-  // Create a mock distribution based on status
-  // In production, this would come from the API
-  let stageDistribution: Record<JourneyStage, number> = {
+  // Initialize stage distribution
+  const stageDistribution: Record<JourneyStage, number> = {
     [JourneyStage.QUEUED]: 0,
     [JourneyStage.CLAIMED]: 0,
     [JourneyStage.WORKING]: 0,
@@ -69,9 +94,37 @@ function deriveConvoyJourneyState(convoy: Convoy): ConvoyJourneyState {
     [JourneyStage.MERGED]: 0,
   };
 
+  // When beads are available, calculate real values
+  if (beads && beads.length > 0) {
+    const issueCount = beads.length;
+    let completedCount = 0;
+
+    // Count beads by stage
+    for (const bead of beads) {
+      const stage = beadStatusToJourneyStage(bead.status);
+      stageDistribution[stage]++;
+      if (bead.status === "closed") {
+        completedCount++;
+      }
+    }
+
+    const progressPercent = Math.round((completedCount / issueCount) * 100);
+
+    return {
+      convoyId: convoy.id,
+      title: convoy.title || convoy.id,
+      progressPercent,
+      issueCount,
+      completedCount,
+      stageDistribution,
+      issues: [], // Would be populated with full journey info
+    };
+  }
+
+  // Fallback: estimate from convoy status when beads not available
   let progressPercent = 0;
   let completedCount = 0;
-  const issueCount = 1; // Placeholder - would come from API
+  const issueCount = 0; // Unknown without beads
 
   switch (status) {
     case "completed":
@@ -85,6 +138,7 @@ function deriveConvoyJourneyState(convoy: Convoy): ConvoyJourneyState {
       stageDistribution[JourneyStage.WORKING] = 1;
       progressPercent = 50;
       break;
+    case "open":
     case "pending":
     case "queued":
       stageDistribution[JourneyStage.QUEUED] = 1;
@@ -106,11 +160,11 @@ function deriveConvoyJourneyState(convoy: Convoy): ConvoyJourneyState {
     issueCount,
     completedCount,
     stageDistribution,
-    issues: [], // Would be populated from API
+    issues: [],
   };
 }
 
-export function ConvoyList({ convoys, convoyCosts, isLoading }: ConvoyListProps) {
+export function ConvoyList({ convoys, convoyCosts, convoyBeads, isLoading }: ConvoyListProps) {
   if (isLoading) {
     return (
       <Panel>
@@ -156,7 +210,8 @@ export function ConvoyList({ convoys, convoyCosts, isLoading }: ConvoyListProps)
       <PanelBody className="p-0">
         <div className="divide-y divide-chrome-border/50">
           {convoys.map((convoy) => {
-            const journeyState = deriveConvoyJourneyState(convoy);
+            const beads = convoyBeads?.get(convoy.id);
+            const journeyState = deriveConvoyJourneyState(convoy, beads);
             const cost = convoyCosts?.get(convoy.id);
 
             return (
