@@ -183,6 +183,82 @@ export interface ConvoyDetail {
   total?: number;
 }
 
+// ============================================================================
+// Refinery Types
+// ============================================================================
+
+/**
+ * Single item in the refinery merge queue
+ */
+export interface RefineryQueueItem {
+  /** Merge request ID */
+  id: string;
+  /** Associated bead ID */
+  beadId: string;
+  /** Position in queue (1-indexed) */
+  position: number;
+  /** When the MR was submitted */
+  submittedAt: string;
+  /** Current processing status */
+  status: "pending" | "processing" | "merged" | "failed";
+}
+
+/**
+ * Refinery status for a rig
+ */
+export interface RefineryStatus {
+  /** Rig identifier */
+  rig: string;
+  /** Refinery state */
+  state: "running" | "stopped" | "error";
+  /** Number of items in queue */
+  queueLength: number;
+  /** Queue items with positions */
+  queue: RefineryQueueItem[];
+}
+
+/**
+ * Journey state for a single bead within a convoy
+ */
+export interface BeadJourneyState {
+  /** Bead ID */
+  beadId: string;
+  /** Bead title */
+  title: string;
+  /** Current journey stage */
+  stage: "queued" | "hooked" | "in_progress" | "pr_ready" | "refinery" | "merged";
+  /** Assigned worker (polecat) */
+  worker?: string;
+  /** Last activity timestamp */
+  lastActivity: string;
+  /** Refinery info if in refinery stage */
+  refinery?: {
+    position: number;
+    queueLength: number;
+    mrId: string;
+  };
+  /** Seconds since last activity */
+  idleDuration: number;
+  /** True if idle > 900 seconds (15 minutes) */
+  needsNudge: boolean;
+}
+
+/**
+ * Enhanced convoy detail with per-bead journey states
+ */
+export interface EnhancedConvoyDetail extends ConvoyDetail {
+  /** Journey states for all tracked beads */
+  beadStates: BeadJourneyState[];
+  /** Summary counts by stage */
+  summary: {
+    queued: number;
+    working: number;
+    inRefinery: number;
+    merged: number;
+    needsNudge: number;
+  };
+}
+
 export interface TokenUsage {
   actor: string;
   input: number;
@@ -1987,6 +2063,226 @@ export class GasTownClient {
       // If bd command fails (e.g., epic has no children), return empty array
       console.error(`Failed to get children for epic ${epicId}:`, error);
       return [];
+    }
+  }
+
+  // ============================================================================
+  // Refinery Methods
+  // ============================================================================
+
+  /**
+   * Get refinery status for a rig.
+   * Uses `gt refinery status <rig> --json` and `gt refinery queue <rig> --json`
+   *
+   * @param rig - The rig identifier
+   * @returns RefineryStatus with queue items and positions
+   */
+  async getRefineryStatus(rig: string): Promise<RefineryStatus> {
+    try {
+      // Get refinery status
+      const statusResult = await this.runCommand<{
+        rig_name: string;
+        state: string;
+        started_at?: string;
+        error?: string;
+      }>(`gt refinery status ${rig} --json`);
+
+      // Get queue
+      let queue: RefineryQueueItem[] = [];
+      try {
+        const queueResult = await this.runCommand<Array<{
+          position: number;
+          mr: {
+            id: string;
+            branch: string;
+            worker: string;
+            issue_id: string;
+            target_branch: string;
+            created_at: string;
+            status: string;
+          };
+          age: string;
+        }>>(`gt refinery queue ${rig} --json`);
+
+        if (Array.isArray(queueResult)) {
+          queue = queueResult.map((item) => ({
+            id: item.mr.id,
+            beadId: item.mr.issue_id,
+            position: item.position,
+            submittedAt: item.mr.created_at,
+            status: this.mapRefineryMrStatus(item.mr.status),
+          }));
+        }
+      } catch {
+        // Queue might be empty or unavailable
+        queue = [];
+      }
+
+      // Map state
+      let state: RefineryStatus["state"] = "stopped";
+      if (statusResult.state === "running") {
+        state = "running";
+      } else if (statusResult.error) {
+        state = "error";
+      }
+
+      return {
+        rig,
+        state,
+        queueLength: queue.length,
+        queue,
+      };
+    } catch (error) {
+      // Refinery might not exist for this rig
+      return {
+        rig,
+        state: "stopped",
+        queueLength: 0,
+        queue: [],
+      };
+    }
+  }
+
+  /**
+   * Map MR status string to RefineryQueueItem status
+   */
+  private mapRefineryMrStatus(status: string): RefineryQueueItem["status"] {
+    switch (status.toLowerCase()) {
+      case "open":
+      case "pending":
+        return "pending";
+      case "processing":
+      case "rebasing":
+      case "testing":
+        return "processing";
+      case "merged":
+      case "closed":
+        return "merged";
+      case "failed":
+      case "error":
+        return "failed";
+      default:
+        return "pending";
+    }
+  }
+
+  /**
+   * Get enhanced convoy status with per-bead journey states.
+   * Combines convoy details with bead status and refinery queue position.
+   *
+   * @param convoyId - The convoy ID
+   * @returns EnhancedConvoyDetail with beadStates and summary
+   */
+  async getEnhancedConvoyStatus(convoyId: string): Promise<EnhancedConvoyDetail> {
+    // Get basic convoy details
+    const convoy = await this.getConvoyStatus(convoyId);
+
+    // Get tracked beads
+    const beads = await this.getBeadsForConvoy(convoyId);
+
+    // Build a map of bead ID to refinery queue position
+    // We need to check refinery status for the rig(s) involved
+    const refineryMap = new Map<string, { position: number; queueLength: number; mrId: string }>();
+
+    // Extract unique rigs from bead assignees (e.g., "citadel/polecats/worker" -> "citadel")
+    const rigs = new Set<string>();
+    for (const bead of beads) {
+      if (bead.assignee) {
+        const rigMatch = bead.assignee.match(/^([^/]+)/);
+        if (rigMatch) {
+          rigs.add(rigMatch[1]);
+        }
+      }
+    }
+
+    // Check refinery queue for each rig
+    for (const rig of rigs) {
+      try {
+        const refineryStatus = await this.getRefineryStatus(rig);
+        for (const queueItem of refineryStatus.queue) {
+          refineryMap.set(queueItem.beadId, {
+            position: queueItem.position,
+            queueLength: refineryStatus.queueLength,
+            mrId: queueItem.id,
+          });
+        }
+      } catch {
+        // Refinery might not be available
+      }
+    }
+
+    // Build bead journey states
+    const now = Date.now();
+    const beadStates: BeadJourneyState[] = beads.map((bead) => {
+      const stage = this.mapBeadStatusToStage(bead.status, refineryMap.has(bead.id));
+      const lastActivity = bead.updated_at;
+      const lastActivityMs = new Date(lastActivity).getTime();
+      const idleDuration = Math.floor((now - lastActivityMs) / 1000);
+      const needsNudge = idleDuration > 900; // 15 minutes
+
+      const refineryInfo = refineryMap.get(bead.id);
+
+      return {
+        beadId: bead.id,
+        title: bead.title,
+        stage,
+        worker: bead.assignee,
+        lastActivity,
+        refinery: refineryInfo,
+        idleDuration,
+        needsNudge,
+      };
+    });
+
+    // Calculate summary
+    const summary = {
+      queued: beadStates.filter((b) => b.stage === "queued").length,
+      working: beadStates.filter((b) => b.stage === "hooked" || b.stage === "in_progress").length,
+      inRefinery: beadStates.filter((b) => b.stage === "refinery" || b.stage === "pr_ready").length,
+      merged: beadStates.filter((b) => b.stage === "merged").length,
+      needsNudge: beadStates.filter((b) => b.needsNudge && b.stage !== "merged").length,
+    };
+
+    return {
+      ...convoy,
+      beadStates,
+      summary,
+    };
+  }
+
+  /**
+   * Map bead status to journey stage
+   */
+  private mapBeadStatusToStage(
+    status: string,
+    inRefinery: boolean
+  ): BeadJourneyState["stage"] {
+    const lower = status.toLowerCase();
+
+    if (inRefinery) {
+      return "refinery";
+    }
+
+    switch (lower) {
+      case "open":
+      case "queued":
+        return "queued";
+      case "hooked":
+      case "claimed":
+        return "hooked";
+      case "in_progress":
+      case "working":
+        return "in_progress";
+      case "pr_ready":
+      case "review":
+      case "merge_ready":
+        return "pr_ready";
+      case "closed":
+      case "done":
+      case "merged":
+        return "merged";
+      default:
+        return "queued";
     }
   }
 }
