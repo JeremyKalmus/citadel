@@ -73,3 +73,44 @@ export function Gauge({
     </div>
   )
 }
+
+/**
+ * Compact Gauge for inline/tight spaces
+ * Fewer segments, smaller height, no label
+ */
+export function GaugeCompact({
+  value,
+  segments = 5,
+  className
+}: {
+  value: number
+  segments?: number
+  className?: string
+}) {
+  const clampedValue = Math.min(100, Math.max(0, value))
+  const filledSegments = Math.round((clampedValue / 100) * segments)
+
+  return (
+    <div className={cn("flex gap-0.5", className)}>
+      {Array.from({ length: segments }).map((_, i) => {
+        const isFilled = i < filledSegments
+        const isFirst = i === 0
+        const isLast = i === segments - 1
+
+        return (
+          <div
+            key={i}
+            className={cn(
+              "flex-1 h-1.5 transition-ratchet",
+              isFilled ? "bg-bone" : "bg-gunmetal",
+              {
+                'rounded-l-sm': isFirst,
+                'rounded-r-sm': isLast,
+              }
+            )}
+          />
+        )
+      })}
+    </div>
+  )
+}

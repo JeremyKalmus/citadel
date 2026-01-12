@@ -2,9 +2,10 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { Panel, ActionButton, StatusBadge } from "@/components/ui";
+import { Panel, ActionButton, StatusBadge, Icon } from "@/components/ui";
 import { WorkerGrid, ConvoyList, RefineryHealth, MergeQueueStats } from "@/components/rig";
-import { useRig, usePolecats, useConvoys } from "@/hooks";
+import { BeadsTree } from "@/components/beads";
+import { useRig, usePolecats, useConvoys, useBeads } from "@/hooks";
 import { ArrowLeft, RefreshCw, Container, Users, Eye, Cog } from "lucide-react";
 
 interface RigPageProps {
@@ -16,13 +17,15 @@ export default function RigPage({ params }: RigPageProps) {
   const { data: rig, isLoading: rigLoading, refresh: refreshRig } = useRig(name, { refreshInterval: 30000 });
   const { data: polecats, isLoading: polecatsLoading, refresh: refreshPolecats } = usePolecats({ rig: name, refreshInterval: 30000 });
   const { data: convoys, isLoading: convoysLoading, refresh: refreshConvoys } = useConvoys({ rig: name, refreshInterval: 30000 });
+  const { data: beadsData, isLoading: beadsLoading, refresh: refreshBeads } = useBeads({ rig: name, refreshInterval: 30000 });
 
-  const isLoading = rigLoading || polecatsLoading || convoysLoading;
+  const isLoading = rigLoading || polecatsLoading || convoysLoading || beadsLoading;
 
   const handleRefresh = () => {
     refreshRig();
     refreshPolecats();
     refreshConvoys();
+    refreshBeads();
   };
 
   if (rigLoading) {
@@ -156,6 +159,42 @@ export default function RigPage({ params }: RigPageProps) {
           <MergeQueueStats mergeQueue={rig.mq} isLoading={rigLoading} />
         )}
       </div>
+
+      {/* Beads / Work Items */}
+      <Panel>
+        <div className="flex items-center justify-between p-4 border-b border-chrome-border/50">
+          <div className="flex items-center gap-3">
+            <Icon name="circle" aria-label="Beads" size="md" variant="muted" />
+            <h2 className="section-header text-bone">Work Items</h2>
+            {beadsData && (
+              <span className="text-xs text-ash">
+                {beadsData.total} total • {beadsData.open} open • {beadsData.in_progress} in progress
+              </span>
+            )}
+          </div>
+          <Link href="/beads" className="text-xs text-fuel-yellow hover:underline">
+            View All Beads →
+          </Link>
+        </div>
+        {beadsLoading ? (
+          <div className="p-8 text-center text-ash">
+            Loading beads...
+          </div>
+        ) : beadsData && beadsData.beads.length > 0 ? (
+          <BeadsTree
+            beads={beadsData.beads}
+            groupBy="epic"
+          />
+        ) : (
+          <div className="p-8 text-center">
+            <Icon name="circle" aria-label="No beads" size="xl" variant="muted" className="mx-auto mb-2" />
+            <p className="text-sm text-ash">No work items found for this rig</p>
+            <p className="text-xs text-ash/70 mt-1">
+              Create beads with <code className="font-mono bg-carbon-black px-1 rounded">bd create</code>
+            </p>
+          </div>
+        )}
+      </Panel>
     </div>
   );
 }

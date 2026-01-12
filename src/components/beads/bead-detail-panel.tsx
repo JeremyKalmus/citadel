@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Panel, PanelHeader, PanelBody, StatusBadge, ActionButton } from "@/components/ui"
+import { Panel, PanelHeader, PanelBody, StatusBadge } from "@/components/ui"
 import { ActivityTimeline, type ActivityEvent } from "@/components/dashboard"
 import { JourneyTracker } from "@/components/journey"
 import { Icon } from "@/components/ui/icon"
@@ -12,7 +12,6 @@ import {
   type WorkingSubstage,
   type JourneyTimestamps,
 } from "@/lib/gastown/types"
-import { CheckCircle, XCircle, Edit2, Link2 } from "lucide-react"
 
 // ============================================================================
 // Type Definitions
@@ -23,8 +22,6 @@ export interface BeadDetailPanelProps {
   bead: BeadDetail
   /** Whether the panel is in a loading state */
   loading?: boolean
-  /** Whether to show action buttons */
-  showActions?: boolean
   /** Callback when refresh is requested */
   onRefresh?: () => void
   /** Whether in compact mode (for side panels) */
@@ -38,7 +35,10 @@ export interface BeadDetailPanelProps {
 /**
  * Map bead status string to Status type for StatusBadge
  */
-function beadStatusToStatus(status: string): Status {
+function beadStatusToStatus(status: string | undefined | null): Status {
+  if (!status) {
+    return "thinking"
+  }
   switch (status.toLowerCase()) {
     case "open":
       return "thinking"
@@ -96,7 +96,10 @@ function formatDate(dateStr: string): string {
 /**
  * Derive journey stage from bead status
  */
-function deriveJourneyStage(status: string): JourneyStage {
+function deriveJourneyStage(status: string | undefined | null): JourneyStage {
+  if (!status) {
+    return JourneyStage.QUEUED
+  }
   switch (status.toLowerCase()) {
     case "open":
       return JourneyStage.QUEUED
@@ -117,7 +120,10 @@ function deriveJourneyStage(status: string): JourneyStage {
 /**
  * Derive working substage from status (placeholder until proper event tracking)
  */
-function deriveSubstage(status: string): WorkingSubstage | undefined {
+function deriveSubstage(status: string | undefined | null): WorkingSubstage | undefined {
+  if (!status) {
+    return undefined
+  }
   if (status === "in_progress" || status === "hooked") {
     return "2b" // Default to coding substage
   }
@@ -282,83 +288,21 @@ function BeadStatusSection({
                 {details.map((detail, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between py-2 border-b border-chrome-border/30 last:border-0"
+                    className="flex items-center justify-between gap-4 py-2 border-b border-chrome-border/30 last:border-0"
                   >
-                    <span className="label text-ash">{detail.label}</span>
-                    <span className="body-text font-medium">{detail.value}</span>
+                    <span className="label text-ash shrink-0">{detail.label}</span>
+                    <span
+                      className="body-text font-medium text-right truncate min-w-0"
+                      title={detail.value}
+                    >
+                      {detail.value}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
           </div>
         )}
-      </PanelBody>
-    </Panel>
-  )
-}
-
-/**
- * Action buttons for bead operations
- */
-function BeadActionsSection({ beadId, status }: { beadId: string; status: string }) {
-  const isOpen = status === "open" || status === "in_progress" || status === "hooked"
-
-  return (
-    <Panel>
-      <PanelHeader icon="settings" title="Actions" />
-      <PanelBody>
-        <div className="flex flex-wrap gap-2">
-          {isOpen && (
-            <>
-              <ActionButton
-                variant="default"
-                size="sm"
-                icon={<CheckCircle className="w-4 h-4" />}
-                onClick={() => {
-                  alert(`Close bead ${beadId}? (Not implemented - read-only dashboard)`)
-                }}
-              >
-                Close
-              </ActionButton>
-              <ActionButton
-                variant="ghost"
-                size="sm"
-                icon={<Edit2 className="w-4 h-4" />}
-                onClick={() => {
-                  alert(`Edit bead ${beadId}? (Not implemented - read-only dashboard)`)
-                }}
-              >
-                Edit
-              </ActionButton>
-            </>
-          )}
-          {!isOpen && (
-            <ActionButton
-              variant="ghost"
-              size="sm"
-              icon={<XCircle className="w-4 h-4" />}
-              onClick={() => {
-                alert(`Reopen bead ${beadId}? (Not implemented - read-only dashboard)`)
-              }}
-            >
-              Reopen
-            </ActionButton>
-          )}
-          <ActionButton
-            variant="ghost"
-            size="sm"
-            icon={<Link2 className="w-4 h-4" />}
-            onClick={() => {
-              navigator.clipboard.writeText(beadId)
-              alert(`Copied ${beadId} to clipboard`)
-            }}
-          >
-            Copy ID
-          </ActionButton>
-        </div>
-        <p className="caption text-ash mt-3">
-          Actions are read-only in the dashboard. Use the <code className="font-mono text-bone">bd</code> CLI for modifications.
-        </p>
       </PanelBody>
     </Panel>
   )
@@ -397,7 +341,6 @@ function DescriptionSection({ description }: { description?: string }) {
  * - Activity timeline
  * - Description
  * - Dependencies
- * - Actions
  *
  * Can be used as a standalone panel or embedded in a page layout.
  *
@@ -406,14 +349,12 @@ function DescriptionSection({ description }: { description?: string }) {
  * <BeadDetailPanel
  *   bead={beadData}
  *   loading={isLoading}
- *   showActions={true}
  * />
  * ```
  */
 export function BeadDetailPanel({
   bead,
   loading = false,
-  showActions = true,
   compact = false,
 }: BeadDetailPanelProps) {
   const status = beadStatusToStatus(bead.status)
@@ -423,6 +364,7 @@ export function BeadDetailPanel({
   const activityEvents = generateBeadActivityEvents(bead)
 
   const details = [
+    { label: "Title", value: bead.title },
     { label: "ID", value: bead.id },
     { label: "Type", value: bead.issue_type },
     { label: "Status", value: bead.status },
@@ -459,32 +401,7 @@ export function BeadDetailPanel({
         </PanelBody>
       </Panel>
 
-      {/* Main content grid */}
-      <div className={`grid grid-cols-1 ${compact ? "" : "lg:grid-cols-2"} gap-4`}>
-        {/* Status panel */}
-        <BeadStatusSection
-          status={status}
-          details={details}
-          loading={loading}
-        />
-
-        {/* Activity timeline */}
-        <ActivityTimeline
-          events={activityEvents}
-          loading={loading}
-          maxEvents={compact ? 5 : 10}
-        />
-      </div>
-
-      {/* Description */}
-      <DescriptionSection description={bead.description} />
-
-      {/* Actions */}
-      {showActions && (
-        <BeadActionsSection beadId={bead.id} status={bead.status} />
-      )}
-
-      {/* Dependencies */}
+      {/* Dependencies - Blocked By & Parent Epic */}
       <div className={`grid grid-cols-1 ${compact ? "" : "lg:grid-cols-2"} gap-4`}>
         <Panel>
           <PanelHeader
@@ -538,6 +455,26 @@ export function BeadDetailPanel({
           </PanelBody>
         </Panel>
       </div>
+
+      {/* Main content grid - Status & Activity */}
+      <div className={`grid grid-cols-1 ${compact ? "" : "lg:grid-cols-2"} gap-4`}>
+        {/* Status panel */}
+        <BeadStatusSection
+          status={status}
+          details={details}
+          loading={loading}
+        />
+
+        {/* Activity timeline */}
+        <ActivityTimeline
+          events={activityEvents}
+          loading={loading}
+          maxEvents={compact ? 5 : 10}
+        />
+      </div>
+
+      {/* Description */}
+      <DescriptionSection description={bead.description} />
     </div>
   )
 }
@@ -554,7 +491,6 @@ export function BeadDetailPanelCompact({
     <BeadDetailPanel
       bead={bead}
       loading={loading}
-      showActions={false}
       compact={true}
     />
   )

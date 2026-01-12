@@ -1,6 +1,6 @@
 export { Panel, PanelHeader, PanelBody } from './panel'
 export { StatusBadge, type Status } from './status-badge'
-export { Gauge } from './gauge'
+export { Gauge, GaugeCompact } from './gauge'
 export { ActionButton } from './action-button'
 export { ConfirmDialog } from './confirm-dialog'
 export { CostSparkline, CostBadge } from './cost-sparkline'

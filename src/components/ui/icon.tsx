@@ -35,6 +35,7 @@ import {
   Circle,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   // Additional icons for plugins
   Anchor,
   Coins,
@@ -43,6 +44,11 @@ import {
   Shield,
   Link,
   Box,
+  // Mail icons for Town Mail
+  Mail,
+  Inbox,
+  // Navigation icons
+  MapPin,
   type LucideIcon,
 } from "lucide-react"
 
@@ -92,6 +98,7 @@ export type IconName =
   | "circle"
   | "chevron-down"
   | "chevron-right"
+  | "chevron-up"
   // Plugin icons (Lucide)
   | "anchor"
   | "coins"
@@ -103,6 +110,11 @@ export type IconName =
   // Domain icons (Font Awesome)
   | "truck"
   | "road"
+  // Mail icons (Lucide)
+  | "mail"
+  | "inbox"
+  // Navigation icons (Lucide)
+  | "map-pin"
 
 export type IconVariant = "default" | "alert" | "active" | "ok" | "muted"
 
@@ -145,6 +157,7 @@ const iconMap: Record<IconName, IconComponent> = {
   "circle": Circle,
   "chevron-down": ChevronDown,
   "chevron-right": ChevronRight,
+  "chevron-up": ChevronUp,
   // Lucide - Plugin icons
   "anchor": Anchor,
   "coins": Coins,
@@ -156,6 +169,11 @@ const iconMap: Record<IconName, IconComponent> = {
   // Font Awesome - Domain
   "truck": FaTruck,
   "road": FaRoad,
+  // Lucide - Mail
+  "mail": Mail,
+  "inbox": Inbox,
+  // Lucide - Navigation
+  "map-pin": MapPin,
 }
 
 const variantStyles: Record<IconVariant, string> = {
@@ -240,9 +258,12 @@ export const statusIcons: Record<string, IconName> = {
  * Navigation icon mapping
  */
 export const navIcons: Record<string, IconName> = {
+  town: "map-pin",
   rigs: "truck",
   convoys: "road",
   workers: "terminal",
+  beads: "layers",
+  mail: "mail",
   settings: "cog",
   guide: "book-open",
 }

@@ -112,6 +112,7 @@ export interface MergeQueue {
 
 export interface Rig {
   name: string;
+  path?: string;
   polecats: string[];
   polecat_count: number;
   crews: string[] | null;
@@ -607,19 +608,33 @@ function parseNameStatus(nameStatusOutput: string): Map<string, FileChangeStatus
 // Beads Types (for DependencyGraph)
 // ============================================================================
 
-export type BeadStatus = 'open' | 'in_progress' | 'hooked' | 'closed' | 'blocked';
-export type BeadType = 'task' | 'bug' | 'feature' | 'epic';
-export type BeadPriority = 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
+// Canonical source: beads CLI (bd list --status, bd create --type)
+// 'hooked' is a Gas Town extension indicating polecat has claimed the issue
+export type BeadStatus = 'open' | 'in_progress' | 'hooked' | 'blocked' | 'deferred' | 'closed';
+export type BeadType = 'task' | 'bug' | 'feature' | 'epic' | 'chore';
+export type BeadPriority = 0 | 1 | 2 | 3 | 4;
+export type BeadsFilter = 'all' | 'open' | 'in_progress' | 'ready' | 'blocked' | 'deferred' | 'closed';
+
+export interface BeadsStats {
+  summary: {
+    total_issues: number;
+    open_issues: number;
+    in_progress_issues: number;
+    ready_issues: number;
+    blocked_issues: number;
+    closed_issues: number;
+  };
+}
 
 export interface Bead {
   id: string;
   title: string;
   status: BeadStatus;
-  type: BeadType;
-  priority: BeadPriority;
+  issue_type: BeadType;
+  priority: number;
   assignee?: string;
-  created: string;
-  updated: string;
+  created_at: string;
+  updated_at: string;
   depends_on: string[];
   blocks: string[];
   parent?: string;
@@ -644,9 +659,13 @@ export interface GasTownClientOptions {
 
 export class GasTownClient {
   private cwd: string;
+  private standaloneMode: boolean;
 
   constructor(options: GasTownClientOptions = {}) {
-    this.cwd = options.cwd || process.env.GT_ROOT || "/Users/jeremykalmus/gt";
+    // Use GT_ROOT if set, otherwise use current working directory (standalone mode)
+    this.cwd = options.cwd || process.env.GT_ROOT || process.cwd();
+    // Standalone mode = no GT_ROOT set, running as independent project
+    this.standaloneMode = !process.env.GT_ROOT;
   }
 
   private async runCommand<T>(command: string): Promise<T> {
@@ -655,6 +674,44 @@ export class GasTownClient {
   }
 
   async getStatus(): Promise<TownStatus> {
+    // In standalone mode, synthesize a status with the current project as a rig
+    if (this.standaloneMode) {
+      const fs = await import("fs/promises");
+      const path = await import("path");
+
+      // Check if this project has a .beads folder
+      const beadsPath = path.join(this.cwd, ".beads", "issues.jsonl");
+      let hasBeads = false;
+      try {
+        await fs.access(beadsPath);
+        hasBeads = true;
+      } catch {
+        hasBeads = false;
+      }
+
+      // Extract project name from cwd
+      const projectName = path.basename(this.cwd);
+
+      return {
+        name: projectName,
+        location: this.cwd,
+        overseer: { name: "standalone", email: "", username: "standalone", source: "local", unread_mail: 0 },
+        agents: [],
+        rigs: hasBeads ? [{
+          name: projectName,
+          path: this.cwd,
+          has_refinery: false,
+          has_witness: false,
+          polecats: [],
+          polecat_count: 0,
+          crews: null,
+          crew_count: 0,
+          hooks: [],
+          agents: [],
+        }] : [],
+      };
+    }
+
     return this.runCommand<TownStatus>("gt status --json");
   }
 
@@ -1607,7 +1664,27 @@ export class GasTownClient {
     const result = await this.runCommand<BeadDetail[]>(`bd show ${id} --json`);
     // bd show returns an array, we want the first element
     if (Array.isArray(result) && result.length > 0) {
-      return result[0];
+      const bead = result[0];
+
+      // Process dependencies to classify as parent-child vs blocking
+      // and extract parent epic if present
+      if (bead.dependencies && Array.isArray(bead.dependencies)) {
+        for (const dep of bead.dependencies) {
+          // If dependency is an epic, it's a parent-child relationship
+          if (dep.issue_type === "epic") {
+            dep.dependency_type = "parent-child";
+            // Set parent to this epic's ID
+            if (!bead.parent) {
+              bead.parent = dep.id;
+            }
+          } else {
+            // Regular blocking dependency
+            dep.dependency_type = dep.dependency_type || "blocks";
+          }
+        }
+      }
+
+      return bead;
     }
     throw new Error(`Bead ${id} not found`);
   }
@@ -1730,19 +1807,46 @@ export class GasTownClient {
         try {
           const issue = JSON.parse(line);
 
+          // Extract depends_on IDs and potential parent from dependencies array
+          // Dependencies array format: [{ issue_id, depends_on_id, type: "blocks" }]
+          let dependsOnIds: string[] = issue.depends_on || [];
+          let parentId: string | undefined = issue.parent;
+
+          if (issue.dependencies && Array.isArray(issue.dependencies)) {
+            // Extract depends_on IDs from dependencies array
+            dependsOnIds = issue.dependencies
+              .map((dep: { depends_on_id?: string }) => dep.depends_on_id)
+              .filter(Boolean);
+
+            // If no explicit parent, use first dependency's target as parent
+            // (commonly used to link issues to their epic)
+            if (!parentId && dependsOnIds.length > 0) {
+              parentId = dependsOnIds[0];
+            }
+          }
+
           // Map beads JSONL format to our Bead interface
+          // Convert priority from string (P0-P4) to number (0-4)
+          let priorityNum = 2;
+          if (typeof issue.priority === 'number') {
+            priorityNum = issue.priority;
+          } else if (typeof issue.priority === 'string') {
+            const match = issue.priority.match(/P?(\d)/i);
+            priorityNum = match ? parseInt(match[1], 10) : 2;
+          }
+
           const bead: Bead = {
             id: issue.id,
             title: issue.title,
             status: issue.status as BeadStatus,
-            type: (issue.issue_type || issue.type || 'task') as BeadType,
-            priority: (issue.priority || 'P2') as BeadPriority,
+            issue_type: (issue.issue_type || issue.type || 'task') as BeadType,
+            priority: priorityNum,
             assignee: issue.assignee,
-            created: issue.created_at || issue.created,
-            updated: issue.updated_at || issue.updated || issue.created_at || issue.created,
-            depends_on: issue.depends_on || [],
+            created_at: issue.created_at || issue.created,
+            updated_at: issue.updated_at || issue.updated || issue.created_at || issue.created,
+            depends_on: dependsOnIds,
             blocks: issue.blocks || [],
-            parent: issue.parent,
+            parent: parentId,
             children: issue.children || [],
           };
 
@@ -1805,6 +1909,70 @@ export class GasTownClient {
 
     // Filter out any null results (beads that couldn't be found)
     return beads.filter((bead): bead is BeadDetail => bead !== null);
+  }
+
+  /**
+   * Get children of an epic.
+   * Uses `bd list --parent <epicId>` to find all issues that have this epic as parent.
+   *
+   * @param epicId - The ID of the epic
+   * @returns Array of child beads
+   */
+  async getEpicChildren(epicId: string): Promise<Bead[]> {
+    try {
+      // Use bd list with parent filter
+      const result = await this.runCommand<Array<{
+        id: string;
+        title: string;
+        status: string;
+        issue_type?: string;
+        type?: string;
+        priority?: number | string;
+        assignee?: string;
+        created_at?: string;
+        created?: string;
+        updated_at?: string;
+        updated?: string;
+        depends_on?: string[];
+        blocks?: string[];
+        parent?: string;
+        children?: string[];
+      }>>(`bd list --parent ${epicId} --status=all --format=json`);
+
+      if (!Array.isArray(result)) {
+        return [];
+      }
+
+      // Map to Bead interface
+      return result.map((issue) => {
+        let priorityNum = 2;
+        if (typeof issue.priority === 'number') {
+          priorityNum = issue.priority;
+        } else if (typeof issue.priority === 'string') {
+          const match = issue.priority.match(/P?(\d)/i);
+          priorityNum = match ? parseInt(match[1], 10) : 2;
+        }
+
+        return {
+          id: issue.id,
+          title: issue.title,
+          status: issue.status as BeadStatus,
+          issue_type: (issue.issue_type || issue.type || 'task') as BeadType,
+          priority: priorityNum,
+          assignee: issue.assignee,
+          created_at: issue.created_at || issue.created || new Date().toISOString(),
+          updated_at: issue.updated_at || issue.updated || issue.created_at || issue.created || new Date().toISOString(),
+          depends_on: issue.depends_on || [],
+          blocks: issue.blocks || [],
+          parent: issue.parent || epicId,
+          children: issue.children || [],
+        };
+      });
+    } catch (error) {
+      // If bd command fails (e.g., epic has no children), return empty array
+      console.error(`Failed to get children for epic ${epicId}:`, error);
+      return [];
+    }
   }
 }
 

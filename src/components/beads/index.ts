@@ -3,4 +3,13 @@ export { BeadsFilterTabs } from "./beads-filter"
 export { BeadsStatsGrid, BeadsStatsCompact } from "./beads-stats"
 export { BeadsTable } from "./beads-table"
 export { BeadDetailPanel, BeadDetailPanelCompact } from "./bead-detail-panel"
+export { BeadDetailModal } from "./bead-detail-modal"
 export { BeadsTree } from "./beads-tree"
+
+// Epic-specific components
+export { EpicDetailPanel, EpicDetailPanelCompact } from "./epic-detail-panel"
+export type { EpicDetailPanelProps } from "./epic-detail-panel"
+export { SubIssuesList, SubIssuesListCompact } from "./sub-issues-list"
+export type { SubIssuesListProps } from "./sub-issues-list"
+export { EpicProgressGauge, EpicProgressGaugeCompact, EpicProgressGaugeCircular } from "./epic-progress-gauge"
+export type { EpicProgressGaugeProps } from "./epic-progress-gauge"

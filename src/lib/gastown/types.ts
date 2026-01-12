@@ -685,3 +685,181 @@ export function calculatePercentChange(current: number, previous: number): numbe
   if (previous === 0) return 0;
   return Math.round(((current - previous) / previous) * 100);
 }
+
+// ============================================================================
+// Epic Journey Types - Container work lifecycle
+// ============================================================================
+
+/**
+ * Epic journey stages representing the container work lifecycle.
+ *
+ * Epics follow a different progression than tasks:
+ * ```
+ * CREATED → PLANNED → ACTIVE → CLOSE_ELIGIBLE → CLOSED
+ *    0         1         2           3            4
+ * ```
+ *
+ * Key difference from task journey:
+ * - CLOSE_ELIGIBLE is GREEN (ready to close) not yellow (in-progress)
+ * - Progress is based on children, not the epic itself
+ */
+export enum EpicJourneyStage {
+  /** Stage 0: Epic created, no children yet */
+  CREATED = 0,
+  /** Stage 1: Children defined but none started */
+  PLANNED = 1,
+  /** Stage 2: At least one child is in progress */
+  ACTIVE = 2,
+  /** Stage 3: All children closed - READY TO CLOSE (GREEN!) */
+  CLOSE_ELIGIBLE = 3,
+  /** Stage 4: Epic officially closed (terminal state) */
+  CLOSED = 4,
+}
+
+/**
+ * Human-readable labels for epic journey stages.
+ */
+export const EPIC_JOURNEY_LABELS: Record<EpicJourneyStage, string> = {
+  [EpicJourneyStage.CREATED]: "Created",
+  [EpicJourneyStage.PLANNED]: "Planned",
+  [EpicJourneyStage.ACTIVE]: "Active",
+  [EpicJourneyStage.CLOSE_ELIGIBLE]: "Ready to Close",
+  [EpicJourneyStage.CLOSED]: "Closed",
+};
+
+/**
+ * Actor types responsible for each epic stage.
+ */
+export const EPIC_STAGE_ACTORS: Record<EpicJourneyStage, string> = {
+  [EpicJourneyStage.CREATED]: "beads",
+  [EpicJourneyStage.PLANNED]: "beads",
+  [EpicJourneyStage.ACTIVE]: "polecats",
+  [EpicJourneyStage.CLOSE_ELIGIBLE]: "beads",
+  [EpicJourneyStage.CLOSED]: "beads",
+};
+
+/**
+ * Timestamps for epic journey stage transitions.
+ */
+export interface EpicJourneyTimestamps {
+  /** When epic was created */
+  created?: string;
+  /** When first child was added */
+  planned?: string;
+  /** When first child entered in_progress */
+  activated?: string;
+  /** When all children became closed */
+  closeEligible?: string;
+  /** When epic was officially closed */
+  closed?: string;
+}
+
+/**
+ * Progress tracking for epic children.
+ * Note: Excludes the epic itself from counts.
+ */
+export interface EpicProgress {
+  /** Total number of children (NOT including the epic) */
+  total: number;
+  /** Children with open status */
+  open: number;
+  /** Children with in_progress or hooked status */
+  inProgress: number;
+  /** Children with blocked status */
+  blocked: number;
+  /** Children with deferred status */
+  deferred: number;
+  /** Children with closed status */
+  closed: number;
+  /** Percentage complete: (closed / total) * 100 */
+  percentComplete: number;
+}
+
+/**
+ * Props for the EpicJourneyTracker component.
+ */
+export interface EpicJourneyTrackerProps {
+  /** Epic ID being tracked */
+  epicId: string;
+  /** Current stage (0-4) */
+  currentStage: EpicJourneyStage;
+  /** Stage transition timestamps */
+  timestamps: EpicJourneyTimestamps;
+  /** Progress of children */
+  progress: EpicProgress;
+}
+
+/**
+ * Derive epic journey stage from child progress and epic status.
+ */
+export function deriveEpicJourneyStage(
+  epicStatus: string,
+  progress: EpicProgress
+): EpicJourneyStage {
+  // If explicitly closed
+  if (epicStatus === "closed") {
+    return EpicJourneyStage.CLOSED;
+  }
+
+  // No children = just created
+  if (progress.total === 0) {
+    return EpicJourneyStage.CREATED;
+  }
+
+  // All children closed = close-eligible
+  if (progress.closed === progress.total) {
+    return EpicJourneyStage.CLOSE_ELIGIBLE;
+  }
+
+  // At least one child in progress = active
+  if (progress.inProgress > 0) {
+    return EpicJourneyStage.ACTIVE;
+  }
+
+  // Has children but none in progress = planned
+  return EpicJourneyStage.PLANNED;
+}
+
+/**
+ * Calculate epic progress from a list of child beads.
+ */
+export function calculateEpicProgress(children: Array<{ status: string }>): EpicProgress {
+  const stats = children.reduce(
+    (acc, child) => {
+      const status = child.status.toLowerCase();
+      switch (status) {
+        case "open":
+          acc.open++;
+          break;
+        case "in_progress":
+        case "hooked":
+          acc.inProgress++;
+          break;
+        case "blocked":
+          acc.blocked++;
+          break;
+        case "deferred":
+          acc.deferred++;
+          break;
+        case "closed":
+        case "done":
+        case "completed":
+          acc.closed++;
+          break;
+        default:
+          acc.open++; // Unknown status counts as open
+      }
+      return acc;
+    },
+    { open: 0, inProgress: 0, blocked: 0, deferred: 0, closed: 0 }
+  );
+
+  const total = children.length;
+  const percentComplete = total > 0 ? Math.round((stats.closed / total) * 100) : 0;
+
+  return {
+    total,
+    ...stats,
+    percentComplete,
+  };
+}

@@ -134,6 +134,54 @@ types:
       - budget_warnings: number
     when_to_use: "Aggregated token usage statistics"
 
+  # ---------------------------------------------------------------------------
+  # Bead Types (External: beads CLI)
+  # CANONICAL SOURCE: beads CLI (bd command)
+  # Citadel is a consumer, not owner, of these types
+  # ---------------------------------------------------------------------------
+  Bead:
+    location: src/lib/gastown.ts
+    canonical_source: beads CLI (external)
+    fields:
+      - id: string
+      - title: string
+      - status: BeadStatus
+      - issue_type: BeadType
+      - priority: number  # 0-4 (0=highest)
+      - assignee?: string
+      - created_at: string
+      - updated_at: string
+      - depends_on: string[]
+      - blocks: string[]
+      - parent?: string
+      - children?: string[]
+    when_to_use: "Issue/task tracking unit from beads"
+    notes: |
+      Citadel reads beads data via bd CLI or JSONL files.
+      Do NOT modify beads source code - adapt Citadel to match beads.
+
+  BeadsData:
+    location: src/lib/gastown.ts
+    canonical_source: beads CLI (external)
+    fields:
+      - beads: Bead[]
+      - total: number
+      - open: number
+      - in_progress: number
+      - blocked: number
+    when_to_use: "Beads collection with summary counts"
+
+  BeadsStats:
+    location: src/lib/gastown.ts
+    fields:
+      - summary.total_issues: number
+      - summary.open_issues: number
+      - summary.in_progress_issues: number
+      - summary.ready_issues: number
+      - summary.blocked_issues: number
+      - summary.closed_issues: number
+    when_to_use: "Beads statistics for dashboard display"
+
 # =============================================================================
 # ENUMS
 # =============================================================================
@@ -170,6 +218,47 @@ enums:
     extension_policy: controlled
     scope: global
     when_to_use: "Icon color variants"
+
+  # ---------------------------------------------------------------------------
+  # Bead Enums (External: beads CLI)
+  # CANONICAL SOURCE: beads CLI (bd command)
+  # ---------------------------------------------------------------------------
+  BeadStatus:
+    location: src/lib/gastown.ts
+    canonical_source: beads CLI (bd list --status)
+    values: [open, in_progress, blocked, deferred, closed]
+    extension_policy: external
+    scope: global
+    when_to_use: "Issue status from beads"
+    notes: |
+      Additional status 'hooked' is used by Gas Town to indicate
+      a polecat has claimed the issue. Treat as in_progress for display.
+
+  BeadType:
+    location: src/lib/gastown.ts
+    canonical_source: beads CLI (bd create --type)
+    values:
+      # Work item types (displayed in Citadel)
+      work: [task, bug, feature, epic, chore]
+      # System types (filtered out in Citadel)
+      system: [merge-request, molecule, gate, agent, role, rig, convoy, event]
+    extension_policy: external
+    scope: global
+    when_to_use: "Issue type classification from beads"
+    notes: |
+      Citadel filters to show only 'work' types on the Beads page.
+      System types like molecule, gate, agent are internal to beads.
+
+  BeadPriority:
+    location: src/lib/gastown.ts
+    canonical_source: beads CLI (bd create --priority)
+    values: [0, 1, 2, 3, 4]  # Numbers, not strings
+    extension_policy: external
+    scope: global
+    when_to_use: "Issue priority (0=critical, 4=backlog)"
+    notes: |
+      Beads accepts both "P0-P4" strings and 0-4 numbers.
+      Citadel normalizes to numbers internally.
 
 # =============================================================================
 # PROPOSED TYPES (Phase 2+)

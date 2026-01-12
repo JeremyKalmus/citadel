@@ -27,6 +27,10 @@ function StageDot({
   const isCompleted = stage < currentStage
   const isCurrent = stage === currentStage
   const isPending = stage > currentStage
+  // Final stage (MERGED) should show as green/done, not yellow/in-progress
+  const isFinalAndDone = isCurrent && stage === JourneyStage.MERGED
+  // In-progress = current stage but not the final stage
+  const isInProgress = isCurrent && !isFinalAndDone
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -35,11 +39,11 @@ function StageDot({
         className={cn(
           "w-3 h-3 rounded-full border-2 transition-all duration-300",
           {
-            // Completed: acid-green solid
-            "bg-acid-green border-acid-green": isCompleted,
-            // Current: fuel-yellow with pulse (or rust-orange if blocked)
-            "bg-fuel-yellow border-fuel-yellow animate-pulse": isCurrent && !blocked,
-            "bg-rust-orange border-rust-orange animate-pulse": isCurrent && blocked,
+            // Completed or final stage done: acid-green solid
+            "bg-acid-green border-acid-green": isCompleted || isFinalAndDone,
+            // In-progress: fuel-yellow with pulse (or rust-orange if blocked)
+            "bg-fuel-yellow border-fuel-yellow animate-pulse": isInProgress && !blocked,
+            "bg-rust-orange border-rust-orange animate-pulse": isInProgress && blocked,
             // Pending: hollow with ash border
             "bg-transparent border-ash": isPending,
           }
@@ -48,9 +52,9 @@ function StageDot({
       {/* Stage label */}
       <span
         className={cn("text-[10px] font-medium uppercase tracking-wider", {
-          "text-acid-green": isCompleted,
-          "text-fuel-yellow": isCurrent && !blocked,
-          "text-rust-orange": isCurrent && blocked,
+          "text-acid-green": isCompleted || isFinalAndDone,
+          "text-fuel-yellow": isInProgress && !blocked,
+          "text-rust-orange": isInProgress && blocked,
           "text-ash": isPending,
         })}
       >
@@ -205,22 +209,25 @@ export function JourneyTrackerCompact({
       {stages.map((stage, index) => {
         const isCompleted = stage < currentStage
         const isCurrent = stage === currentStage
+        // Final stage (MERGED) should show as green/done
+        const isFinalAndDone = isCurrent && stage === JourneyStage.MERGED
+        const isInProgress = isCurrent && !isFinalAndDone
 
         return (
           <div key={stage} className="flex items-center">
             <div
               className={cn("w-2 h-2 rounded-full", {
-                "bg-acid-green": isCompleted,
-                "bg-fuel-yellow": isCurrent && !blocked,
-                "bg-rust-orange": isCurrent && blocked,
+                "bg-acid-green": isCompleted || isFinalAndDone,
+                "bg-fuel-yellow": isInProgress && !blocked,
+                "bg-rust-orange": isInProgress && blocked,
                 "bg-chrome-border": stage > currentStage,
               })}
             />
             {index < stages.length - 1 && (
               <div
                 className={cn("w-2 h-px mx-0.5", {
-                  "bg-acid-green": isCompleted,
-                  "bg-chrome-border": !isCompleted,
+                  "bg-acid-green": isCompleted || isFinalAndDone,
+                  "bg-chrome-border": !isCompleted && !isFinalAndDone,
                 })}
               />
             )}

@@ -39,3 +39,6 @@ export type { UseBeadsOptions, UseBeadsResult } from "./use-beads";
 
 export { useConvoyBeads } from "./use-convoy-beads";
 export type { UseConvoyBeadsOptions, UseConvoyBeadsResult } from "./use-convoy-beads";
+
+export { useEpicChildren } from "./use-epic-children";
+export type { UseEpicChildrenOptions, UseEpicChildrenResult } from "./use-epic-children";

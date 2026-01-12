@@ -35,8 +35,9 @@ const statusColors: Record<BeadStatus, { bg: string; border: string; text: strin
   open: { bg: "#141820", border: "#2A2F3A", text: "#9AA1AC" },
   in_progress: { bg: "#1a2030", border: "#F2C94C", text: "#F2C94C" },
   hooked: { bg: "#1a2520", border: "#27AE60", text: "#27AE60" },
-  closed: { bg: "#141820", border: "#27AE60", text: "#27AE60" },
   blocked: { bg: "#201818", border: "#FF7A00", text: "#FF7A00" },
+  deferred: { bg: "#181820", border: "#6B7280", text: "#6B7280" },
+  closed: { bg: "#141820", border: "#27AE60", text: "#27AE60" },
 }
 
 function calculateLayout(beads: Bead[]): LayoutNode[] {

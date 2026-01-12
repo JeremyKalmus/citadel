@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Panel, PanelHeader, PanelBody } from "@/components/ui/panel"
+import { Panel, PanelHeader, PanelBody, Gauge } from "@/components/ui"
 import { CostSparkline } from "./cost-sparkline"
 import {
   type CostTrend,
@@ -33,12 +33,13 @@ function AgentTypeBar({
   return (
     <div className="flex items-center gap-3">
       <span className="text-xs text-ash w-20 shrink-0">{label}</span>
-      <div className="flex-1 h-2 bg-chrome-border rounded-sm overflow-hidden">
-        <div
-          className="h-full bg-acid-green/70 transition-all duration-500"
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
+      <Gauge
+        value={percentage}
+        size="sm"
+        segments={10}
+        showLabel={false}
+        className="flex-1"
+      />
       <span className="text-xs font-mono text-bone tabular-nums w-12 text-right">
         {formatTokenCount(tokens)}
       </span>

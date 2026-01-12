@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { Gauge, GaugeCompact } from "@/components/ui"
 import {
   JourneyStage,
   type ConvoyJourneyState,
@@ -9,25 +10,6 @@ import {
   formatDuration,
 } from "@/lib/gastown/types"
 import { JourneyTrackerCompact } from "./journey-tracker"
-
-/**
- * Progress bar component showing convoy completion percentage
- */
-function ProgressBar({ percent }: { percent: number }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex-1 h-2 bg-chrome-border rounded-sm overflow-hidden">
-        <div
-          className="h-full bg-acid-green transition-all duration-500"
-          style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
-        />
-      </div>
-      <span className="text-sm font-medium text-bone tabular-nums">
-        {Math.round(percent)}%
-      </span>
-    </div>
-  )
-}
 
 /**
  * Stage distribution grid showing count at each stage
@@ -208,8 +190,8 @@ export function ConvoyJourney({
         </div>
       </div>
 
-      {/* Progress bar */}
-      <ProgressBar percent={convoy.progressPercent} />
+      {/* Progress gauge */}
+      <Gauge value={convoy.progressPercent} size="md" />
 
       {/* Stage distribution */}
       <div>
@@ -249,14 +231,9 @@ export function ConvoyJourneyCompact({
 }) {
   return (
     <div className={cn("flex items-center gap-4", className)}>
-      {/* Progress indicator */}
+      {/* Progress gauge */}
       <div className="w-24">
-        <div className="h-1.5 bg-chrome-border rounded-full overflow-hidden">
-          <div
-            className="h-full bg-acid-green"
-            style={{ width: `${convoy.progressPercent}%` }}
-          />
-        </div>
+        <GaugeCompact value={convoy.progressPercent} />
       </div>
 
       {/* Fraction */}

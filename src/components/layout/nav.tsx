@@ -12,9 +12,10 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Rigs", href: "/", icon: navIcons.rigs },
-  { label: "Convoys", href: "/convoys", icon: navIcons.convoys },
-  { label: "Workers", href: "/workers", icon: navIcons.workers },
+  { label: "Town", href: "/", icon: navIcons.town },
+  { label: "Rigs", href: "/rigs", icon: navIcons.rigs },
+  { label: "Beads", href: "/beads", icon: navIcons.beads },
+  { label: "Town Mail", href: "/mail", icon: navIcons.mail },
   { label: "Guide", href: "/guide", icon: navIcons.guide },
   { label: "Settings", href: "/settings", icon: navIcons.settings },
 ]
