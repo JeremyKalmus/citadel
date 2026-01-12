@@ -3,7 +3,26 @@
 import Link from "next/link";
 import { StatusBadge, type Status } from "@/components/ui";
 import type { Convoy, Bead } from "@/lib/gastown";
-import { Circle, ChevronRight } from "lucide-react";
+import { Circle, ChevronRight, Container } from "lucide-react";
+
+/**
+ * Extract unique rigs from bead assignees.
+ * Parses paths like "citadel/polecats/furiosa" to get "citadel".
+ */
+function extractRigsFromBeads(beads: Bead[]): string[] {
+  const rigs = new Set<string>();
+
+  for (const bead of beads) {
+    if (bead.assignee) {
+      const parts = bead.assignee.split("/");
+      if (parts.length >= 2) {
+        rigs.add(parts[0]);
+      }
+    }
+  }
+
+  return Array.from(rigs);
+}
 
 interface ConvoyCardProps {
   convoy: Convoy;
@@ -107,6 +126,31 @@ function BeadsSummaryBadges({ beads }: { beads: Bead[] }) {
   );
 }
 
+/**
+ * RigIndicators - Shows which rigs are processing this convoy's work.
+ * Helps users understand the convoy → rig relationship at a glance.
+ */
+function RigIndicators({ beads }: { beads: Bead[] }) {
+  const rigs = extractRigsFromBeads(beads);
+
+  if (rigs.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-1">
+      {rigs.map((rig) => (
+        <span
+          key={rig}
+          className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-gunmetal text-[9px] text-ash font-mono"
+          title={`Processed by rig: ${rig}`}
+        >
+          <Container className="w-2 h-2" />
+          {rig}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function ConvoyCard({ convoy, beads, beadsLoading }: ConvoyCardProps) {
   return (
     <Link
@@ -119,13 +163,16 @@ export function ConvoyCard({ convoy, beads, beadsLoading }: ConvoyCardProps) {
             {convoy.title || convoy.id}
           </span>
         </div>
-        <div className="flex items-center gap-3 mt-1">
+        <div className="flex items-center gap-3 mt-1 flex-wrap">
           <span className="text-xs text-ash font-mono">{convoy.id}</span>
           <span className="text-xs text-ash">{formatDate(convoy.created_at)}</span>
           {beadsLoading ? (
             <span className="text-[10px] text-ash">loading beads...</span>
           ) : beads && beads.length > 0 ? (
-            <BeadsSummaryBadges beads={beads} />
+            <>
+              <BeadsSummaryBadges beads={beads} />
+              <RigIndicators beads={beads} />
+            </>
           ) : null}
         </div>
       </div>

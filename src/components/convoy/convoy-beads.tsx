@@ -3,7 +3,29 @@
 import { Panel, PanelHeader, PanelBody, StatusBadge, type Status } from "@/components/ui";
 import { Icon } from "@/components/ui/icon";
 import type { Bead } from "@/lib/gastown";
-import { Circle } from "lucide-react";
+import { Circle, Container, User } from "lucide-react";
+import Link from "next/link";
+
+/**
+ * Parse a worker path to extract rig and worker name.
+ * Examples:
+ * - "citadel/polecats/furiosa" → { rig: "citadel", worker: "furiosa", type: "polecat" }
+ * - "citadel/crew/alpha" → { rig: "citadel", worker: "alpha", type: "crew" }
+ */
+function parseWorkerPath(path?: string): { rig: string; worker: string; type: string } | null {
+  if (!path) return null;
+
+  const parts = path.split("/");
+  if (parts.length >= 3) {
+    return {
+      rig: parts[0],
+      worker: parts[parts.length - 1],
+      type: parts[1] === "polecats" ? "polecat" : parts[1] === "crew" ? "crew" : "worker",
+    };
+  }
+  // Simple name without path
+  return { rig: "", worker: path, type: "worker" };
+}
 
 interface ConvoyBeadsProps {
   beads: Bead[];
@@ -185,13 +207,34 @@ export function ConvoyBeads({ beads, isLoading }: ConvoyBeadsProps) {
                     {bead.title}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span className="text-xs text-ash font-mono">{bead.id}</span>
-                  {bead.assignee && (
-                    <span className="text-xs text-ash">
-                      assigned: {bead.assignee.split("/").pop()}
-                    </span>
-                  )}
+                  {bead.assignee && (() => {
+                    const parsed = parseWorkerPath(bead.assignee);
+                    if (!parsed) return null;
+
+                    return (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-ash">→</span>
+                        {/* Rig indicator */}
+                        {parsed.rig && (
+                          <Link
+                            href={`/rig/${parsed.rig}`}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gunmetal hover:bg-chrome-border/50 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Container className="w-2.5 h-2.5 text-ash" />
+                            <span className="text-[10px] text-ash font-mono">{parsed.rig}</span>
+                          </Link>
+                        )}
+                        {/* Worker indicator */}
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-fuel-yellow/10 border border-fuel-yellow/20">
+                          <User className="w-2.5 h-2.5 text-fuel-yellow" />
+                          <span className="text-[10px] text-fuel-yellow font-mono">{parsed.worker}</span>
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               <StatusBadge
