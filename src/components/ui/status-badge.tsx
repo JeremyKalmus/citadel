@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils"
 import { Icon, statusIcons, type IconName } from "./icon"
 
 export type Status =
-  | 'active' | 'thinking' | 'slow' | 'unresponsive' | 'dead' | 'blocked' | 'done'
+  | 'active' | 'thinking' | 'slow' | 'unresponsive' | 'dead' | 'blocked' | 'done' | 'stopped'
   | 'refinery_queued' | 'refinery_rebasing' | 'refinery_testing' | 'refinery_merging'
 
 interface StatusConfig {
@@ -47,6 +47,11 @@ const statusConfig: Record<Status, StatusConfig> = {
     icon: statusIcons.done,
     label: 'Complete',
     className: 'text-status-done bg-status-done/10 border-status-done/30'
+  },
+  stopped: {
+    icon: statusIcons.stopped,
+    label: 'Stopped',
+    className: 'text-status-dead bg-status-dead/10 border-status-dead/30'
   },
   // Refinery pipeline states
   refinery_queued: {

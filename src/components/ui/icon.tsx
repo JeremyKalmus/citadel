@@ -252,6 +252,7 @@ export const statusIcons: Record<string, IconName> = {
   dead: "x-circle",
   blocked: "lock",
   done: "check-circle",
+  stopped: "x-circle",
   // Refinery pipeline states
   refinery_queued: "layers",
   refinery_rebasing: "refresh-cw",

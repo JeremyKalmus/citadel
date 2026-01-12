@@ -5,3 +5,4 @@ export { MergeQueuePanel } from "./merge-queue-panel";
 export { MergeQueueStats } from "./merge-queue-stats";
 export { RefineryHealth } from "./refinery-health";
 export { RigList } from "./rig-list";
+export { InfraAgentStatus } from "./infra-agent-status";

@@ -5,6 +5,31 @@ import { Panel, PanelHeader, PanelBody, StatusBadge, SkeletonRow, type Status } 
 import type { Rig } from "@/lib/gastown";
 import { Container, ChevronRight } from "lucide-react";
 
+/** Helper to check if an infrastructure agent is running */
+function isAgentRunning(rig: Rig, role: "witness" | "refinery"): boolean {
+  return rig.agents?.some((a) => a.role === role && a.running) ?? false;
+}
+
+/** InfraAgentLabel - Shows agent name with color and tooltip based on running state */
+function InfraAgentLabel({
+  label,
+  isRunning,
+}: {
+  label: string;
+  isRunning: boolean;
+}) {
+  const tooltip = isRunning
+    ? `${label} is running`
+    : `${label} stopped. Run 'gt prime' to start infrastructure agents`;
+  const colorClass = isRunning ? "text-acid-green" : "text-status-dead";
+
+  return (
+    <span className={`text-xs ${colorClass}`} title={tooltip}>
+      {label}
+    </span>
+  );
+}
+
 interface RigListProps {
   rigs: Rig[];
   isLoading?: boolean;
@@ -94,10 +119,16 @@ export function RigList({ rigs, isLoading }: RigListProps) {
                       </span>
                     )}
                     {rig.has_witness && (
-                      <span className="text-xs text-acid-green">witness</span>
+                      <InfraAgentLabel
+                        label="witness"
+                        isRunning={isAgentRunning(rig, "witness")}
+                      />
                     )}
                     {rig.has_refinery && (
-                      <span className="text-xs text-acid-green">refinery</span>
+                      <InfraAgentLabel
+                        label="refinery"
+                        isRunning={isAgentRunning(rig, "refinery")}
+                      />
                     )}
                   </div>
                 </div>
