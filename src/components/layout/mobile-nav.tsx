@@ -16,6 +16,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Town Overview", href: "/", icon: navIcons.town },
   { label: "Rigs", href: "/rigs", icon: navIcons.rigs },
+  { label: "Convoys", href: "/convoys", icon: navIcons.convoys },
   { label: "Work Items", href: "/beads", icon: navIcons.beads },
   { label: "Town Mail", href: "/mail", icon: navIcons.mail },
   { label: "Settings", href: "/settings", icon: navIcons.settings },
