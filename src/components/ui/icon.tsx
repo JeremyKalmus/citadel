@@ -49,6 +49,11 @@ import {
   Inbox,
   // Navigation icons
   MapPin,
+  // Lifecycle stage icons
+  MessageCircle,
+  Clipboard,
+  Send,
+  Filter,
   type LucideIcon,
 } from "lucide-react"
 
@@ -115,6 +120,11 @@ export type IconName =
   | "inbox"
   // Navigation icons (Lucide)
   | "map-pin"
+  // Lifecycle stage icons (Lucide)
+  | "message-circle"
+  | "clipboard"
+  | "send"
+  | "filter"
 
 export type IconVariant = "default" | "alert" | "active" | "ok" | "muted"
 
@@ -174,6 +184,11 @@ const iconMap: Record<IconName, IconComponent> = {
   "inbox": Inbox,
   // Lucide - Navigation
   "map-pin": MapPin,
+  // Lucide - Lifecycle stages
+  "message-circle": MessageCircle,
+  "clipboard": Clipboard,
+  "send": Send,
+  "filter": Filter,
 }
 
 const variantStyles: Record<IconVariant, string> = {
