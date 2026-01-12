@@ -241,7 +241,7 @@ export default function ConvoyPage({ params }: ConvoyPageProps) {
         { label: "ID", value: convoy.id },
         { label: "Status", value: convoy.status },
         { label: "Created", value: formatCreatedAt(convoy.created_at) },
-        { label: "Issues", value: String(convoy.issues?.length ?? 0) },
+        { label: "Issues", value: String(convoy.tracked?.length ?? 0) },
         { label: "Workers", value: String(convoy.assigned_workers?.length ?? 0) },
       ]
     : []

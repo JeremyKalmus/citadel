@@ -159,13 +159,28 @@ export interface PolecatDetail {
   last_activity: string;
 }
 
+/**
+ * Tracked issue within a convoy (from gt convoy status --json)
+ */
+export interface TrackedIssue {
+  id: string;
+  title: string;
+  status: string;
+  dependency_type: string;
+  issue_type?: string;
+  assignee?: string;
+}
+
 export interface ConvoyDetail {
   id: string;
   title: string;
   status: string;
   created_at: string;
-  issues?: string[];
+  /** Tracked issues in this convoy (renamed from 'issues' to match CLI output) */
+  tracked?: TrackedIssue[];
   assigned_workers?: string[];
+  completed?: number;
+  total?: number;
 }
 
 export interface TokenUsage {
@@ -1009,7 +1024,7 @@ export class GasTownClient {
       try {
         // Get convoy details with issue list
         const detail = await this.getConvoyStatus(convoy.id);
-        const issues = detail.issues || [];
+        const issues = (detail.tracked || []).map(t => t.id);
 
         // Aggregate tokens from all issues in convoy
         let inputTokens = 0;
@@ -1887,18 +1902,18 @@ export class GasTownClient {
    * @returns Array of BeadDetail objects for all issues in the convoy
    */
   async getBeadsForConvoy(convoyId: string): Promise<BeadDetail[]> {
-    // Get convoy details to retrieve issue list
+    // Get convoy details to retrieve tracked issues
     const convoy = await this.getConvoyStatus(convoyId);
-    const issues = convoy.issues || [];
+    const tracked = convoy.tracked || [];
 
-    if (issues.length === 0) {
+    if (tracked.length === 0) {
       return [];
     }
 
-    // Fetch bead details for each issue in parallel
-    const beadPromises = issues.map(async (issueId) => {
+    // Extract issue IDs from tracked items and fetch bead details in parallel
+    const beadPromises = tracked.map(async (trackedIssue) => {
       try {
-        return await this.getBeadDetail(issueId);
+        return await this.getBeadDetail(trackedIssue.id);
       } catch {
         // If a bead can't be found, return null and filter later
         return null;
