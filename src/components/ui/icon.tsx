@@ -54,6 +54,8 @@ import {
   Clipboard,
   Send,
   Filter,
+  // User icon for workflow
+  User,
   type LucideIcon,
 } from "lucide-react"
 
@@ -125,6 +127,8 @@ export type IconName =
   | "clipboard"
   | "send"
   | "filter"
+  // User icon (Lucide)
+  | "user"
 
 export type IconVariant = "default" | "alert" | "active" | "ok" | "muted"
 
@@ -189,6 +193,8 @@ const iconMap: Record<IconName, IconComponent> = {
   "clipboard": Clipboard,
   "send": Send,
   "filter": Filter,
+  // Lucide - User
+  "user": User,
 }
 
 const variantStyles: Record<IconVariant, string> = {
