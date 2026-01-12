@@ -101,53 +101,49 @@ function OverviewSection({
     <div className="space-y-6">
       {/* Welcome Panel */}
       <Panel>
-        <PanelHeader icon="info" title="Welcome to Gas Town" />
+        <PanelHeader icon="fuel" title="Welcome to Gas Town" />
         <PanelBody>
-          <p className="body-text text-ash">
-            Gas Town is a <span className="text-acid-green font-semibold">multi-agent workspace manager</span>. 
-            AI workers (polecats) do the coding while you orchestrate and monitor. This dashboard gives you 
-            visibility into what&apos;s happening across your projects.
+          <p className="body-text text-ash leading-relaxed">
+            Gas Town is a <span className="text-acid-green font-medium">multi-agent workspace manager</span>.
+            AI workers (polecats) do the coding while you orchestrate and monitor. This dashboard gives you
+            visibility into what&apos;s happening across your projects—see worker status, track progress,
+            and manage the flow of work from issue to merged PR.
           </p>
         </PanelBody>
       </Panel>
 
       {/* Key Concepts Panel */}
       <Panel>
-        <PanelHeader icon="book-open" title="Key Concepts" />
+        <PanelHeader icon="info" title="Key Concepts" />
         <PanelBody>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon name="home" aria-label="" size="sm" className="text-acid-green" />
-                <span className="font-semibold text-bone">Town</span>
+          <div className="space-y-4">
+            <div className="flex gap-3 items-start">
+              <Icon name="home" aria-label="" size="md" className="text-acid-green shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-bone">Town</p>
+                <p className="text-sm text-ash">Your workspace containing multiple projects (rigs). One town = one development environment.</p>
               </div>
-              <p className="text-sm text-ash">Workspace with multiple projects and workers</p>
             </div>
-            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon name="container" aria-label="" size="sm" className="text-acid-green" />
-                <span className="font-semibold text-bone">Rig</span>
+            <div className="flex gap-3 items-start">
+              <Icon name="container" aria-label="" size="md" className="text-fuel-yellow shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-bone">Rig</p>
+                <p className="text-sm text-ash">A project container with its own workers (polecats), merge queue (refinery), and health monitor (witness).</p>
               </div>
-              <p className="text-sm text-ash">Project container with workers and merge queue</p>
             </div>
-            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30 sm:col-span-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon name="fuel" aria-label="" size="sm" className="text-fuel-yellow" />
-                <span className="font-semibold text-bone">GUPP</span>
+            <div className="flex gap-3 items-start">
+              <Icon name="fuel" aria-label="" size="md" className="text-rust shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-bone">GUPP — The Propulsion Principle</p>
+                <p className="text-sm text-ash">&quot;If there is work on your Hook, YOU MUST RUN IT.&quot; Workers automatically execute assigned tasks. No waiting, no confirmation needed.</p>
               </div>
-              <p className="text-sm text-ash">
-                <span className="text-fuel-yellow">&quot;If there is work on your Hook, YOU MUST RUN IT&quot;</span> - 
-                The Gas Town Universal Propulsion Principle. Workers execute immediately when assigned work.
-              </p>
             </div>
-            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30 sm:col-span-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon name="activity" aria-label="" size="sm" className="text-acid-green" />
-                <span className="font-semibold text-bone">Work Flow</span>
+            <div className="flex gap-3 items-start">
+              <Icon name="activity" aria-label="" size="md" className="text-bone shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-bone">Work Flow</p>
+                <p className="text-sm text-ash">Beads (issues) → Polecats (workers) → Refinery (merge queue) → Merged to main</p>
               </div>
-              <p className="text-sm text-ash">
-                Beads (issues) → Polecats (workers) → Refinery (merge queue) → Merged to main
-              </p>
             </div>
           </div>
         </PanelBody>
@@ -157,22 +153,22 @@ function OverviewSection({
       <Panel>
         <PanelHeader icon="terminal" title="Quick Start Commands" />
         <PanelBody>
-          <div className="space-y-3">
-            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
-              <code className="text-fuel-yellow text-sm">bd create &quot;Fix bug in login&quot; --type=bug</code>
-              <p className="text-xs text-ash mt-1">Create a new work item (bead)</p>
+          <div className="space-y-3 font-mono text-sm">
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <code className="text-fuel-yellow">bd create &quot;Fix bug in login&quot; --type=bug</code>
+              <p className="text-ash text-xs mt-1">Create a new work item (bead)</p>
             </div>
-            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
-              <code className="text-fuel-yellow text-sm">gt sling ci-xxx citadel</code>
-              <p className="text-xs text-ash mt-1">Dispatch work to a polecat worker</p>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <code className="text-fuel-yellow">gt sling ci-xxx citadel</code>
+              <p className="text-ash text-xs mt-1">Dispatch work to a worker on a rig</p>
             </div>
-            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
-              <code className="text-fuel-yellow text-sm">bd list --status=open</code>
-              <p className="text-xs text-ash mt-1">See all open work items</p>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <code className="text-fuel-yellow">bd list --status=open</code>
+              <p className="text-ash text-xs mt-1">See all open work items</p>
             </div>
-            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
-              <code className="text-fuel-yellow text-sm">gt convoy list</code>
-              <p className="text-xs text-ash mt-1">See active work batches</p>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <code className="text-fuel-yellow">gt convoy list</code>
+              <p className="text-ash text-xs mt-1">See active work batches</p>
             </div>
           </div>
         </PanelBody>
@@ -269,7 +265,7 @@ function OverviewSection({
               </div>
               <div>
                 <p className="font-medium text-bone">Monitor Progress</p>
-                <p className="text-sm text-ash">Use this Citadel dashboard to track worker status and activity</p>
+                <p className="text-sm text-ash">Watch the Citadel dashboard as workers implement your tasks</p>
               </div>
             </div>
             <div className="flex gap-3 items-start">
@@ -278,7 +274,7 @@ function OverviewSection({
               </div>
               <div>
                 <p className="font-medium text-bone">Review Results</p>
-                <p className="text-sm text-ash">The Refinery merges PRs automatically - review the merged code</p>
+                <p className="text-sm text-ash">The refinery merges completed work—check PR status and diffs</p>
               </div>
             </div>
             <div className="flex gap-3 items-start">
