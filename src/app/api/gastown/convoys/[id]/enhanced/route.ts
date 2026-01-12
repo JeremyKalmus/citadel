@@ -7,21 +7,11 @@ interface RouteParams {
   }>;
 }
 
-/**
- * GET /api/gastown/convoys/[id]/enhanced
- *
- * Returns enhanced convoy status with per-bead journey states.
- * Includes:
- * - Bead journey stages (queued, hooked, in_progress, pr_ready, refinery, merged)
- * - Refinery queue positions
- * - Idle duration and needsNudge flags
- * - Summary counts by stage
- */
 export async function GET(_request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const enhancedConvoy = await gastown.getEnhancedConvoyStatus(id);
-    return NextResponse.json(enhancedConvoy);
+    const convoy = await gastown.getEnhancedConvoyStatus(id);
+    return NextResponse.json(convoy);
   } catch (error) {
     console.error("Failed to fetch enhanced convoy status:", error);
     return NextResponse.json(

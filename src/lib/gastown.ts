@@ -741,6 +741,99 @@ export interface BeadsData {
 }
 
 // ============================================================================
+// Enhanced Convoy Types (ci-a6w)
+// ============================================================================
+
+/**
+ * Stage for bead journey visualization.
+ * Maps to LifecycleFlow stages: queued, hooked, in_progress, pr_ready, refinery, merged
+ */
+export type BeadJourneyStage =
+  | "queued"
+  | "hooked"
+  | "in_progress"
+  | "pr_ready"
+  | "refinery"
+  | "merged";
+
+/**
+ * Refinery queue item representing a merge request in the queue.
+ */
+export interface RefineryQueueItem {
+  /** Merge request ID */
+  id: string;
+  /** Associated bead ID */
+  beadId: string;
+  /** Position in queue (1-indexed) */
+  position: number;
+  /** When submitted to queue */
+  submittedAt: string;
+  /** Current status in refinery */
+  status: "pending" | "processing" | "merged" | "failed";
+}
+
+/**
+ * Refinery status for a rig.
+ */
+export interface RefineryStatus {
+  /** Rig name */
+  rig: string;
+  /** Refinery state */
+  state: "running" | "stopped" | "error";
+  /** Number of items in queue */
+  queueLength: number;
+  /** Queue items */
+  queue: RefineryQueueItem[];
+}
+
+/**
+ * Journey state for a single bead with stage, worker, and refinery info.
+ */
+export interface BeadJourneyState {
+  /** Bead ID */
+  beadId: string;
+  /** Bead title */
+  title: string;
+  /** Current journey stage */
+  stage: BeadJourneyStage;
+  /** Assigned worker (if any) */
+  worker?: string;
+  /** Last activity timestamp */
+  lastActivity: string;
+  /** Refinery info if in refinery stage */
+  refinery?: {
+    position: number;
+    queueLength: number;
+    mrId: string;
+  };
+  /** Seconds since last activity */
+  idleDuration: number;
+  /** True if idle > 900 seconds (15 minutes) */
+  needsNudge: boolean;
+}
+
+/**
+ * Summary counts for convoy beads.
+ */
+export interface ConvoySummary {
+  queued: number;
+  working: number;
+  inRefinery: number;
+  merged: number;
+  needsNudge: number;
+}
+
+/**
+ * Enhanced convoy detail with per-bead journey states.
+ */
+export interface EnhancedConvoyDetail extends ConvoyDetail {
+  /** Journey state for each bead in convoy */
+  beadStates: BeadJourneyState[];
+  /** Summary counts */
+  summary: ConvoySummary;
+}
+
+// ============================================================================
 // Client
 // ============================================================================
 
