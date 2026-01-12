@@ -650,6 +650,99 @@ export interface BeadsData {
 }
 
 // ============================================================================
+// Enhanced Convoy Types (ci-a6w)
+// ============================================================================
+
+/**
+ * Stage for bead journey visualization.
+ * Maps to LifecycleFlow stages: queued, hooked, in_progress, pr_ready, refinery, merged
+ */
+export type BeadJourneyStage =
+  | "queued"
+  | "hooked"
+  | "in_progress"
+  | "pr_ready"
+  | "refinery"
+  | "merged";
+
+/**
+ * Refinery queue item representing a merge request in the queue.
+ */
+export interface RefineryQueueItem {
+  /** Merge request ID */
+  id: string;
+  /** Associated bead ID */
+  beadId: string;
+  /** Position in queue (1-indexed) */
+  position: number;
+  /** When submitted to queue */
+  submittedAt: string;
+  /** Current status in refinery */
+  status: "pending" | "processing" | "merged" | "failed";
+}
+
+/**
+ * Refinery status for a rig.
+ */
+export interface RefineryStatus {
+  /** Rig name */
+  rig: string;
+  /** Refinery state */
+  state: "running" | "stopped" | "error";
+  /** Number of items in queue */
+  queueLength: number;
+  /** Queue items */
+  queue: RefineryQueueItem[];
+}
+
+/**
+ * Journey state for a single bead with stage, worker, and refinery info.
+ */
+export interface BeadJourneyState {
+  /** Bead ID */
+  beadId: string;
+  /** Bead title */
+  title: string;
+  /** Current journey stage */
+  stage: BeadJourneyStage;
+  /** Assigned worker (if any) */
+  worker?: string;
+  /** Last activity timestamp */
+  lastActivity: string;
+  /** Refinery info if in refinery stage */
+  refinery?: {
+    position: number;
+    queueLength: number;
+    mrId: string;
+  };
+  /** Seconds since last activity */
+  idleDuration: number;
+  /** True if idle > 900 seconds (15 minutes) */
+  needsNudge: boolean;
+}
+
+/**
+ * Summary counts for convoy beads.
+ */
+export interface ConvoySummary {
+  queued: number;
+  working: number;
+  inRefinery: number;
+  merged: number;
+  needsNudge: number;
+}
+
+/**
+ * Enhanced convoy detail with per-bead journey states.
+ */
+export interface EnhancedConvoyDetail extends ConvoyDetail {
+  /** Journey state for each bead in convoy */
+  beadStates: BeadJourneyState[];
+  /** Summary counts */
+  summary: ConvoySummary;
+}
+
+// ============================================================================
 // Client
 // ============================================================================
 
@@ -1102,6 +1195,77 @@ export class GasTownClient {
 
   async getConvoyStatus(id: string): Promise<ConvoyDetail> {
     return this.runCommand<ConvoyDetail>(`gt convoy status ${id} --json`);
+  }
+
+  /**
+   * Get enhanced convoy status with per-bead journey states.
+   * Enriches convoy beads with stage, worker, refinery position, and idle duration.
+   */
+  async getEnhancedConvoyStatus(convoyId: string): Promise<EnhancedConvoyDetail> {
+    const convoy = await this.getConvoyStatus(convoyId);
+    const beads = await this.getBeadsForConvoy(convoyId);
+    const now = Date.now();
+
+    // Build bead states
+    const beadStates: BeadJourneyState[] = beads.map((bead) => {
+      // Determine stage from bead status
+      let stage: BeadJourneyStage = "queued";
+      switch (bead.status.toLowerCase()) {
+        case "open":
+        case "pending":
+          stage = "queued";
+          break;
+        case "hooked":
+          stage = "hooked";
+          break;
+        case "in_progress":
+          stage = "in_progress";
+          break;
+        case "pr_ready":
+        case "review":
+          stage = "pr_ready";
+          break;
+        case "refinery":
+        case "merge_ready":
+          stage = "refinery";
+          break;
+        case "closed":
+        case "merged":
+        case "done":
+          stage = "merged";
+          break;
+      }
+
+      // Calculate idle duration
+      const lastActivity = bead.updated_at || bead.created_at;
+      const lastActivityTime = new Date(lastActivity).getTime();
+      const idleDuration = Math.floor((now - lastActivityTime) / 1000);
+
+      return {
+        beadId: bead.id,
+        title: bead.title,
+        stage,
+        worker: bead.assignee?.split("/").pop(),
+        lastActivity,
+        idleDuration,
+        needsNudge: idleDuration > 900 && stage !== "merged" && stage !== "queued",
+      };
+    });
+
+    // Calculate summary
+    const summary: ConvoySummary = {
+      queued: beadStates.filter((b) => b.stage === "queued" || b.stage === "hooked").length,
+      working: beadStates.filter((b) => b.stage === "in_progress" || b.stage === "pr_ready").length,
+      inRefinery: beadStates.filter((b) => b.stage === "refinery").length,
+      merged: beadStates.filter((b) => b.stage === "merged").length,
+      needsNudge: beadStates.filter((b) => b.needsNudge).length,
+    };
+
+    return {
+      ...convoy,
+      beadStates,
+      summary,
+    };
   }
 
   // ============================================================================
