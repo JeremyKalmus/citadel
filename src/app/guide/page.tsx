@@ -93,6 +93,81 @@ function OverviewSection({
 }) {
   return (
     <div className="space-y-6">
+      {/* Welcome Panel */}
+      <Panel>
+        <PanelHeader icon="zap" title="Welcome to Gas Town" />
+        <PanelBody>
+          <p className="body-text text-ash leading-relaxed">
+            Gas Town is a <span className="text-acid-green font-medium">multi-agent workspace manager</span>.
+            AI workers (polecats) do the coding while you orchestrate and monitor. This dashboard gives you
+            visibility into what&apos;s happening across your projects—see worker status, track progress,
+            and manage the flow of work from issue to merged PR.
+          </p>
+        </PanelBody>
+      </Panel>
+
+      {/* Key Concepts Panel */}
+      <Panel>
+        <PanelHeader icon="lightbulb" title="Key Concepts" />
+        <PanelBody>
+          <div className="space-y-4">
+            <div className="flex gap-3 items-start">
+              <Icon name="globe" aria-label="" size="md" className="text-acid-green shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-bone">Town</p>
+                <p className="text-sm text-ash">Your workspace containing multiple projects (rigs). One town = one development environment.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <Icon name="container" aria-label="" size="md" className="text-fuel-yellow shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-bone">Rig</p>
+                <p className="text-sm text-ash">A project container with its own workers (polecats), merge queue (refinery), and health monitor (witness).</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <Icon name="flame" aria-label="" size="md" className="text-rust shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-bone">GUPP — The Propulsion Principle</p>
+                <p className="text-sm text-ash">&quot;If there is work on your Hook, YOU MUST RUN IT.&quot; Workers automatically execute assigned tasks. No waiting, no confirmation needed.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <Icon name="activity" aria-label="" size="md" className="text-bone shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-bone">Work Flow</p>
+                <p className="text-sm text-ash">Beads (issues) → Polecats (workers) → Refinery (merge queue) → Merged to main</p>
+              </div>
+            </div>
+          </div>
+        </PanelBody>
+      </Panel>
+
+      {/* Quick Start Commands Panel */}
+      <Panel>
+        <PanelHeader icon="terminal" title="Quick Start Commands" />
+        <PanelBody>
+          <div className="space-y-3 font-mono text-sm">
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <code className="text-fuel-yellow">bd create &quot;Fix bug in login&quot; --type=bug</code>
+              <p className="text-ash text-xs mt-1">Create a new work item (bead)</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <code className="text-fuel-yellow">gt sling ci-xxx citadel</code>
+              <p className="text-ash text-xs mt-1">Dispatch work to a worker on a rig</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <code className="text-fuel-yellow">bd list --status=open</code>
+              <p className="text-ash text-xs mt-1">See all open work items</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <code className="text-fuel-yellow">gt convoy list</code>
+              <p className="text-ash text-xs mt-1">See active work batches</p>
+            </div>
+          </div>
+        </PanelBody>
+      </Panel>
+
       {/* Your Setup Summary */}
       <Panel>
         <PanelHeader icon="home" title="Your Setup" />
@@ -167,8 +242,26 @@ function OverviewSection({
                 <span className="text-acid-green text-sm font-bold">3</span>
               </div>
               <div>
-                <p className="font-medium text-bone">Watch Progress</p>
-                <p className="text-sm text-ash">Workers implement, submit PRs, and the refinery merges them</p>
+                <p className="font-medium text-bone">Monitor Progress</p>
+                <p className="text-sm text-ash">Watch the Citadel dashboard as workers implement your tasks</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-acid-green/20 flex items-center justify-center shrink-0">
+                <span className="text-acid-green text-sm font-bold">4</span>
+              </div>
+              <div>
+                <p className="font-medium text-bone">Review Results</p>
+                <p className="text-sm text-ash">The refinery merges completed work—check PR status and diffs</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-acid-green/20 flex items-center justify-center shrink-0">
+                <span className="text-acid-green text-sm font-bold">5</span>
+              </div>
+              <div>
+                <p className="font-medium text-bone">Push to Remote</p>
+                <p className="text-sm text-ash">Use <code className="text-fuel-yellow">git push</code> to sync merged changes to GitHub</p>
               </div>
             </div>
           </div>
