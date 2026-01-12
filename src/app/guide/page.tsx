@@ -8,6 +8,7 @@ import { useTownStatus } from "@/hooks"
 import { GuideNav, type GuideSection } from "./components/guide-nav"
 import { EntityCardList, type EntityLiveData } from "./components"
 import { LifecycleFlow } from "@/components/journey/lifecycle-flow"
+import { glossaryCategories, glossaryTerms, type GlossaryCategory } from "./data"
 
 // ============================================================================
 // Section Definitions
@@ -17,6 +18,7 @@ const guideSections: GuideSection[] = [
   { id: "overview", label: "Overview", icon: "compass" },
   { id: "entities", label: "Entities", icon: "layers" },
   { id: "lifecycle", label: "Lifecycle", icon: "activity" },
+  { id: "git", label: "Git Strategy", icon: "github" },
   { id: "status", label: "Status Guide", icon: "circle" },
 ]
 
@@ -91,8 +93,91 @@ function OverviewSection({
   convoyCount: number
   loading: boolean
 }) {
+  const [activeCategory, setActiveCategory] = useState<GlossaryCategory>("principles")
+  const categoryTerms = glossaryTerms.filter(t => t.category === activeCategory)
+  const activeCategoryInfo = glossaryCategories.find(c => c.id === activeCategory)
+
   return (
     <div className="space-y-6">
+      {/* Welcome Panel */}
+      <Panel>
+        <PanelHeader icon="info" title="Welcome to Gas Town" />
+        <PanelBody>
+          <p className="body-text text-ash">
+            Gas Town is a <span className="text-acid-green font-semibold">multi-agent workspace manager</span>. 
+            AI workers (polecats) do the coding while you orchestrate and monitor. This dashboard gives you 
+            visibility into what&apos;s happening across your projects.
+          </p>
+        </PanelBody>
+      </Panel>
+
+      {/* Key Concepts Panel */}
+      <Panel>
+        <PanelHeader icon="book-open" title="Key Concepts" />
+        <PanelBody>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="home" aria-label="" size="sm" className="text-acid-green" />
+                <span className="font-semibold text-bone">Town</span>
+              </div>
+              <p className="text-sm text-ash">Workspace with multiple projects and workers</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="container" aria-label="" size="sm" className="text-acid-green" />
+                <span className="font-semibold text-bone">Rig</span>
+              </div>
+              <p className="text-sm text-ash">Project container with workers and merge queue</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30 sm:col-span-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="zap" aria-label="" size="sm" className="text-fuel-yellow" />
+                <span className="font-semibold text-bone">GUPP</span>
+              </div>
+              <p className="text-sm text-ash">
+                <span className="text-fuel-yellow">&quot;If there is work on your Hook, YOU MUST RUN IT&quot;</span> - 
+                The Gas Town Universal Propulsion Principle. Workers execute immediately when assigned work.
+              </p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30 sm:col-span-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="activity" aria-label="" size="sm" className="text-acid-green" />
+                <span className="font-semibold text-bone">Work Flow</span>
+              </div>
+              <p className="text-sm text-ash">
+                Beads (issues) → Polecats (workers) → Refinery (merge queue) → Merged to main
+              </p>
+            </div>
+          </div>
+        </PanelBody>
+      </Panel>
+
+      {/* Quick Start Commands Panel */}
+      <Panel>
+        <PanelHeader icon="terminal" title="Quick Start Commands" />
+        <PanelBody>
+          <div className="space-y-3">
+            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
+              <code className="text-fuel-yellow text-sm">bd create &quot;Fix bug in login&quot; --type=bug</code>
+              <p className="text-xs text-ash mt-1">Create a new work item (bead)</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
+              <code className="text-fuel-yellow text-sm">gt sling ci-xxx citadel</code>
+              <p className="text-xs text-ash mt-1">Dispatch work to a polecat worker</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
+              <code className="text-fuel-yellow text-sm">bd list --status=open</code>
+              <p className="text-xs text-ash mt-1">See all open work items</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
+              <code className="text-fuel-yellow text-sm">gt convoy list</code>
+              <p className="text-xs text-ash mt-1">See active work batches</p>
+            </div>
+          </div>
+        </PanelBody>
+      </Panel>
+
       {/* Your Setup Summary */}
       <Panel>
         <PanelHeader icon="home" title="Your Setup" />
@@ -117,19 +202,35 @@ function OverviewSection({
         </PanelBody>
       </Panel>
 
-      {/* Quick Glossary */}
+      {/* Glossary with Category Tabs */}
       <Panel>
-        <PanelHeader icon="info" title="Quick Glossary" />
+        <PanelHeader icon="book-open" title="Gas Town Glossary" />
         <PanelBody>
+          {/* Category Tabs */}
+          <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-chrome-border/30">
+            {glossaryCategories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveCategory(category.id)}
+                className={`px-3 py-1.5 text-xs rounded-sm transition-colors ${
+                  activeCategory === category.id
+                    ? "bg-acid-green/20 text-acid-green border border-acid-green/30"
+                    : "bg-carbon-black/50 text-ash border border-chrome-border/30 hover:border-bone/30"
+                }`}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+          
+          {/* Category Description */}
+          {activeCategoryInfo && (
+            <p className="text-sm text-ash mb-4">{activeCategoryInfo.description}</p>
+          )}
+          
+          {/* Terms Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              { term: "Rig", definition: "Container for a project (has workers, refinery, witness)" },
-              { term: "Polecat", definition: "AI worker agent that executes tasks" },
-              { term: "Convoy", definition: "Batch of related work traveling together" },
-              { term: "Refinery", definition: "Merge queue processor for PRs" },
-              { term: "Witness", definition: "Monitors worker health and lifecycle" },
-              { term: "Beads", definition: "Issue tracking - each bead is a task" },
-            ].map(({ term, definition }) => (
+            {categoryTerms.map(({ term, definition }) => (
               <div key={term} className="flex gap-2 p-2 rounded-sm bg-carbon-black/30">
                 <span className="font-semibold text-acid-green shrink-0">{term}:</span>
                 <span className="text-ash text-sm">{definition}</span>
@@ -139,7 +240,7 @@ function OverviewSection({
         </PanelBody>
       </Panel>
 
-      {/* What to Expect */}
+      {/* What to Expect - Expanded to 5 Steps */}
       <Panel>
         <PanelHeader icon="compass" title="What to Expect" />
         <PanelBody>
@@ -167,8 +268,26 @@ function OverviewSection({
                 <span className="text-acid-green text-sm font-bold">3</span>
               </div>
               <div>
-                <p className="font-medium text-bone">Watch Progress</p>
-                <p className="text-sm text-ash">Workers implement, submit PRs, and the refinery merges them</p>
+                <p className="font-medium text-bone">Monitor Progress</p>
+                <p className="text-sm text-ash">Use this Citadel dashboard to track worker status and activity</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-acid-green/20 flex items-center justify-center shrink-0">
+                <span className="text-acid-green text-sm font-bold">4</span>
+              </div>
+              <div>
+                <p className="font-medium text-bone">Review Results</p>
+                <p className="text-sm text-ash">The Refinery merges PRs automatically - review the merged code</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-acid-green/20 flex items-center justify-center shrink-0">
+                <span className="text-acid-green text-sm font-bold">5</span>
+              </div>
+              <div>
+                <p className="font-medium text-bone">Push to Remote</p>
+                <p className="text-sm text-ash">Use <code className="text-fuel-yellow">git push</code> to sync merged changes to GitHub</p>
               </div>
             </div>
           </div>
@@ -215,6 +334,149 @@ function LifecycleSection() {
             speed="normal"
             showSubstages
           />
+        </PanelBody>
+      </Panel>
+    </div>
+  )
+}
+
+function GitStrategySection() {
+  return (
+    <div className="space-y-6">
+      {/* Overview */}
+      <Panel>
+        <PanelHeader icon="github" title="Git Workflow Overview" />
+        <PanelBody>
+          <p className="body-text text-ash mb-4">
+            Gas Town uses a <span className="text-acid-green font-semibold">worktree-based workflow</span> instead 
+            of traditional feature branches. Each polecat gets its own isolated worktree, preventing branch 
+            conflicts between workers.
+          </p>
+        </PanelBody>
+      </Panel>
+
+      {/* Visual Workflow */}
+      <Panel>
+        <PanelHeader icon="activity" title="Workflow Stages" />
+        <PanelBody>
+          <div className="flex flex-wrap items-center justify-center gap-2 py-4">
+            {/* GitHub */}
+            <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-chrome-border min-w-[100px]">
+              <Icon name="github" aria-label="GitHub" size="lg" className="mb-2 text-bone" />
+              <span className="text-sm font-medium uppercase tracking-wider text-bone">GitHub</span>
+              <span className="text-[10px] text-ash/60 mt-1">remote</span>
+            </div>
+            
+            <Icon name="arrow-right" aria-label="" size="md" className="text-chrome-border mx-1" />
+            
+            {/* Rig */}
+            <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-acid-green/50 min-w-[100px]">
+              <Icon name="container" aria-label="Rig" size="lg" className="mb-2 text-acid-green" />
+              <span className="text-sm font-medium uppercase tracking-wider text-acid-green">Rig</span>
+              <span className="text-[10px] text-ash/60 mt-1">local clone</span>
+            </div>
+            
+            <Icon name="arrow-right" aria-label="" size="md" className="text-chrome-border mx-1" />
+            
+            {/* Worktrees */}
+            <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-fuel-yellow/50 min-w-[100px]">
+              <Icon name="terminal" aria-label="Worktrees" size="lg" className="mb-2 text-fuel-yellow" />
+              <span className="text-sm font-medium uppercase tracking-wider text-fuel-yellow">Worktrees</span>
+              <span className="text-[10px] text-ash/60 mt-1">polecats</span>
+            </div>
+            
+            <Icon name="arrow-right" aria-label="" size="md" className="text-chrome-border mx-1" />
+            
+            {/* Refinery */}
+            <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-rust-orange/50 min-w-[100px]">
+              <Icon name="factory" aria-label="Refinery" size="lg" className="mb-2 text-rust-orange" />
+              <span className="text-sm font-medium uppercase tracking-wider text-rust-orange">Refinery</span>
+              <span className="text-[10px] text-ash/60 mt-1">merge queue</span>
+            </div>
+            
+            <Icon name="arrow-right" aria-label="" size="md" className="text-chrome-border mx-1" />
+            
+            {/* Push */}
+            <div className="flex flex-col items-center p-3 rounded-md bg-gunmetal border-2 border-acid-green min-w-[100px]">
+              <Icon name="upload" aria-label="Push" size="lg" className="mb-2 text-acid-green" />
+              <span className="text-sm font-medium uppercase tracking-wider text-acid-green">Push</span>
+              <span className="text-[10px] text-ash/60 mt-1">to remote</span>
+            </div>
+          </div>
+        </PanelBody>
+      </Panel>
+
+      {/* Key Concepts */}
+      <Panel>
+        <PanelHeader icon="info" title="Key Concepts" />
+        <PanelBody>
+          <div className="space-y-4">
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="container" aria-label="" size="sm" className="text-acid-green" />
+                <span className="font-semibold text-bone">Rig = Full Clone</span>
+              </div>
+              <p className="text-sm text-ash">
+                A Rig is a full clone of your repository (not a fork). It contains a bare repo 
+                (<code className="text-fuel-yellow">.repo.git</code>) that all worktrees share.
+              </p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="terminal" aria-label="" size="sm" className="text-fuel-yellow" />
+                <span className="font-semibold text-bone">Isolated Worktrees</span>
+              </div>
+              <p className="text-sm text-ash">
+                Each polecat gets its own worktree on a branch like <code className="text-fuel-yellow">polecat/name-xxx</code>. 
+                Workers never conflict with each other.
+              </p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="factory" aria-label="" size="sm" className="text-rust-orange" />
+                <span className="font-semibold text-bone">Refinery Handles Merges</span>
+              </div>
+              <p className="text-sm text-ash">
+                The Refinery handles all merges to main. It rebases, resolves conflicts, and ensures 
+                clean commits before merging.
+              </p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/50 border border-chrome-border/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="check-circle" aria-label="" size="sm" className="text-acid-green" />
+                <span className="font-semibold text-bone">Clean Main Branch</span>
+              </div>
+              <p className="text-sm text-ash">
+                Main stays clean and linear. All work is integrated through the Refinery, 
+                then pushed to the remote.
+              </p>
+            </div>
+          </div>
+        </PanelBody>
+      </Panel>
+
+      {/* Commands */}
+      <Panel>
+        <PanelHeader icon="terminal" title="Git Commands" />
+        <PanelBody>
+          <div className="space-y-3">
+            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
+              <code className="text-fuel-yellow text-sm">gt sling ci-xxx citadel</code>
+              <p className="text-xs text-ash mt-1">Dispatch work to a polecat (creates worktree if needed)</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
+              <code className="text-fuel-yellow text-sm">gt done</code>
+              <p className="text-xs text-ash mt-1">Signal work is ready for the merge queue</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
+              <code className="text-fuel-yellow text-sm">gt mq status</code>
+              <p className="text-xs text-ash mt-1">Check merge queue status</p>
+            </div>
+            <div className="p-3 rounded-sm bg-carbon-black/70 border border-chrome-border/30">
+              <code className="text-fuel-yellow text-sm">git push</code>
+              <p className="text-xs text-ash mt-1">Push merged changes to GitHub</p>
+            </div>
+          </div>
         </PanelBody>
       </Panel>
     </div>
@@ -299,6 +561,8 @@ export default function GuidePage() {
         return <EntitiesSection liveData={entityLiveData} />
       case "lifecycle":
         return <LifecycleSection />
+      case "git":
+        return <GitStrategySection />
       case "status":
         return <StatusSection />
       default:
