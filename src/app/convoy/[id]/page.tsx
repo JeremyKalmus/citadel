@@ -7,7 +7,8 @@ import { StatusExplanation, ActivityTimeline, type ActivityEvent } from "@/compo
 import { ConvoyBeads } from "@/components/convoy"
 import { useConvoyDetail, useConvoyBeads } from "@/hooks"
 import type { Status } from "@/components/ui"
-import { RefreshCw, ArrowLeft } from "lucide-react"
+import type { Bead } from "@/lib/gastown"
+import { RefreshCw, ArrowLeft, Container, ArrowRight, Circle, User, Truck } from "lucide-react"
 import { Icon } from "@/components/ui/icon"
 
 interface ConvoyPageProps {
@@ -85,6 +86,93 @@ function generateConvoyActivityEvents(
   return events
 }
 
+/**
+ * Parse worker path to extract rig and worker name.
+ */
+function parseWorkerPath(path: string): { rig: string; worker: string; type: string } {
+  const parts = path.split("/")
+  if (parts.length >= 3) {
+    return {
+      rig: parts[0],
+      worker: parts[parts.length - 1],
+      type: parts[1] === "polecats" ? "polecat" : parts[1] === "crew" ? "crew" : "worker",
+    }
+  }
+  return { rig: "", worker: path, type: "worker" }
+}
+
+/**
+ * Group workers by their rig.
+ */
+function groupWorkersByRig(workers: string[]): Map<string, Array<{ path: string; worker: string; type: string }>> {
+  const grouped = new Map<string, Array<{ path: string; worker: string; type: string }>>()
+
+  for (const workerPath of workers) {
+    const parsed = parseWorkerPath(workerPath)
+    const rigName = parsed.rig || "unknown"
+
+    if (!grouped.has(rigName)) {
+      grouped.set(rigName, [])
+    }
+    grouped.get(rigName)!.push({
+      path: workerPath,
+      worker: parsed.worker,
+      type: parsed.type,
+    })
+  }
+
+  return grouped
+}
+
+/**
+ * RelationshipBreadcrumb - Visual explanation of convoy→bead→rig hierarchy.
+ */
+function RelationshipBreadcrumb({ beadsCount, workersCount, rigsCount }: {
+  beadsCount: number
+  workersCount: number
+  rigsCount: number
+}) {
+  return (
+    <Panel className="p-4">
+      <div className="flex items-center justify-center gap-2 flex-wrap">
+        {/* Convoy */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-gunmetal">
+          <Truck className="w-4 h-4 text-bone" />
+          <span className="text-sm font-mono text-bone">Convoy</span>
+        </div>
+
+        <ArrowRight className="w-4 h-4 text-ash" />
+
+        {/* Beads */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-acid-green/10 border border-acid-green/30">
+          <Circle className="w-4 h-4 text-acid-green" />
+          <span className="text-sm font-mono text-acid-green">{beadsCount} beads</span>
+        </div>
+
+        <ArrowRight className="w-4 h-4 text-ash" />
+
+        {/* Rigs */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-chrome-border/30">
+          <Container className="w-4 h-4 text-ash" />
+          <span className="text-sm font-mono text-ash">{rigsCount} rig{rigsCount !== 1 ? "s" : ""}</span>
+        </div>
+
+        <ArrowRight className="w-4 h-4 text-ash" />
+
+        {/* Workers */}
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-fuel-yellow/10 border border-fuel-yellow/30">
+          <User className="w-4 h-4 text-fuel-yellow" />
+          <span className="text-sm font-mono text-fuel-yellow">{workersCount} worker{workersCount !== 1 ? "s" : ""}</span>
+        </div>
+      </div>
+
+      <p className="text-xs text-ash text-center mt-3">
+        Work flows from convoy → individual beads → processed by workers in rigs
+      </p>
+    </Panel>
+  )
+}
+
 function WorkersList({ workers }: { workers: string[] }) {
   if (!workers || workers.length === 0) {
     return (
@@ -94,17 +182,37 @@ function WorkersList({ workers }: { workers: string[] }) {
     )
   }
 
+  const groupedByRig = groupWorkersByRig(workers)
+
   return (
-    <div className="px-4">
-      {workers.map((worker) => (
-        <Link
-          key={worker}
-          href={`/worker/${worker.replace("/", "/")}`}
-          className="flex items-center gap-3 py-3 border-b border-chrome-border/30 last:border-0 hover:bg-carbon-black/30 -mx-4 px-4 transition-colors"
-        >
-          <Icon name="terminal" aria-label="" variant="muted" size="sm" />
-          <span className="body-text">{worker}</span>
-        </Link>
+    <div className="divide-y divide-chrome-border/30">
+      {Array.from(groupedByRig.entries()).map(([rigName, rigWorkers]) => (
+        <div key={rigName} className="py-2">
+          {/* Rig header */}
+          <Link
+            href={`/rig/${rigName}`}
+            className="flex items-center gap-2 px-4 py-2 hover:bg-carbon-black/20 transition-colors"
+          >
+            <Container className="w-4 h-4 text-ash" />
+            <span className="text-xs font-mono text-ash uppercase">{rigName}</span>
+            <span className="text-xs text-ash">({rigWorkers.length} worker{rigWorkers.length !== 1 ? "s" : ""})</span>
+          </Link>
+
+          {/* Workers in this rig */}
+          <div className="pl-8">
+            {rigWorkers.map(({ path, worker, type }) => (
+              <Link
+                key={path}
+                href={`/worker/${path}`}
+                className="flex items-center gap-3 py-2 px-4 hover:bg-carbon-black/30 transition-colors"
+              >
+                <User className="w-3.5 h-3.5 text-fuel-yellow" />
+                <span className="body-text text-bone">{worker}</span>
+                <span className="text-xs text-ash px-1.5 py-0.5 rounded bg-gunmetal">{type}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   )
@@ -197,6 +305,23 @@ export default function ConvoyPage({ params }: ConvoyPageProps) {
           Refresh
         </ActionButton>
       </div>
+
+      {/* Relationship breadcrumb - shows convoy→beads→rigs→workers flow */}
+      {!isLoading && !beadsLoading && (
+        <RelationshipBreadcrumb
+          beadsCount={beads?.length ?? 0}
+          workersCount={convoy?.assigned_workers?.length ?? 0}
+          rigsCount={
+            convoy?.assigned_workers
+              ? new Set(
+                  convoy.assigned_workers
+                    .map((w) => w.split("/")[0])
+                    .filter(Boolean)
+                ).size
+              : 0
+          }
+        />
+      )}
 
       {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
