@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/ui/icon"
 import {
   JourneyStage,
   type WorkingSubstage,
+  type RefinerySubstage,
 } from "@/lib/gastown/types"
 
 // ============================================================================
@@ -58,7 +59,7 @@ const DEFAULT_STAGES: StageDefinition[] = [
   {
     id: "claimed",
     label: "Claimed",
-    description: "Polecat picks up the work",
+    description: "Witness assigns work to polecat hook",
     icon: "lock",
     actors: ["witness"],
   },
@@ -70,10 +71,17 @@ const DEFAULT_STAGES: StageDefinition[] = [
     actors: ["polecat"],
   },
   {
-    id: "pr",
+    id: "pr_ready",
     label: "PR Ready",
-    description: "Pull request submitted, awaiting review",
-    icon: "activity",
+    description: "Worker runs gt done, branch pushed",
+    icon: "link",
+    actors: ["witness"],
+  },
+  {
+    id: "refinery",
+    label: "Refinery",
+    description: "Processing in merge queue",
+    icon: "cog",
     actors: ["refinery"],
   },
   {
@@ -85,11 +93,17 @@ const DEFAULT_STAGES: StageDefinition[] = [
   },
 ]
 
-const SUBSTAGES: { id: WorkingSubstage; label: string; description: string }[] = [
+const WORKING_SUBSTAGES: { id: WorkingSubstage; label: string; description: string }[] = [
   { id: "2a", label: "Analyzing", description: "Reading and understanding codebase" },
   { id: "2b", label: "Coding", description: "Writing and committing code" },
   { id: "2c", label: "Testing", description: "Running tests and validation" },
   { id: "2d", label: "PR Prep", description: "Preparing pull request" },
+]
+
+const REFINERY_SUBSTAGES: { id: RefinerySubstage; label: string; description: string }[] = [
+  { id: "4a", label: "Rebasing", description: "Syncing with main branch" },
+  { id: "4b", label: "Testing", description: "Running CI checks" },
+  { id: "4c", label: "Merging", description: "Committing to main" },
 ]
 
 // ============================================================================
@@ -191,10 +205,10 @@ function StageBox({
       setIsActive(true)
     }, animationDelay)
 
-    // Deactivate after animation completes (except for final stage)
+    // Deactivate after animation completes (except for final stage - index 5)
     const deactivateTimer = setTimeout(
       () => {
-        if (index < 4) setIsActive(false)
+        if (index < 5) setIsActive(false)
       },
       animationDelay + duration
     )
@@ -263,30 +277,34 @@ function StageBox({
 }
 
 /**
- * Working substages expansion
+ * Generic substages panel for Working or Refinery stages
  */
-function SubstagesPanel({
+function SubstagesPanel<T extends string>({
   expanded,
+  title,
+  substages,
   currentSubstage,
   onSubstageClick,
 }: {
   expanded: boolean
-  currentSubstage?: WorkingSubstage
-  onSubstageClick?: (substage: WorkingSubstage) => void
+  title: string
+  substages: { id: T; label: string; description: string }[]
+  currentSubstage?: T
+  onSubstageClick?: (substage: T) => void
 }) {
   if (!expanded) return null
 
   return (
     <div className="mt-4 ml-[calc(50%-8px)] pl-4 border-l-2 border-chrome-border">
       <div className="text-[10px] uppercase tracking-wider text-ash mb-3">
-        Working Substages
+        {title}
       </div>
       <div className="grid grid-cols-2 gap-2 max-w-[320px]">
-        {SUBSTAGES.map((substage, index) => {
+        {substages.map((substage, index) => {
           const isCurrent = currentSubstage === substage.id
           const isCompleted =
             currentSubstage &&
-            SUBSTAGES.findIndex((s) => s.id === currentSubstage) > index
+            substages.findIndex((s) => s.id === currentSubstage) > index
 
           return (
             <button
@@ -344,14 +362,16 @@ function SubstagesPanel({
 /**
  * LifecycleFlow Component
  *
- * Animated visualization showing work flow through stages:
- * QUEUED → CLAIMED → WORKING → PR → MERGED
+ * Animated visualization showing complete Gas Town work lifecycle:
+ * QUEUED → CLAIMED → WORKING → PR_READY → REFINERY → MERGED
+ *    0        1         2          3          4          5
  *
  * Used in the Guide tab to explain how work moves through Gas Town.
  *
  * Features:
  * - Animated flow with configurable speed
- * - Substage expansion for Working stage
+ * - Substage expansion for Working stage (2a-2d)
+ * - Substage expansion for Refinery stage (4a-4c)
  * - Interactive stage selection
  * - DS2 color system integration
  *
@@ -391,9 +411,11 @@ export function LifecycleFlow({
     return () => clearInterval(interval)
   }, [animated, duration, stages.length])
 
-  // Show substages when Working stage is current
+  // Show substages when Working or Refinery stage is current
   const showWorkingSubstages =
     showSubstages && (currentStage === JourneyStage.WORKING || currentStage === undefined)
+  const showRefinerySubstages =
+    showSubstages && currentStage === JourneyStage.REFINERY
 
   return (
     <div className={cn("w-full", className)}>
@@ -444,9 +466,19 @@ export function LifecycleFlow({
         ))}
       </div>
 
-      {/* Substages panel */}
+      {/* Working substages panel */}
       <SubstagesPanel
         expanded={showWorkingSubstages}
+        title="Working Substages"
+        substages={WORKING_SUBSTAGES}
+        currentSubstage={undefined}
+      />
+
+      {/* Refinery substages panel */}
+      <SubstagesPanel
+        expanded={showRefinerySubstages}
+        title="Refinery Substages"
+        substages={REFINERY_SUBSTAGES}
         currentSubstage={undefined}
       />
 
@@ -484,6 +516,8 @@ export function LifecycleFlow({
 
 /**
  * Compact LifecycleFlow for smaller spaces
+ *
+ * Shows complete workflow: QUEUED → CLAIMED → WORKING → PR → REFINERY → MERGED
  */
 export function LifecycleFlowCompact({
   currentStage,
@@ -492,8 +526,8 @@ export function LifecycleFlowCompact({
   currentStage?: number
   className?: string
 }) {
-  const stages = ["Q", "C", "W", "P", "M"]
-  const labels = ["Queued", "Claimed", "Working", "PR", "Merged"]
+  const stages = ["Q", "C", "W", "P", "R", "M"]
+  const labels = ["Queued", "Claimed", "Working", "PR Ready", "Refinery", "Merged"]
 
   return (
     <div className={cn("flex items-center gap-1", className)}>
