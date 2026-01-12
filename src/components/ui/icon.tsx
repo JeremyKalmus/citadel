@@ -49,6 +49,8 @@ import {
   Inbox,
   // Navigation icons
   MapPin,
+  // User icon for workflow
+  User,
   type LucideIcon,
 } from "lucide-react"
 
@@ -115,6 +117,8 @@ export type IconName =
   | "inbox"
   // Navigation icons (Lucide)
   | "map-pin"
+  // User icon (Lucide)
+  | "user"
 
 export type IconVariant = "default" | "alert" | "active" | "ok" | "muted"
 
@@ -174,6 +178,8 @@ const iconMap: Record<IconName, IconComponent> = {
   "inbox": Inbox,
   // Lucide - Navigation
   "map-pin": MapPin,
+  // Lucide - User
+  "user": User,
 }
 
 const variantStyles: Record<IconVariant, string> = {

@@ -7,7 +7,7 @@ import { Icon, type IconName } from "@/components/ui/icon"
 import { useTownStatus } from "@/hooks"
 import { GuideNav, type GuideSection } from "./components/guide-nav"
 import { EntityCardList, type EntityLiveData } from "./components"
-import { LifecycleFlow } from "@/components/journey/lifecycle-flow"
+import { WorkflowDiagram } from "@/components/guide"
 
 // ============================================================================
 // Section Definitions
@@ -16,7 +16,7 @@ import { LifecycleFlow } from "@/components/journey/lifecycle-flow"
 const guideSections: GuideSection[] = [
   { id: "overview", label: "Overview", icon: "compass" },
   { id: "entities", label: "Entities", icon: "layers" },
-  { id: "lifecycle", label: "Lifecycle", icon: "activity" },
+  { id: "workflow", label: "How It Works", icon: "activity" },
   { id: "status", label: "Status Guide", icon: "circle" },
 ]
 
@@ -191,32 +191,15 @@ function EntitiesSection({ liveData }: { liveData?: EntityLiveData }) {
   )
 }
 
-function LifecycleSection() {
-  const [animated, setAnimated] = useState(false)
-
+function WorkflowSection() {
   return (
     <div className="space-y-6">
-      <Panel>
-        <PanelBody>
-          <div className="flex items-center justify-between mb-4">
-            <p className="body-text text-ash">
-              See how work flows through Gas Town from issue creation to merge.
-            </p>
-            <ActionButton
-              variant={animated ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setAnimated(!animated)}
-            >
-              {animated ? "Stop Animation" : "Animate Flow"}
-            </ActionButton>
-          </div>
-          <LifecycleFlow
-            animated={animated}
-            speed="normal"
-            showSubstages
-          />
-        </PanelBody>
-      </Panel>
+      <div className="mb-4">
+        <p className="body-text text-ash">
+          See how work flows through Gas Town from request to merge.
+        </p>
+      </div>
+      <WorkflowDiagram />
     </div>
   )
 }
@@ -297,8 +280,8 @@ export default function GuidePage() {
         )
       case "entities":
         return <EntitiesSection liveData={entityLiveData} />
-      case "lifecycle":
-        return <LifecycleSection />
+      case "workflow":
+        return <WorkflowSection />
       case "status":
         return <StatusSection />
       default:
