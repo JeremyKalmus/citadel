@@ -149,8 +149,8 @@ function OverviewSection({
                 <span className="text-acid-green text-sm font-bold">1</span>
               </div>
               <div>
-                <p className="font-medium text-bone">Create work with Beads</p>
-                <p className="text-sm text-ash">Use <code className="text-fuel-yellow">bd create</code> to create issues to work on</p>
+                <p className="font-medium text-bone">Request Work</p>
+                <p className="text-sm text-ash">Ask the <span className="text-fuel-yellow">Mayor</span> what you want built - a bug fix, feature, or improvement</p>
               </div>
             </div>
             <div className="flex gap-3 items-start">
@@ -158,8 +158,8 @@ function OverviewSection({
                 <span className="text-acid-green text-sm font-bold">2</span>
               </div>
               <div>
-                <p className="font-medium text-bone">Dispatch to Polecats</p>
-                <p className="text-sm text-ash">Use <code className="text-fuel-yellow">gt sling</code> to assign work to workers</p>
+                <p className="font-medium text-bone">Planning & Dispatch</p>
+                <p className="text-sm text-ash">Mayor creates a spec, <span className="text-fuel-yellow">Keeper</span> evaluates scope, then work is dispatched to a <span className="text-fuel-yellow">Polecat</span></p>
               </div>
             </div>
             <div className="flex gap-3 items-start">
@@ -167,8 +167,17 @@ function OverviewSection({
                 <span className="text-acid-green text-sm font-bold">3</span>
               </div>
               <div>
-                <p className="font-medium text-bone">Watch Progress</p>
-                <p className="text-sm text-ash">Workers implement, submit PRs, and the refinery merges them</p>
+                <p className="font-medium text-bone">Execution</p>
+                <p className="text-sm text-ash">Polecat claims work from hook, implements the solution, and signals completion</p>
+              </div>
+            </div>
+            <div className="flex gap-3 items-start">
+              <div className="w-6 h-6 rounded-full bg-acid-green/20 flex items-center justify-center shrink-0">
+                <span className="text-acid-green text-sm font-bold">4</span>
+              </div>
+              <div>
+                <p className="font-medium text-bone">Refinery & Merge</p>
+                <p className="text-sm text-ash">The <span className="text-fuel-yellow">Refinery</span> validates, runs the merge queue, and lands the work on main</p>
               </div>
             </div>
           </div>

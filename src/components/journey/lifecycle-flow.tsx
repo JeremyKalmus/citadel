@@ -3,10 +3,7 @@
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Icon, type IconName } from "@/components/ui/icon"
-import {
-  JourneyStage,
-  type WorkingSubstage,
-} from "@/lib/gastown/types"
+import { type WorkingSubstage } from "@/lib/gastown/types"
 
 // ============================================================================
 // Types
@@ -49,6 +46,27 @@ export interface LifecycleFlowProps {
 
 const DEFAULT_STAGES: StageDefinition[] = [
   {
+    id: "request",
+    label: "Request",
+    description: "User asks Mayor for work",
+    icon: "message-circle",
+    actors: ["user", "mayor"],
+  },
+  {
+    id: "planning",
+    label: "Planning",
+    description: "Mayor creates spec, evaluates with Keeper",
+    icon: "clipboard",
+    actors: ["mayor", "keeper"],
+  },
+  {
+    id: "dispatched",
+    label: "Dispatched",
+    description: "Mayor slings work to polecat",
+    icon: "send",
+    actors: ["mayor", "convoy"],
+  },
+  {
     id: "queued",
     label: "Queued",
     description: "Issue created, waiting for assignment",
@@ -58,7 +76,7 @@ const DEFAULT_STAGES: StageDefinition[] = [
   {
     id: "claimed",
     label: "Claimed",
-    description: "Polecat picks up the work",
+    description: "Polecat finds work on hook, begins execution",
     icon: "lock",
     actors: ["witness"],
   },
@@ -74,6 +92,13 @@ const DEFAULT_STAGES: StageDefinition[] = [
     label: "PR Ready",
     description: "Pull request submitted, awaiting review",
     icon: "activity",
+    actors: ["polecat"],
+  },
+  {
+    id: "refinery",
+    label: "Refinery",
+    description: "Merge queue processing and validation",
+    icon: "filter",
     actors: ["refinery"],
   },
   {
@@ -91,6 +116,9 @@ const SUBSTAGES: { id: WorkingSubstage; label: string; description: string }[] =
   { id: "2c", label: "Testing", description: "Running tests and validation" },
   { id: "2d", label: "PR Prep", description: "Preparing pull request" },
 ]
+
+/** Visual index of the WORKING stage in the 9-stage flow */
+const WORKING_STAGE_INDEX = 5
 
 // ============================================================================
 // Animation Timing
@@ -194,7 +222,7 @@ function StageBox({
     // Deactivate after animation completes (except for final stage)
     const deactivateTimer = setTimeout(
       () => {
-        if (index < 4) setIsActive(false)
+        if (index < 8) setIsActive(false)
       },
       animationDelay + duration
     )
@@ -344,8 +372,8 @@ function SubstagesPanel({
 /**
  * LifecycleFlow Component
  *
- * Animated visualization showing work flow through stages:
- * QUEUED → CLAIMED → WORKING → PR → MERGED
+ * Animated visualization showing work flow through 9 stages:
+ * REQUEST → PLANNING → DISPATCHED → QUEUED → CLAIMED → WORKING → PR_READY → REFINERY → MERGED
  *
  * Used in the Guide tab to explain how work moves through Gas Town.
  *
@@ -361,7 +389,7 @@ function SubstagesPanel({
  * <LifecycleFlow animated speed="normal" />
  *
  * // Static with current stage highlighted
- * <LifecycleFlow currentStage={2} showSubstages />
+ * <LifecycleFlow currentStage={5} showSubstages />
  *
  * // Interactive with click handler
  * <LifecycleFlow onStageClick={(stage) => console.log(stage)} />
@@ -391,9 +419,9 @@ export function LifecycleFlow({
     return () => clearInterval(interval)
   }, [animated, duration, stages.length])
 
-  // Show substages when Working stage is current
+  // Show substages when Working stage is current (index 5 in 9-stage flow)
   const showWorkingSubstages =
-    showSubstages && (currentStage === JourneyStage.WORKING || currentStage === undefined)
+    showSubstages && (currentStage === WORKING_STAGE_INDEX || currentStage === undefined)
 
   return (
     <div className={cn("w-full", className)}>
@@ -457,6 +485,26 @@ export function LifecycleFlow({
         </div>
         <div className="flex flex-wrap gap-4 text-xs">
           <div className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-bone/50" />
+            <span className="text-ash">user</span>
+            <span className="text-ash/50">- Human operator</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-fuel-yellow/50" />
+            <span className="text-ash">mayor</span>
+            <span className="text-ash/50">- Work orchestrator</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-rust-orange/50" />
+            <span className="text-ash">keeper</span>
+            <span className="text-ash/50">- Scope gatekeeper</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-chrome-border" />
+            <span className="text-ash">convoy</span>
+            <span className="text-ash/50">- Work transport</span>
+          </div>
+          <div className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-ash/50" />
             <span className="text-ash">beads</span>
             <span className="text-ash/50">- Issue tracking</span>
@@ -492,8 +540,8 @@ export function LifecycleFlowCompact({
   currentStage?: number
   className?: string
 }) {
-  const stages = ["Q", "C", "W", "P", "M"]
-  const labels = ["Queued", "Claimed", "Working", "PR", "Merged"]
+  const stages = ["R", "P", "D", "Q", "C", "W", "PR", "RF", "M"]
+  const labels = ["Request", "Planning", "Dispatched", "Queued", "Claimed", "Working", "PR Ready", "Refinery", "Merged"]
 
   return (
     <div className={cn("flex items-center gap-1", className)}>
