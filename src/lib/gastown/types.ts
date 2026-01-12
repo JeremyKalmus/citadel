@@ -275,8 +275,8 @@ export interface EnhancedGuzzolineQuery {
  *
  * Every piece of work follows this progression:
  * ```
- * QUEUED → CLAIMED → WORKING → PR_READY → MERGED
- *   0        1         2          3          4
+ * QUEUED → CLAIMED → WORKING → PR_READY → REFINERY → MERGED
+ *   0        1         2          3          4          5
  * ```
  */
 export enum JourneyStage {
@@ -286,10 +286,12 @@ export enum JourneyStage {
   CLAIMED = 1,
   /** Stage 2: Active development (see WorkingSubstage for detail) */
   WORKING = 2,
-  /** Stage 3: PR opened, tests running */
+  /** Stage 3: PR opened, awaiting review */
   PR_READY = 3,
-  /** Stage 4: PR merged to main (terminal state) */
-  MERGED = 4,
+  /** Stage 4: In merge queue, processing (see RefinerySubstage for detail) */
+  REFINERY = 4,
+  /** Stage 5: PR merged to main (terminal state) */
+  MERGED = 5,
 }
 
 /**
@@ -312,6 +314,24 @@ export const WORKING_SUBSTAGE_LABELS: Record<WorkingSubstage, string> = {
 };
 
 /**
+ * Substages within the REFINERY stage (Stage 4).
+ *
+ * ```
+ * 4a: REBASING → 4b: TESTING → 4c: MERGING
+ * ```
+ */
+export type RefinerySubstage = "4a" | "4b" | "4c";
+
+/**
+ * Human-readable names for refinery substages.
+ */
+export const REFINERY_SUBSTAGE_LABELS: Record<RefinerySubstage, string> = {
+  "4a": "Rebasing",
+  "4b": "Testing",
+  "4c": "Merging",
+};
+
+/**
  * Human-readable names for journey stages.
  */
 export const JOURNEY_STAGE_LABELS: Record<JourneyStage, string> = {
@@ -319,6 +339,7 @@ export const JOURNEY_STAGE_LABELS: Record<JourneyStage, string> = {
   [JourneyStage.CLAIMED]: "Claimed",
   [JourneyStage.WORKING]: "Working",
   [JourneyStage.PR_READY]: "PR Ready",
+  [JourneyStage.REFINERY]: "Refinery",
   [JourneyStage.MERGED]: "Merged",
 };
 
@@ -329,7 +350,8 @@ export const JOURNEY_STAGE_ACTORS: Record<JourneyStage, string> = {
   [JourneyStage.QUEUED]: "beads",
   [JourneyStage.CLAIMED]: "witness",
   [JourneyStage.WORKING]: "polecat",
-  [JourneyStage.PR_READY]: "refinery",
+  [JourneyStage.PR_READY]: "witness",
+  [JourneyStage.REFINERY]: "refinery",
   [JourneyStage.MERGED]: "refinery",
 };
 
@@ -341,6 +363,7 @@ export const JOURNEY_STAGE_DURATION_CONCERNS: Record<JourneyStage, string> = {
   [JourneyStage.CLAIMED]: "< 2min",
   [JourneyStage.WORKING]: "Varies by complexity",
   [JourneyStage.PR_READY]: "< 15min",
+  [JourneyStage.REFINERY]: "< 10min",
   [JourneyStage.MERGED]: "Terminal state",
 };
 
@@ -356,6 +379,8 @@ export interface JourneyTimestamps {
   workStarted?: string;
   /** When PR was opened */
   prOpened?: string;
+  /** When PR entered the refinery/merge queue */
+  refineryEntered?: string;
   /** When PR was merged */
   merged?: string;
 }
@@ -364,10 +389,12 @@ export interface JourneyTimestamps {
  * Complete journey state for a work item.
  */
 export interface JourneyState {
-  /** Current stage (0-4) */
+  /** Current stage (0-5) */
   currentStage: JourneyStage;
   /** Substage within WORKING stage */
   substage?: WorkingSubstage;
+  /** Substage within REFINERY stage */
+  refinerySubstage?: RefinerySubstage;
   /** Stage transition timestamps */
   timestamps: JourneyTimestamps;
   /** Current actor (polecat name, etc.) */
@@ -384,10 +411,12 @@ export interface JourneyState {
 export interface JourneyTrackerProps {
   /** Issue/bead ID being tracked */
   issueId: string;
-  /** Current stage (0-4) */
+  /** Current stage (0-5) */
   currentStage: JourneyStage;
   /** Substage if in WORKING stage */
   substage?: WorkingSubstage;
+  /** Substage if in REFINERY stage */
+  refinerySubstage?: RefinerySubstage;
   /** Stage transition timestamps */
   timestamps: JourneyTimestamps;
   /** Current actor (polecat name, etc.) */
@@ -453,9 +482,13 @@ export const STAGE_TRANSITION_SIGNALS = {
   // Stage 2 → 3: PR opened
   "pr.opened": { from: JourneyStage.WORKING, to: JourneyStage.PR_READY },
 
-  // Stage 3 → 4: Merged
-  "pr.merged": { from: JourneyStage.PR_READY, to: JourneyStage.MERGED },
-  "issue.closed": { from: JourneyStage.PR_READY, to: JourneyStage.MERGED },
+  // Stage 3 → 4: Entered refinery/merge queue
+  "pr.approved": { from: JourneyStage.PR_READY, to: JourneyStage.REFINERY },
+  "merge_queue.entered": { from: JourneyStage.PR_READY, to: JourneyStage.REFINERY },
+
+  // Stage 4 → 5: Merged
+  "pr.merged": { from: JourneyStage.REFINERY, to: JourneyStage.MERGED },
+  "issue.closed": { from: JourneyStage.REFINERY, to: JourneyStage.MERGED },
 } as const;
 
 /**
@@ -480,6 +513,24 @@ export const SUBSTAGE_DETECTION_SIGNALS: Record<string, WorkingSubstage> = {
   // 2d: PR Prep
   "git.push": "2d",
   "pr.draft": "2d",
+};
+
+/**
+ * Signals that indicate substage within REFINERY stage.
+ */
+export const REFINERY_SUBSTAGE_DETECTION_SIGNALS: Record<string, RefinerySubstage> = {
+  // 4a: Rebasing
+  "refinery.rebase.start": "4a",
+  "refinery.rebase.in_progress": "4a",
+
+  // 4b: Testing
+  "refinery.test.start": "4b",
+  "refinery.test.running": "4b",
+  "refinery.ci.running": "4b",
+
+  // 4c: Merging
+  "refinery.merge.start": "4c",
+  "refinery.merge.in_progress": "4c",
 };
 
 // ============================================================================

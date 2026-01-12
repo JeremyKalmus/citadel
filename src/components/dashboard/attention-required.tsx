@@ -146,6 +146,10 @@ export function AttentionRequired({ polecats, guzzoline, loading = false }: Atte
     thinking: 4,
     active: 5,
     done: 6,
+    refinery_queued: 7,
+    refinery_rebasing: 7,
+    refinery_testing: 7,
+    refinery_merging: 7,
   }
   allItems.sort((a, b) => (severityOrder[a.status] ?? 5) - (severityOrder[b.status] ?? 5))
 

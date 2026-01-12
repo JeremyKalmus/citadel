@@ -160,6 +160,7 @@ export function JourneyTimeline({
     JourneyStage.CLAIMED,
     JourneyStage.WORKING,
     JourneyStage.PR_READY,
+    JourneyStage.REFINERY,
     JourneyStage.MERGED,
   ]
 
@@ -168,6 +169,7 @@ export function JourneyTimeline({
     [JourneyStage.CLAIMED]: timestamps.claimed,
     [JourneyStage.WORKING]: timestamps.workStarted,
     [JourneyStage.PR_READY]: timestamps.prOpened,
+    [JourneyStage.REFINERY]: timestamps.refineryEntered,
     [JourneyStage.MERGED]: timestamps.merged,
   }
 

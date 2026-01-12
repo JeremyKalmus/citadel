@@ -24,6 +24,10 @@ const statusExplanations: Record<Status, string> = {
   dead: "Worker session has terminated. Manual intervention may be required.",
   blocked: "Worker is waiting on a dependency or external condition to proceed.",
   done: "Worker has completed its assigned tasks successfully.",
+  refinery_queued: "Branch is queued for merge processing. Waiting for refinery.",
+  refinery_rebasing: "Refinery is rebasing the branch onto main.",
+  refinery_testing: "Refinery is running tests on the rebased branch.",
+  refinery_merging: "Refinery is merging the branch to main.",
 }
 
 function DetailRow({ label, value }: StatusDetail) {

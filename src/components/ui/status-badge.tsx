@@ -1,7 +1,9 @@
 import { cn } from "@/lib/utils"
 import { Icon, statusIcons, type IconName } from "./icon"
 
-export type Status = 'active' | 'thinking' | 'slow' | 'unresponsive' | 'dead' | 'blocked' | 'done'
+export type Status =
+  | 'active' | 'thinking' | 'slow' | 'unresponsive' | 'dead' | 'blocked' | 'done'
+  | 'refinery_queued' | 'refinery_rebasing' | 'refinery_testing' | 'refinery_merging'
 
 interface StatusConfig {
   icon: IconName
@@ -45,6 +47,27 @@ const statusConfig: Record<Status, StatusConfig> = {
     icon: statusIcons.done,
     label: 'Complete',
     className: 'text-status-done bg-status-done/10 border-status-done/30'
+  },
+  // Refinery pipeline states
+  refinery_queued: {
+    icon: statusIcons.refinery_queued,
+    label: 'Queued',
+    className: 'text-[var(--status-refinery-queued)] bg-[var(--status-refinery-queued-bg)] border-[var(--status-refinery-queued)]/30'
+  },
+  refinery_rebasing: {
+    icon: statusIcons.refinery_rebasing,
+    label: 'Rebasing',
+    className: 'text-[var(--status-refinery-rebasing)] bg-[var(--status-refinery-rebasing-bg)] border-[var(--status-refinery-rebasing)]/30'
+  },
+  refinery_testing: {
+    icon: statusIcons.refinery_testing,
+    label: 'Testing',
+    className: 'text-[var(--status-refinery-testing)] bg-[var(--status-refinery-testing-bg)] border-[var(--status-refinery-testing)]/30'
+  },
+  refinery_merging: {
+    icon: statusIcons.refinery_merging,
+    label: 'Merging',
+    className: 'text-[var(--status-refinery-merging)] bg-[var(--status-refinery-merging-bg)] border-[var(--status-refinery-merging)]/30'
   },
 }
 

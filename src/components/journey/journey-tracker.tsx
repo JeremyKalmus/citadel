@@ -5,8 +5,10 @@ import {
   JourneyStage,
   type JourneyTrackerProps,
   type WorkingSubstage,
+  type RefinerySubstage,
   JOURNEY_STAGE_LABELS,
   WORKING_SUBSTAGE_LABELS,
+  REFINERY_SUBSTAGE_LABELS,
   formatRelativeTime,
 } from "@/lib/gastown/types"
 
@@ -94,7 +96,7 @@ function StageConnector({
  * JourneyTracker Component
  *
  * Displays the work lifecycle as a horizontal progress indicator:
- * QUEUED → CLAIMED → WORKING → PR READY → MERGED
+ * QUEUED → CLAIMED → WORKING → PR READY → REFINERY → MERGED
  *
  * Design tokens (DS2):
  * - Completed: acid-green (#27AE60)
@@ -106,6 +108,7 @@ export function JourneyTracker({
   issueId,
   currentStage,
   substage,
+  refinerySubstage,
   timestamps,
   actor,
   blocked,
@@ -116,6 +119,7 @@ export function JourneyTracker({
     JourneyStage.CLAIMED,
     JourneyStage.WORKING,
     JourneyStage.PR_READY,
+    JourneyStage.REFINERY,
     JourneyStage.MERGED,
   ]
 
@@ -125,6 +129,7 @@ export function JourneyTracker({
     [JourneyStage.CLAIMED]: timestamps.claimed,
     [JourneyStage.WORKING]: timestamps.workStarted,
     [JourneyStage.PR_READY]: timestamps.prOpened,
+    [JourneyStage.REFINERY]: timestamps.refineryEntered,
     [JourneyStage.MERGED]: timestamps.merged,
   }
 
@@ -175,6 +180,23 @@ export function JourneyTracker({
         </div>
       )}
 
+      {/* Substage detail (when in REFINERY stage) */}
+      {currentStage === JourneyStage.REFINERY && (
+        <div className="mt-4 pl-4 border-l-2 border-chrome-border">
+          <div className="flex items-center gap-2">
+            <span className="text-fuel-yellow text-xs font-medium">
+              Stage 4{refinerySubstage?.slice(1)}: {refinerySubstage ? REFINERY_SUBSTAGE_LABELS[refinerySubstage] : "Processing"}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 mt-1 text-ash text-[11px]">
+            <span>refinery</span>
+            {refinerySubstage === "4a" && <span className="text-ash/70">• Updating branch</span>}
+            {refinerySubstage === "4b" && <span className="text-ash/70">• Running CI</span>}
+            {refinerySubstage === "4c" && <span className="text-ash/70">• Merging to main</span>}
+          </div>
+        </div>
+      )}
+
       {/* Blocked indicator */}
       {blocked && (
         <div className="mt-3 flex items-center gap-2 text-rust-orange text-xs">
@@ -201,6 +223,7 @@ export function JourneyTrackerCompact({
     JourneyStage.CLAIMED,
     JourneyStage.WORKING,
     JourneyStage.PR_READY,
+    JourneyStage.REFINERY,
     JourneyStage.MERGED,
   ]
 

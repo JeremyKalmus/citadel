@@ -57,7 +57,7 @@ function calculateLayout(beads: Bead[]): LayoutNode[] {
     if (!bead) return 0
 
     // Level is 1 + max level of all dependencies
-    const depLevels = bead.depends_on
+    const depLevels = (bead.depends_on || [])
       .filter(depId => beadMap.has(depId))
       .map(depId => getLevel(depId))
 
@@ -256,7 +256,7 @@ export function DependencyGraph({
     }> = []
 
     nodes.forEach(node => {
-      node.bead.depends_on.forEach(depId => {
+      (node.bead.depends_on || []).forEach(depId => {
         const depNode = nodeMap.get(depId)
         if (depNode) {
           const highlighted =

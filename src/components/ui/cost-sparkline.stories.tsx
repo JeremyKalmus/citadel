@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react"
+import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import { CostSparkline, CostBadge } from "./cost-sparkline"
 import type { SparklinePoint } from "@/lib/cost-utils"
 
