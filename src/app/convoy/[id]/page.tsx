@@ -4,9 +4,10 @@ import { use } from "react"
 import Link from "next/link"
 import { ActionButton, Panel, PanelHeader, PanelBody } from "@/components/ui"
 import { StatusExplanation, ActivityTimeline, type ActivityEvent } from "@/components/dashboard"
-import { ConvoyBeads } from "@/components/convoy"
-import { useConvoyDetail, useConvoyBeads } from "@/hooks"
+import { BeadStatusRow } from "@/components/convoy"
+import { useEnhancedConvoyDetail } from "@/hooks"
 import type { Status } from "@/components/ui"
+import type { BeadJourneyState, EnhancedConvoyDetail } from "@/lib/gastown"
 import { RefreshCw, ArrowLeft } from "lucide-react"
 import { Icon } from "@/components/ui/icon"
 
@@ -49,44 +50,82 @@ function formatCreatedAt(createdAt: string): string {
 }
 
 function generateConvoyActivityEvents(
-  status: string,
-  createdAt: string
+  data: EnhancedConvoyDetail | null
 ): ActivityEvent[] {
+  if (!data) return []
+
   const events: ActivityEvent[] = []
 
-  if (createdAt) {
+  // Convoy created event
+  if (data.created_at) {
     events.push({
       id: "created",
-      timestamp: createdAt,
+      timestamp: data.created_at,
       type: "work_started",
       title: "Convoy created",
-      description: `Initial status: ${status}`,
+      description: `Status: ${data.status}`,
     })
   }
 
-  if (status === "active") {
-    events.push({
-      id: "active",
-      timestamp: new Date().toISOString(),
-      type: "info",
-      title: "Convoy in progress",
-      description: "Workers are processing assigned issues",
-    })
-  } else if (status === "completed" || status === "done") {
-    events.push({
-      id: "completed",
-      timestamp: new Date().toISOString(),
-      type: "work_completed",
-      title: "Convoy completed",
-      description: "All assigned work has been finished",
-    })
+  // Add events from bead states
+  for (const bead of data.beadStates) {
+    if (bead.stage === "refinery" && bead.refinery) {
+      events.push({
+        id: `refinery-${bead.beadId}`,
+        timestamp: bead.lastActivity,
+        type: "info",
+        title: `${bead.beadId} entered refinery`,
+        description: `Queue position: #${bead.refinery.position} of ${bead.refinery.queueLength}`,
+      })
+    } else if (bead.stage === "merged") {
+      events.push({
+        id: `merged-${bead.beadId}`,
+        timestamp: bead.lastActivity,
+        type: "work_completed",
+        title: `${bead.beadId} merged`,
+        description: bead.title,
+      })
+    } else if (bead.needsNudge) {
+      events.push({
+        id: `nudge-${bead.beadId}`,
+        timestamp: bead.lastActivity,
+        type: "error",
+        title: `${bead.beadId} needs nudge`,
+        description: `Idle in ${bead.stage} stage`,
+      })
+    }
   }
+
+  // Sort by timestamp descending (most recent first)
+  events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
   return events
 }
 
-function WorkersList({ workers }: { workers: string[] }) {
-  if (!workers || workers.length === 0) {
+interface WorkerAssignment {
+  worker: string
+  beads: BeadJourneyState[]
+}
+
+function extractWorkerAssignments(beadStates: BeadJourneyState[]): WorkerAssignment[] {
+  const workerMap = new Map<string, BeadJourneyState[]>()
+
+  for (const bead of beadStates) {
+    if (bead.worker) {
+      const existing = workerMap.get(bead.worker) || []
+      existing.push(bead)
+      workerMap.set(bead.worker, existing)
+    }
+  }
+
+  return Array.from(workerMap.entries()).map(([worker, beads]) => ({
+    worker,
+    beads,
+  }))
+}
+
+function WorkersList({ assignments }: { assignments: WorkerAssignment[] }) {
+  if (!assignments || assignments.length === 0) {
     return (
       <div className="p-4 text-center">
         <p className="caption text-ash">No workers assigned</p>
@@ -96,14 +135,19 @@ function WorkersList({ workers }: { workers: string[] }) {
 
   return (
     <div className="px-4">
-      {workers.map((worker) => (
+      {assignments.map(({ worker, beads }) => (
         <Link
           key={worker}
-          href={`/worker/${worker.replace("/", "/")}`}
-          className="flex items-center gap-3 py-3 border-b border-chrome-border/30 last:border-0 hover:bg-carbon-black/30 -mx-4 px-4 transition-colors"
+          href={`/worker/${encodeURIComponent(worker)}`}
+          className="flex items-center justify-between py-3 border-b border-chrome-border/30 last:border-0 hover:bg-carbon-black/30 -mx-4 px-4 transition-colors"
         >
-          <Icon name="terminal" aria-label="" variant="muted" size="sm" />
-          <span className="body-text">{worker}</span>
+          <div className="flex items-center gap-3">
+            <Icon name="terminal" aria-label="" variant="muted" size="sm" />
+            <span className="body-text">{worker}</span>
+          </div>
+          <span className="caption text-ash">
+            {beads.length} bead{beads.length !== 1 ? "s" : ""}
+          </span>
         </Link>
       ))}
     </div>
@@ -114,33 +158,30 @@ export default function ConvoyPage({ params }: ConvoyPageProps) {
   const { id } = use(params)
   const decodedId = decodeURIComponent(id)
 
-  const { data: convoy, isLoading, error, refresh } = useConvoyDetail({
+  const { data, isLoading, error, refresh } = useEnhancedConvoyDetail({
     id: decodedId,
-    refreshInterval: 30000,
+    refreshInterval: 5000,
   })
 
-  const { data: beads, isLoading: beadsLoading } = useConvoyBeads({
-    convoyId: decodedId,
-    refreshInterval: 30000,
-  })
-
-  const status = convoy
-    ? convoyStatusToStatus(convoy.status)
+  const status = data
+    ? convoyStatusToStatus(data.status)
     : "thinking"
 
-  const details = convoy
+  const workerAssignments = data ? extractWorkerAssignments(data.beadStates) : []
+
+  const details = data
     ? [
-        { label: "ID", value: convoy.id },
-        { label: "Status", value: convoy.status },
-        { label: "Created", value: formatCreatedAt(convoy.created_at) },
-        { label: "Issues", value: String(convoy.issues?.length ?? 0) },
-        { label: "Workers", value: String(convoy.assigned_workers?.length ?? 0) },
+        { label: "ID", value: data.id },
+        { label: "Status", value: data.status },
+        { label: "Created", value: formatCreatedAt(data.created_at) },
+        { label: "Beads", value: String(data.beadStates.length) },
+        { label: "Working", value: String(data.summary.working) },
+        { label: "In Refinery", value: String(data.summary.inRefinery) },
+        { label: "Merged", value: String(data.summary.merged) },
       ]
     : []
 
-  const activityEvents = convoy
-    ? generateConvoyActivityEvents(convoy.status, convoy.created_at)
-    : []
+  const activityEvents = generateConvoyActivityEvents(data)
 
   if (error) {
     return (
@@ -183,7 +224,7 @@ export default function ConvoyPage({ params }: ConvoyPageProps) {
           </Link>
           <div>
             <h1 className="text-4xl font-bold text-bone">
-              {convoy?.title || decodedId}
+              {data?.title || decodedId}
             </h1>
             <p className="body-text-muted mt-1">Convoy Detail View</p>
           </div>
@@ -217,7 +258,34 @@ export default function ConvoyPage({ params }: ConvoyPageProps) {
       </div>
 
       {/* Linked Beads */}
-      <ConvoyBeads beads={beads || []} isLoading={beadsLoading} />
+      <Panel>
+        <PanelHeader
+          icon="link"
+          title="Linked Beads"
+          actions={
+            <span className="caption text-ash">
+              {data?.beadStates.length ?? 0} total
+            </span>
+          }
+        />
+        <PanelBody className="p-0">
+          {isLoading ? (
+            <div className="p-4 text-center">
+              <p className="caption text-ash">Loading beads...</p>
+            </div>
+          ) : data?.beadStates && data.beadStates.length > 0 ? (
+            <div className="divide-y divide-chrome-border/20">
+              {data.beadStates.map((bead) => (
+                <BeadStatusRow key={bead.beadId} bead={bead} />
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 text-center">
+              <p className="caption text-ash">No beads linked to this convoy</p>
+            </div>
+          )}
+        </PanelBody>
+      </Panel>
 
       {/* Workers */}
       <Panel>
@@ -226,7 +294,7 @@ export default function ConvoyPage({ params }: ConvoyPageProps) {
           title="Assigned Workers"
           actions={
             <span className="caption text-ash">
-              {convoy?.assigned_workers?.length ?? 0} total
+              {workerAssignments.length} total
             </span>
           }
         />
@@ -236,7 +304,7 @@ export default function ConvoyPage({ params }: ConvoyPageProps) {
               <p className="caption text-ash">Loading...</p>
             </div>
           ) : (
-            <WorkersList workers={convoy?.assigned_workers || []} />
+            <WorkersList assignments={workerAssignments} />
           )}
         </PanelBody>
       </Panel>
