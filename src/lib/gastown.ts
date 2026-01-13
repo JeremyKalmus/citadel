@@ -735,7 +735,7 @@ export class GasTownClient {
     return allPolecats;
   }
 
-  async getGuzzolineStats(): Promise<GuzzolineStats> {
+  async getGuzzolineStats(rig?: string): Promise<GuzzolineStats> {
     const fs = await import("fs/promises");
     const path = await import("path");
 
@@ -771,13 +771,19 @@ export class GasTownClient {
 
           // Count token_usage events from guzzoline
           if (event.source === "guzzoline" && event.type === "token_usage") {
+            const actor = event.actor || "";
+
+            // Filter by rig if specified
+            if (rig && !actor.startsWith(`${rig}/`)) {
+              continue;
+            }
+
             const tokens = event.payload?.tokens?.total ?? 0;
 
             if (eventTime >= weekStart) {
               stats.total_tokens_week += tokens;
 
               // Categorize by agent type
-              const actor = event.actor || "";
               if (actor.includes("witness")) {
                 stats.by_agent_type.witness += tokens;
               } else if (actor.includes("refinery")) {
@@ -831,8 +837,9 @@ export class GasTownClient {
   /**
    * Get enhanced guzzoline stats including per-issue token breakdown.
    * Parses events.jsonl and aggregates token usage by issue ID.
+   * @param rig - Optional rig name to filter stats by workers in that rig
    */
-  async getEnhancedGuzzolineStats(): Promise<EnhancedGuzzolineStats> {
+  async getEnhancedGuzzolineStats(rig?: string): Promise<EnhancedGuzzolineStats> {
     const fs = await import("fs/promises");
     const path = await import("path");
 
@@ -875,6 +882,13 @@ export class GasTownClient {
 
           // Count token_usage events from guzzoline
           if (event.source === "guzzoline" && event.type === "token_usage") {
+            const actor = event.actor || "";
+
+            // Filter by rig if specified
+            if (rig && !actor.startsWith(`${rig}/`)) {
+              continue;
+            }
+
             const tokens = event.payload?.tokens?.total ?? 0;
             const inputTokens = event.payload?.tokens?.input ?? 0;
             const outputTokens = event.payload?.tokens?.output ?? 0;
@@ -884,7 +898,6 @@ export class GasTownClient {
               stats.total_tokens_week += tokens;
 
               // Categorize by agent type
-              const actor = event.actor || "";
               if (actor.includes("witness")) {
                 stats.by_agent_type.witness += tokens;
               } else if (actor.includes("refinery")) {
@@ -988,10 +1001,11 @@ export class GasTownClient {
   /**
    * Get enhanced guzzoline stats with convoy breakdown.
    * Aggregates issue token usage by convoy for cost visibility.
+   * @param rig - Optional rig name to filter stats by workers in that rig
    */
-  async getGuzzolineStatsWithConvoys(): Promise<EnhancedGuzzolineStatsWithConvoys> {
+  async getGuzzolineStatsWithConvoys(rig?: string): Promise<EnhancedGuzzolineStatsWithConvoys> {
     // Get base enhanced stats with per-issue breakdown
-    const baseStats = await this.getEnhancedGuzzolineStats();
+    const baseStats = await this.getEnhancedGuzzolineStats(rig);
 
     // Get all convoys
     const convoys = await this.getConvoys();

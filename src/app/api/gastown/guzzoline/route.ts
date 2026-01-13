@@ -6,16 +6,17 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const enhanced = searchParams.get("enhanced") === "true";
     const withConvoys = searchParams.get("convoys") === "true";
+    const rig = searchParams.get("rig") || undefined;
 
     // Convoy stats include enhanced stats
     if (withConvoys) {
-      const stats = await gastown.getGuzzolineStatsWithConvoys();
+      const stats = await gastown.getGuzzolineStatsWithConvoys(rig);
       return NextResponse.json(stats);
     }
 
     const stats = enhanced
-      ? await gastown.getEnhancedGuzzolineStats()
-      : await gastown.getGuzzolineStats();
+      ? await gastown.getEnhancedGuzzolineStats(rig)
+      : await gastown.getGuzzolineStats(rig);
 
     return NextResponse.json(stats);
   } catch (error) {
