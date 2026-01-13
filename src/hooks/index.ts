@@ -42,3 +42,6 @@ export type { UseConvoyBeadsOptions, UseConvoyBeadsResult } from "./use-convoy-b
 
 export { useEpicChildren } from "./use-epic-children";
 export type { UseEpicChildrenOptions, UseEpicChildrenResult } from "./use-epic-children";
+
+export { useRigGuzzoline } from "./use-rig-guzzoline";
+export type { UseRigGuzzolineOptions, UseRigGuzzolineResult } from "./use-rig-guzzoline";
