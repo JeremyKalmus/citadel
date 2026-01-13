@@ -27,6 +27,7 @@ function mapConvoyStatusToStatus(status: string): Status {
     case "active":
     case "running":
       return "active";
+    case "open":
     case "pending":
     case "queued":
       return "thinking";
@@ -405,7 +406,7 @@ export default function ConvoysPage() {
         const status = convoy.status.toLowerCase();
         if (status === "active" || status === "running") {
           acc.active++;
-        } else if (status === "pending" || status === "queued") {
+        } else if (status === "open" || status === "pending" || status === "queued") {
           acc.pending++;
         } else if (status === "completed" || status === "done") {
           acc.done++;
